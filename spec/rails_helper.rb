@@ -71,3 +71,4 @@ RSpec.configure do |config|
   # arbitrary gems may also be filtered via:
   # config.filter_gems_from_backtrace("gem name")
 end
+require_relative './support/shoulda_matchers'
