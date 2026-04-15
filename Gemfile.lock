@@ -103,6 +103,11 @@ GEM
     erubi (1.13.1)
     et-orbi (1.4.0)
       tzinfo
+    factory_bot (6.5.6)
+      activesupport (>= 6.1.0)
+    factory_bot_rails (6.5.1)
+      factory_bot (~> 6.5)
+      railties (>= 6.1.0)
     ffi (1.17.4-aarch64-linux-gnu)
     ffi (1.17.4-aarch64-linux-musl)
     ffi (1.17.4-arm-linux-gnu)
@@ -396,6 +401,7 @@ DEPENDENCIES
   brakeman
   bundler-audit
   debug
+  factory_bot_rails (~> 6.5)
   image_processing (~> 1.2)
   importmap-rails
   jbuilder
