@@ -36,3 +36,12 @@
 
 /app/assets/builds/*
 !/app/assets/builds/.keep
+
+# IDE files
+.idea/
+*.iml
+*.swp
+*.swo
+*~
+.vscode/
+
