@@ -65,4 +65,7 @@ end
 group :development do
   # Use console on exceptions pages [https://github.com/rails/web-console]
   gem "web-console"
+
+  # Additional matchers for common Rails test assertions [https://github.com/thoughtbot/shoulda-matchers]
+  gem "shoulda-matchers", "~> 7.0"
 end
