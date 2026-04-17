@@ -7,10 +7,14 @@ module ApplicationCable
     end
 
     private
-      def set_current_user
-        if session = Session.find_by(id: cookies.signed[:session_id])
-          self.current_user = session.user
-        end
+    def set_current_user
+      if session = find_session_by_cookie
+        self.current_user = session.user
       end
+    end
+
+    def find_session_by_cookie
+      Session.find_by(id: cookies.signed[:session_id])
+    end
   end
 end
