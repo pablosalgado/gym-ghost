@@ -23,7 +23,7 @@ RSpec.describe ClassType, type: :model do
         end
       end
 
-      context 'when black' do
+      context 'when blank' do
         it 'is invalid' do
           class_type.name = ''
 
@@ -31,9 +31,8 @@ RSpec.describe ClassType, type: :model do
           expect(class_type.errors[:name]).to include("can't be blank")
         end
       end
-    end
 
-    context 'when 2 characters long' do
+      context 'when 2 characters long' do
         it 'is invalid' do
           class_type.name = 'A' * 2
 
@@ -50,5 +49,36 @@ RSpec.describe ClassType, type: :model do
           expect(class_type.errors[:name]).to include("is too long (maximum is 50 characters)")
         end
       end
+    end
+
+    describe ':duration' do
+      it { should validate_presence_of(:duration) }
+
+      context 'when duration is range' do
+        it 'is valid' do
+          class_type.duration = 60
+
+          expect(class_type).to be_valid
+        end
+      end
+
+      context 'when less than zero' do
+        it 'is invalid' do
+          class_type.duration = -1
+
+          expect(class_type).to be_invalid
+          expect(class_type.errors[:duration]).to include("must be greater than or equal to 0")
+        end
+      end
+
+      context 'when greater than sixty' do
+        it 'is invalid' do
+          class_type.duration = 61
+
+          expect(class_type).to be_invalid
+          expect(class_type.errors[:duration]).to include("must be less than or equal to 60")
+        end
+      end
+    end
   end
 end
