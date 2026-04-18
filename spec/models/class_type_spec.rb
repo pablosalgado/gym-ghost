@@ -54,7 +54,7 @@ RSpec.describe ClassType, type: :model do
     describe ':duration' do
       it { should validate_presence_of(:duration) }
 
-      context 'when duration is range' do
+      context 'when duration is in range' do
         it 'is valid' do
           class_type.duration = 60
 
