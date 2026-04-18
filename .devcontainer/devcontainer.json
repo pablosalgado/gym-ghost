@@ -4,7 +4,7 @@
   "name": "gym_ghost",
   "dockerComposeFile": "compose.yaml",
   "service": "rails-app",
-  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+  "workspaceFolder": "/workspaces/gym-ghost",
 
   // Features to add to the dev container. More info: https://containers.dev/features.
   "features": {
@@ -15,7 +15,7 @@
   },
 
   "containerEnv": {
-    "KAMAL_REGISTRY_PASSWORD": "$KAMAL_REGISTRY_PASSWORD"
+    "KAMAL_REGISTRY_PASSWORD": "${localEnv:KAMAL_REGISTRY_PASSWORD}"
   },
 
   // Use 'forwardPorts' to make a list of ports inside the container available locally.
