@@ -42,7 +42,7 @@ RSpec.describe ClassType, type: :model do
       end
 
       context 'when 51 characters long' do
-        it 'is invalid ' do
+        it 'is invalid' do
           class_type.name = 'A' * 51
 
           expect(class_type).to be_invalid
