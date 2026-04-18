@@ -22,6 +22,13 @@
     "KAMAL_REGISTRY_PASSWORD": "${localEnv:KAMAL_REGISTRY_PASSWORD}"
   },
 
+  // Optional: uncomment if you run Kamal deployments from inside the devcontainer.
+  // Locally the value comes from your shell environment; in Codespaces add it as a secret
+  // at github.com/settings/codespaces so it is injected automatically without this entry.
+  // "containerEnv": {
+  //   "KAMAL_REGISTRY_PASSWORD": "${localEnv:KAMAL_REGISTRY_PASSWORD}"
+  // },
+
   // Use 'forwardPorts' to make a list of ports inside the container available locally.
   "forwardPorts": [3000],
 
