@@ -10,10 +10,11 @@
   "features": {
     "ghcr.io/devcontainers/features/github-cli:1": {},
     "ghcr.io/rails/devcontainer/features/activestorage:1": {},
-    // Required for running Kamal deployments (docker build/push) from inside the devcontainer.
-    // WARNING: this mounts the host Docker socket, giving the container root-equivalent access
-    // to the host. Remove this if you only deploy from CI and never run Kamal locally.
-    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {"moby":false},
+    // Optional: uncomment the feature below only if you need to run Kamal deployments
+    // (docker build/push) from inside the devcontainer.
+    // WARNING: this mounts the host Docker socket, giving the container root-equivalent
+    // access to the host, so it should remain opt-in.
+    // "ghcr.io/devcontainers/features/docker-outside-of-docker:1": { "moby": false },
     "ghcr.io/rails/devcontainer/features/sqlite3:1": {}
   },
 
