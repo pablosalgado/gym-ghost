@@ -48,4 +48,14 @@ RSpec.describe GymGhost::Scraper::DefaultScraper, :smoke do
       expect(cities.map(&:upcase)).to eq(cities), "expected city names to be upper-cased"
     end
   end
+
+  describe "#scrape_facilities" do
+    it "returns a non-empty array of strings" do
+      facilities = scraper.scrape_facilities("BOGOTÁ, D.C.")
+
+      expect(facilities).to be_an(Array)
+      expect(facilities).not_to be_empty
+      expect(facilities).to all(be_a(String) & be_truthy)
+    end
+  end
 end

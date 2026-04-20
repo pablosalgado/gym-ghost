@@ -18,6 +18,14 @@ module GymGhost
         driver.find_elements(xpath: "//ul[@aria-labelledby='city-select-label']/li").map { |element| element.text }
       end
 
+      def scrape_facilities(city)
+        driver.get(url)
+        click_change_facility_button
+        click_city_select
+        click_city_element(city)
+        driver.find_elements(xpath: "//button/span[contains(@class, 'font-poppins')]").map { |element| element.text }
+      end
+
       private
 
       def click_change_facility_button
@@ -30,6 +38,12 @@ module GymGhost
         city_select = driver.find_element(xpath: "//div[@aria-labelledby='city-select-label']")
         wait.until { city_select.displayed? }
         city_select.click
+      end
+
+      def click_city_element(city)
+        city_element = driver.find_element(xpath: "//ul[@aria-labelledby='city-select-label']/li/span[starts-with(., '#{city}')]")
+        wait.until { city_element.displayed? }
+        city_element.click
       end
     end
   end
