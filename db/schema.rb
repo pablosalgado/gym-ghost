@@ -33,7 +33,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_17_171025) do
     t.string "name", null: false
     t.datetime "updated_at", null: false
     t.index ["city_id"], name: "index_facilities_on_city_id"
-    t.check_constraint "length(name) >=3 and length(name) <= 50"
+    t.check_constraint "length(name) >= 3 and length(name) <= 50"
   end
 
   create_table "schedules", force: :cascade do |t|

@@ -15,8 +15,8 @@ module GymGhost
 
       def self.gym_id = raise NotImplementedError, "#{self} must implement .gym_id"
       def self.register! = raise NotImplementedError, "#{self} must implement .register!"
-      def scrape_cities = raise NotImplementedError, "#{self.class} must implement #scrape_cities"
-      def scrape_facilities = raise NotImplementedError, "#{self.class} must implement #scrape_facilities"
+      def scrap_cities = raise NotImplementedError, "#{self.class} must implement #scrap_cities"
+      def scrap_facilities = raise NotImplementedError, "#{self.class} must implement #scrap_facilities"
     end
   end
 end
