@@ -4,30 +4,19 @@
   "name": "gym_ghost",
   "dockerComposeFile": "compose.yaml",
   "service": "rails-app",
-  "workspaceFolder": "/workspaces/gym-ghost",
+  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
 
   // Features to add to the dev container. More info: https://containers.dev/features.
   "features": {
     "ghcr.io/devcontainers/features/github-cli:1": {},
-    "ghcr.io/rails/devcontainer/features/activestorage:1": {},
-    // Optional: uncomment the feature below only if you need to run Kamal deployments
-    // (docker build/push) from inside the devcontainer.
-    // WARNING: this mounts the host Docker socket, giving the container root-equivalent
-    // access to the host, so it should remain opt-in.
-    // "ghcr.io/devcontainers/features/docker-outside-of-docker:1": { "moby": false },
-    "ghcr.io/rails/devcontainer/features/sqlite3:1": {}
+    "ghcr.io/rails/devcontainer/features/activestorage": {},
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {"moby":false},
+    "ghcr.io/rails/devcontainer/features/sqlite3": {}
   },
 
   "containerEnv": {
-    "KAMAL_REGISTRY_PASSWORD": "${localEnv:KAMAL_REGISTRY_PASSWORD}"
+    "KAMAL_REGISTRY_PASSWORD": "$KAMAL_REGISTRY_PASSWORD"
   },
-
-  // Optional: uncomment if you run Kamal deployments from inside the devcontainer.
-  // Locally the value comes from your shell environment; in Codespaces add it as a secret
-  // at github.com/settings/codespaces so it is injected automatically without this entry.
-  // "containerEnv": {
-  //   "KAMAL_REGISTRY_PASSWORD": "${localEnv:KAMAL_REGISTRY_PASSWORD}"
-  // },
 
   // Use 'forwardPorts' to make a list of ports inside the container available locally.
   "forwardPorts": [3000],
