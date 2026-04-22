@@ -4,7 +4,7 @@ require 'fugit'
 RSpec.describe ScrapeScheduleJob, type: :job do
   describe 'recurring schedule' do
     subject(:schedule_expression) do
-      config = YAML.load_file(Rails.root.join('config/recurring.yml'))
+      config = YAML.safe_load_file(Rails.root.join('config/recurring.yml'))
       config.dig('production', 'scrape_gym_schedule', 'schedule')
     end
 
