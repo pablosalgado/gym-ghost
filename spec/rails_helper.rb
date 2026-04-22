@@ -67,6 +67,16 @@ RSpec.configure do |config|
   # To enable this behaviour uncomment the line below.
   # config.infer_spec_type_from_file_location!
 
+  # Force English locale for all tests.
+  config.around(:each) do |example|
+    I18n.with_locale(:en) { example.run }
+  end
+
+  # Override to Spanish for smoke tests.
+  config.around(:each, :smoke) do |example|
+    I18n.with_locale(:es) { example.run }
+  end
+
   # Filter lines from Rails gems in backtraces.
   config.filter_rails_from_backtrace!
   # arbitrary gems may also be filtered via:
