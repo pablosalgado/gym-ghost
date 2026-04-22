@@ -3,21 +3,21 @@ require 'fugit'
 
 RSpec.describe ScrapeScheduleJob, type: :job do
   describe 'recurring schedule' do
-    subject(:cron_expression) do
+    subject(:schedule_expression) do
       config = YAML.load_file(Rails.root.join('config/recurring.yml'))
       config.dig('production', 'scrape_gym_schedule', 'schedule')
     end
 
     it 'is defined in config/recurring.yml' do
-      expect(cron_expression).to be_present
+      expect(schedule_expression).to be_present
     end
 
-    it 'is a valid cron expression' do
-      expect(Fugit.parse(cron_expression)).not_to be_nil
+    it 'is a valid schedule expression' do
+      expect(Fugit.parse(schedule_expression)).not_to be_nil
     end
 
     it 'fires every Sunday at midnight' do
-      cron = Fugit.parse(cron_expression)
+      cron = Fugit.parse(schedule_expression)
 
       # Collect the next 4 fire times starting from an arbitrary reference point.
       next_times = []
