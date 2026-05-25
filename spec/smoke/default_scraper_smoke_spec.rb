@@ -15,8 +15,8 @@ require "gym_ghost/scraper/default_scraper"
 require "gym_ghost/scraper/driver_factory"
 
 RSpec.describe GymGhost::Scraper::DefaultScraper, :smoke do
-  let(:driver) {  ENV.fetch("HEADLESS") == "true" ? GymGhost::Scraper::DriverFactory.build_headless_driver : GymGhost::Scraper::DriverFactory.build_driver }
-  let(:wait)   { GymGhost::Scraper::DriverFactory.build_wait }
+  let(:driver) { GymGhost::Scraper::DriverFactory.build_driver }
+  let(:wait) { GymGhost::Scraper::DriverFactory.build_wait }
 
   subject(:scraper) do
     described_class.new(
@@ -34,9 +34,9 @@ RSpec.describe GymGhost::Scraper::DefaultScraper, :smoke do
     nil
   end
 
-  describe "#scrap_cities" do
+  describe "#scrape_cities" do
     it "returns a non-empty array of strings" do
-      cities = scraper.scrap_cities
+      cities = scraper.scrape_cities
 
       expect(cities).to be_an(Array)
       expect(cities).not_to be_empty
@@ -44,15 +44,15 @@ RSpec.describe GymGhost::Scraper::DefaultScraper, :smoke do
     end
 
     it "includes at least one recognisable city name" do
-      cities = scraper.scrap_cities
+      cities = scraper.scrape_cities
 
       expect(cities.map(&:upcase)).to eq(cities), "expected city names to be upper-cased"
     end
   end
 
-  describe "#scrap_facilities" do
+  describe "#scrape_facilities" do
     it "returns a non-empty array of strings" do
-      facilities = scraper.scrap_facilities("BOGOTÁ, D.C.")
+      facilities = scraper.scrape_facilities("BOGOTÁ, D.C.")
 
       expect(facilities).to be_an(Array)
       expect(facilities).not_to be_empty
@@ -60,9 +60,9 @@ RSpec.describe GymGhost::Scraper::DefaultScraper, :smoke do
     end
   end
 
-  describe "#scrap_schedule" do
+  describe "#scrape_schedule" do
     it "returns a non-empty array of hashes" do
-      schedule = scraper.scrap_schedule("BOGOTÁ, D.C.", "Colina", I18n.l(Date.today, format: "%b %d").capitalize)
+      schedule = scraper.scrape_schedule("BOGOTÁ, D.C.", "Colina", I18n.l(Date.today, format: "%b %d").capitalize)
 
       expect(schedule).to be_an(Array)
       expect(schedule).not_to be_empty
