@@ -72,7 +72,7 @@ RSpec.describe GymGhost::Scraper::ScrapeScheduleJob, type: :job do
 
           # This makes the request to fail because schedule is invalid and it can't scrape anything
           allow(scraper).to receive(:scrape_schedule)
-                              .and_return([{}])
+                              .and_return([ {} ])
 
           allow(scraper).to receive(:end_session)
         end
