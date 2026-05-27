@@ -15,6 +15,6 @@ production:
     schedule: every hour at minute 12
 
   scrape_gym_schedule:
-    class: GymHost::Scraper::ScrapeScheduleJob
+    class: GymGhost::Scraper::ScrapeScheduleJob
     queue: default
     schedule: every Sunday at midnight

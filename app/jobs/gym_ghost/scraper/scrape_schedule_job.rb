@@ -3,7 +3,7 @@ module GymGhost
     class ScrapeScheduleJob < ApplicationJob
       queue_as :default
 
-      def perform(url, username, password, scraper_factory)
+      def perform(url = ENV["SMOKE_GYM_URL"], username = nil, password = nil, scraper_factory = ScraperFactory)
         Rails.logger.info("Scraping schedule for #{url}")
         save_schedule(url, username, password, scraper_factory)
       end
@@ -77,8 +77,7 @@ module GymGhost
         Rails.logger.debug("Adding schedule #{item} to facility #{item[:facility]} #{day}")
 
         class_type = find_or_create_class_type(item[:activity], item[:duration])
-        schedule = facility.schedules.build(class_type_id: class_type.id, day_of_week: day.wday, facility: facility, start_time: item[:time])
-        schedule.save!
+        facility.schedules.find_or_create_by!(class_type_id: class_type.id, day_of_week: day.wday, facility: facility, start_time: item[:time])
       end
 
       def find_or_create_class_type(activity, duration)
