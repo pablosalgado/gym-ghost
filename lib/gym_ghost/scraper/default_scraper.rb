@@ -11,17 +11,17 @@ module GymGhost
         "default"
       end
 
-      def scrap_cities
+      def scrape_cities
         navigate_to_cities
         build_cities
       end
 
-      def scrap_facilities(city)
+      def scrape_facilities(city)
         navigate_to_facilities(city)
         build_facilities
       end
 
-      def scrap_schedule(city, facility, date)
+      def scrape_schedule(city, facility, date)
         navigate_to_schedule(city, facility, date)
         build_and_merge_location(date: date, facility: facility, city: city)
       end
