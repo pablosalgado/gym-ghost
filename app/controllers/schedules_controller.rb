@@ -30,10 +30,14 @@ class SchedulesController < ApplicationController
     { day_offset: 6, time: "16:00", city: "NYC",    facility: "Pool",           activity: "CrossFit" }
   ].freeze
 
+  CITIES     = MOCK_SESSIONS.map { |s| s[:city] }.uniq.sort.freeze
+  FACILITIES = MOCK_SESSIONS.map { |s| s[:facility] }.uniq.sort.freeze
+  ACTIVITIES = MOCK_SESSIONS.map { |s| s[:activity] }.uniq.sort.freeze
+
   def index
-    @sessions = MOCK_SESSIONS
-    @cities     = MOCK_SESSIONS.map { |s| s[:city] }.uniq.sort
-    @facilities = MOCK_SESSIONS.map { |s| s[:facility] }.uniq.sort
-    @activities = MOCK_SESSIONS.map { |s| s[:activity] }.uniq.sort
+    @sessions   = MOCK_SESSIONS
+    @cities     = CITIES
+    @facilities = FACILITIES
+    @activities = ACTIVITIES
   end
 end

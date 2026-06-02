@@ -8,6 +8,7 @@ export default class extends Controller {
 
   connect() {
     this.selectedDay = 0
+    this.sortedSessions = [...this.sessionsValue].sort((a, b) => a.time.localeCompare(b.time))
     this.renderDayLabels()
     this.renderSessions()
   }
@@ -52,7 +53,7 @@ export default class extends Controller {
     const facility = this.facilityFilterTarget.value
     const activity = this.activityFilterTarget.value
 
-    const filtered = this.sessionsValue.filter((s) => {
+    const filtered = this.sortedSessions.filter((s) => {
       if (s.day_offset !== this.selectedDay) return false
       if (city     && s.city     !== city)     return false
       if (facility && s.facility !== facility) return false
@@ -68,7 +69,6 @@ export default class extends Controller {
     }
 
     const rows = filtered
-      .sort((a, b) => a.time.localeCompare(b.time))
       .map((s) => `
         <div class="flex items-center justify-between bg-white rounded-xl border border-gray-100 shadow-sm px-4 py-3">
           <div class="flex items-center gap-4">
