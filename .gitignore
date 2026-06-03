@@ -8,6 +8,9 @@
 /.bundle
 /vendor/bundle
 
+# Ignore vendor bundle directory (locally installed gems).
+/vendor/bundle
+
 # Ignore all environment files.
 /.env*
 

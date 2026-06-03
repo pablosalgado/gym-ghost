@@ -8,3 +8,118 @@
  *
  * Consider organizing styles into separate files for maintainability.
  */
+
+:root {
+  --app-nav-height: 57px;
+}
+
+body {
+  background-color: #f8fafc;
+}
+
+.app-authenticated {
+  height: 100vh;
+  overflow: hidden;
+}
+
+.app-authenticated .app-main {
+  height: calc(100vh - var(--app-nav-height));
+  overflow: hidden;
+}
+
+.schedule-shell {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.schedule-sticky-controls {
+  flex: 0 0 auto;
+}
+
+.schedule-scroll-area {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.day-strip {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(4.25rem, 1fr);
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.25rem;
+}
+
+.day-pill {
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  line-height: 1.1;
+}
+
+.schedule-card {
+  border-left: 0.35rem solid #64748b;
+}
+
+.activity-badge {
+  font-size: 0.75rem;
+}
+
+.activity-boxing {
+  border-left-color: #dc2626;
+}
+
+.activity-badge-boxing {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.activity-crossfit {
+  border-left-color: #ea580c;
+}
+
+.activity-badge-crossfit {
+  background-color: #ffedd5;
+  color: #9a3412;
+}
+
+.activity-pilates {
+  border-left-color: #7c3aed;
+}
+
+.activity-badge-pilates {
+  background-color: #ede9fe;
+  color: #5b21b6;
+}
+
+.activity-swimming {
+  border-left-color: #0891b2;
+}
+
+.activity-badge-swimming {
+  background-color: #cffafe;
+  color: #155e75;
+}
+
+.activity-yoga {
+  border-left-color: #16a34a;
+}
+
+.activity-badge-yoga {
+  background-color: #dcfce7;
+  color: #166534;
+}
+
+.activity-default {
+  border-left-color: #64748b;
+}
+
+.activity-badge-default {
+  background-color: #e2e8f0;
+  color: #334155;
+}
