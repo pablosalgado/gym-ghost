@@ -11,4 +11,3 @@ module SchedulesHelper
     ACTIVITY_THEMES.fetch(activity.to_s, "default")
   end
 end
-
