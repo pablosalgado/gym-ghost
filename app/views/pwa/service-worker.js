@@ -1,5 +1,5 @@
 const CACHE_NAME = "gym-ghost-static-v1"
-const STATIC_ASSET_PATHS = ["/manifest.json", "/icon.png", "/icon.svg"]
+const STATIC_ASSET_PATHS = ["/manifest", "/manifest.json", "/icon.png", "/icon.svg"]
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
