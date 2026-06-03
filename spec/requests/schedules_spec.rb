@@ -38,9 +38,21 @@ RSpec.describe SchedulesController, type: :request do
         expect(response.body).to include("Boxing", "CrossFit", "Pilates", "Swimming", "Yoga")
       end
 
-      it "embeds session data for the Stimulus controller" do
+      it "renders sessions for the default day (today)" do
         get schedules_url
-        expect(response.body).to include("data-schedule-sessions-value")
+        expect(response.body).to include("07:00", "09:00")
+      end
+
+      it "filters sessions by day param" do
+        get schedules_url, params: { day: 1 }
+        expect(response.body).to include("08:00")      # day 1 session
+        expect(response.body).not_to include("07:00")  # day 0 only session
+      end
+
+      it "filters sessions by city param" do
+        get schedules_url, params: { day: 0, city: "Boston" }
+        expect(response.body).to include("11:00")  # Boston day-0 session time
+        expect(response.body).not_to include("07:00")  # NYC-only day-0 session time
       end
     end
   end
@@ -54,9 +66,10 @@ RSpec.describe SchedulesController, type: :request do
         expect(response).to have_http_status(:success)
       end
 
-      it "renders the schedule week strip" do
+      it "renders the day navigation strip" do
         get root_url
-        expect(response.body).to include("data-schedule-target=\"weekStrip\"")
+        expect(response.body).to include("schedules?day=0")
+        expect(response.body).to include("schedules?day=6")
       end
     end
   end

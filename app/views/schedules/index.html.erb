@@ -1,79 +1,87 @@
 <% content_for :title, "Schedule" %>
 
-<div
-  class="w-full"
-  data-controller="schedule"
-  data-schedule-sessions-value="<%= @sessions.to_json %>"
->
-  <%# Week view header %>
-  <div class="mb-6">
-    <h1 class="text-2xl font-bold text-gray-800 mb-4">Schedule</h1>
-
-    <div class="flex gap-2 overflow-x-auto pb-2" data-schedule-target="weekStrip">
+<div class="py-2 schedule-shell">
+  <div class="schedule-sticky-controls">
+    <%# Day navigation %>
+    <div class="day-strip mb-3" role="navigation" aria-label="Choose day">
       <% (0..6).each do |offset| %>
-        <button
-          type="button"
-          class="flex-1 min-w-[4rem] flex flex-col items-center py-3 px-2 rounded-xl border-2 transition-colors cursor-pointer
-                 <%= offset == 0 ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-gray-200 bg-white text-gray-700 hover:border-indigo-400' %>"
-          data-schedule-target="dayButton"
-          data-day="<%= offset %>"
-          data-action="click->schedule#selectDay"
-        >
-          <span class="text-xs font-medium uppercase tracking-wide day-label"></span>
-          <span class="text-lg font-bold day-number"></span>
-        </button>
+        <% date = Date.today + offset %>
+        <% is_active = offset == @selected_day %>
+        <%= link_to schedules_path(day: offset, city: params[:city], facility: params[:facility], activity: params[:activity]),
+              class: "btn #{is_active ? 'btn-primary' : 'btn-outline-secondary'} day-pill" do %>
+          <span class="text-uppercase small fw-semibold"><%= date.strftime("%a") %></span>
+          <span class="fw-bold"><%= date.day %></span>
+        <% end %>
       <% end %>
     </div>
-  </div>
 
-  <%# Filters %>
-  <div class="bg-gray-50 rounded-xl p-4 mb-6">
-    <h2 class="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-3">Filters</h2>
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-      <div>
-        <label class="block text-xs font-medium text-gray-500 mb-1">City</label>
-        <select
-          class="w-full rounded-lg border-gray-300 border py-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
-          data-schedule-target="cityFilter"
-          data-action="change->schedule#filter"
-        >
-          <option value="">All cities</option>
-          <% @cities.each do |city| %>
-            <option value="<%= city %>"><%= city %></option>
-          <% end %>
-        </select>
-      </div>
-      <div>
-        <label class="block text-xs font-medium text-gray-500 mb-1">Facility</label>
-        <select
-          class="w-full rounded-lg border-gray-300 border py-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
-          data-schedule-target="facilityFilter"
-          data-action="change->schedule#filter"
-        >
-          <option value="">All facilities</option>
-          <% @facilities.each do |facility| %>
-            <option value="<%= facility %>"><%= facility %></option>
-          <% end %>
-        </select>
-      </div>
-      <div>
-        <label class="block text-xs font-medium text-gray-500 mb-1">Activity</label>
-        <select
-          class="w-full rounded-lg border-gray-300 border py-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
-          data-schedule-target="activityFilter"
-          data-action="change->schedule#filter"
-        >
-          <option value="">All activities</option>
-          <% @activities.each do |activity| %>
-            <option value="<%= activity %>"><%= activity %></option>
-          <% end %>
-        </select>
+    <%# Filters %>
+    <div class="card shadow-sm border-0 mb-3">
+      <div class="card-body">
+        <%= form_with url: schedules_path, method: :get, data: { turbo_action: "replace" } do |f| %>
+          <%= hidden_field_tag :day, @selected_day %>
+
+          <div class="row g-3">
+            <div class="col-12 col-md-4">
+              <%= f.select :city,
+                    options_for_select([["All cities", ""]] + @cities.map { |c| [c, c] }, params[:city]),
+                    {},
+                    id: "city_filter",
+                    class: "form-select",
+                    onchange: "this.form.requestSubmit()" %>
+            </div>
+
+            <div class="col-12 col-md-4">
+              <%= f.select :facility,
+                    options_for_select([["All facilities", ""]] + @facilities.map { |facility| [facility, facility] }, params[:facility]),
+                    {},
+                    id: "facility_filter",
+                    class: "form-select",
+                    onchange: "this.form.requestSubmit()" %>
+            </div>
+
+            <div class="col-12 col-md-4">
+              <%= f.select :activity,
+                    options_for_select([["All activities", ""]] + @activities.map { |activity| [activity, activity] }, params[:activity]),
+                    {},
+                    id: "activity_filter",
+                    class: "form-select",
+                    onchange: "this.form.requestSubmit()" %>
+            </div>
+          </div>
+        <% end %>
       </div>
     </div>
   </div>
 
   <%# Session list %>
-  <div data-schedule-target="sessionList">
-    <p class="text-gray-400 text-sm text-center py-8">Loading sessions…</p>
+  <div class="schedule-scroll-area">
+    <% if @sessions.any? %>
+      <div class="d-grid gap-2 pb-3">
+        <% @sessions.each do |session| %>
+          <% theme = activity_theme(session[:activity]) %>
+          <article class="card shadow-sm border-0 schedule-card activity-<%= theme %>">
+            <div class="card-body p-3">
+              <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+                <span class="fs-5 fw-bold"><%= session[:time] %></span>
+                <span class="badge rounded-pill activity-badge activity-badge-<%= theme %>"><%= session[:activity] %></span>
+              </div>
+
+              <p class="mb-0 text-secondary">
+                <strong class="text-dark"><%= session[:facility] %></strong>
+                <span aria-hidden="true"> · </span>
+                <span><%= session[:city] %></span>
+              </p>
+            </div>
+          </article>
+        <% end %>
+      </div>
+    <% else %>
+      <div class="card border-0 shadow-sm">
+        <div class="card-body text-center text-secondary py-4">
+          No sessions available for the selected day and filters.
+        </div>
+      </div>
+    <% end %>
   </div>
 </div>

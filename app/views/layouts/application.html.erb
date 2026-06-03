@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title><%= content_for(:title) || "Gym Ghost" %></title>
+    <title><%= "Gym Ghost - #{content_for(:title)}" %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="application-name" content="Gym Ghost">
@@ -20,22 +20,44 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5/dist/css/bootstrap.min.css">
 
     <%# Includes all stylesheet files in app/assets/stylesheets %>
-    <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+    <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5/dist/js/bootstrap.bundle.min.js"></script>
   </head>
 
-  <body>
+  <body class="<%= authenticated? ? 'app-authenticated' : '' %>">
     <% if authenticated? %>
-      <nav class="fixed top-0 left-0 right-0 bg-white border-b border-gray-200 z-10">
-        <div class="container mx-auto px-5 h-14 flex items-center justify-between">
-          <span class="font-bold text-indigo-600 text-lg">Gym Ghost</span>
-          <%= button_to "Sign out", session_path, method: :delete,
-                        class: "text-sm text-gray-600 hover:text-red-600 transition-colors cursor-pointer bg-transparent border-0 p-0" %>
+      <nav class="navbar bg-white border-bottom sticky-top">
+        <div class="container-fluid">
+          <button class="btn btn-link p-0 text-dark" type="button" data-bs-toggle="offcanvas" data-bs-target="#navMenu" aria-controls="navMenu" aria-label="Toggle navigation menu">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <line x1="3" y1="12" x2="21" y2="12"></line>
+              <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+          </button>
+
+          <span class="navbar-brand mb-0 h5 ms-2">Gym Ghost</span>
         </div>
       </nav>
+
+      <div class="offcanvas offcanvas-end" tabindex="-1" id="navMenu" aria-labelledby="navMenuLabel">
+        <div class="offcanvas-header">
+          <h5 class="offcanvas-title" id="navMenuLabel">Menu</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+
+        <div class="offcanvas-body p-0">
+          <div class="list-group list-group-flush">
+            <%= link_to "Schedule", schedules_path, class: "list-group-item list-group-item-action", data: { bs_dismiss: "offcanvas" } %>
+            <%= link_to "Settings", "#", class: "list-group-item list-group-item-action", data: { bs_dismiss: "offcanvas" } %>
+            <%= button_to "Sign out", session_path, method: :delete, class: "list-group-item list-group-item-action text-danger text-start border-0 bg-transparent", data: { bs_dismiss: "offcanvas" } %>
+          </div>
+        </div>
+      </div>
     <% end %>
-    <main class="container mt-5">
+
+    <main class="container-fluid app-main">
       <%= yield %>
     </main>
   </body>
