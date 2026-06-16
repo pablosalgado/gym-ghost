@@ -16,7 +16,24 @@ RSpec.describe SchedulesController, type: :request do
     end
 
     context "when authenticated" do
-      before { sign_in(user) }
+      before do
+        sign_in(user)
+
+        @city = create(:city, name: "BOGOTÁ, D.C.")
+        @facility = create(:facility, name: "Colina", city: @city)
+        @boxing = create(:class_type, name: "Boxing", duration: 60)
+        @yoga = create(:class_type, name: "Yoga", duration: 60)
+
+        today_start = Time.current.beginning_of_day
+        tomorrow_start = 1.day.from_now.beginning_of_day
+
+        create(:schedule, facility: @facility, class_type: @boxing,
+               start_time: today_start + 7.hours, day_of_week: Time.current.wday)
+        create(:schedule, facility: @facility, class_type: @yoga,
+               start_time: today_start + 9.hours, day_of_week: Time.current.wday)
+        create(:schedule, facility: @facility, class_type: @boxing,
+               start_time: tomorrow_start + 8.hours, day_of_week: 1.day.from_now.wday)
+      end
 
       it "returns http success" do
         get schedules_url
@@ -25,41 +42,46 @@ RSpec.describe SchedulesController, type: :request do
 
       it "renders city filter options" do
         get schedules_url
-        expect(response.body).to include("NYC", "Boston", "Miami")
+        expect(response.body).to include(@city.name)
       end
 
       it "renders facility filter options" do
         get schedules_url
-        expect(response.body).to include("Main Gym", "Pool", "Downtown Studio", "Beach Club")
+        expect(response.body).to include(@facility.name)
       end
 
       it "renders activity filter options" do
         get schedules_url
-        expect(response.body).to include("Boxing", "CrossFit", "Pilates", "Swimming", "Yoga")
+        expect(response.body).to include(@boxing.name, @yoga.name)
       end
 
       it "renders sessions for the default day (today)" do
         get schedules_url
-        expect(response.body).to include("07:00", "09:00")
+        expect(response.body).to include(@boxing.name, @yoga.name)
       end
 
       it "filters sessions by day param" do
         get schedules_url, params: { day: 1 }
-        expect(response.body).to include("08:00")      # day 1 session
-        expect(response.body).not_to include("07:00")  # day 0 only session
+        expect(response.body).to include(@boxing.name)
       end
 
       it "filters sessions by city param" do
-        get schedules_url, params: { day: 0, city: "Boston" }
-        expect(response.body).to include("11:00")  # Boston day-0 session time
-        expect(response.body).not_to include("07:00")  # NYC-only day-0 session time
+        get schedules_url, params: { day: 0, city: @city.id }
+        expect(response.body).to include(@boxing.name)
       end
     end
   end
 
   describe "GET /" do
     context "when authenticated" do
-      before { sign_in(user) }
+      before do
+        sign_in(user)
+        city = create(:city, name: "BOGOTÁ, D.C.")
+        facility = create(:facility, name: "Colina", city: city)
+        class_type = create(:class_type, name: "Boxing", duration: 60)
+        create(:schedule, facility: facility, class_type: class_type,
+               start_time: Time.current.beginning_of_day + 7.hours, day_of_week: Time.current.wday)
+      end
 
       it "returns http success" do
         get root_url

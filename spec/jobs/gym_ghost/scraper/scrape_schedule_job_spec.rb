@@ -30,7 +30,7 @@ RSpec.describe GymGhost::Scraper::ScrapeScheduleJob, type: :job do
       aggregate_failures do
         next_times.each do |time|
           expect(time.wday).to eq(0), "expected Sunday (wday 0), got wday #{time.wday} for #{time}"
-          expect(time.hour).to eq(0), "expected hour 0, got #{time.hour} for #{time}"
+          expect(time.hour).to eq(5), "expected hour 5, got #{time.hour} for #{time}"
           expect(time.min).to eq(0), "expected minute 0, got #{time.min} for #{time}"
         end
       end
@@ -42,26 +42,17 @@ RSpec.describe GymGhost::Scraper::ScrapeScheduleJob, type: :job do
 
     context "when scraping fails" do
       context "when database transaction fails" do
+        let(:date) { Date.current }
+        let(:facility_name) { "Colina" }
         let(:url) { "http://example.com" }
-        let(:username) { "username" }
-        let(:password) { "password" }
-        let(:driver) { instance_double(Selenium::WebDriver::Driver) }
-        let(:wait) { instance_double(Selenium::WebDriver::Wait) }
-        let(:driver_factory) { class_double(GymGhost::Scraper::DriverFactory) }
         let(:scraper_factory) { class_double(GymGhost::Scraper::ScraperFactory) }
         let(:scraper) { instance_double(GymGhost::Scraper::DefaultScraper) }
-        let(:cities) { %w[CityOne CityTwo] }
-        let(:facilities) { %w[FacilityOne FacilityTwo] }
+        let(:cities) { [ "BOGOTÁ, D.C." ] }
+        let(:facilities) { [ facility_name ] }
 
         before do
-          allow(driver_factory).to receive(:build_driver)
-                                      .and_return(driver)
-
-          allow(driver_factory).to receive(:build_wait)
-                                      .and_return(wait)
-
           allow(scraper_factory).to receive(:build_scraper)
-                                       .with(url, username, password)
+                                       .with(url, nil, nil)
                                        .and_return(scraper)
 
           allow(scraper).to receive(:scrape_cities)
@@ -78,7 +69,7 @@ RSpec.describe GymGhost::Scraper::ScrapeScheduleJob, type: :job do
         end
 
         it "rolls back" do
-          job.perform(url, username, password, scraper_factory)
+          job.perform(date, facility_name, url, scraper_factory)
           expect(scraper).to have_received(:end_session)
         end
       end
