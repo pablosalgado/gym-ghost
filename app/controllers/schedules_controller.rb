@@ -1,54 +1,47 @@
 class SchedulesController < ApplicationController
-  MOCK_SESSIONS = [
-    { day_offset: 0, time: "07:00", city: "NYC",    facility: "Main Gym",       activity: "Boxing" },
-    { day_offset: 0, time: "09:00", city: "NYC",    facility: "Pool",           activity: "Swimming" },
-    { day_offset: 0, time: "11:00", city: "Boston", facility: "Downtown Studio", activity: "Yoga" },
-    { day_offset: 0, time: "13:00", city: "Miami",  facility: "Beach Club",     activity: "Pilates" },
-    { day_offset: 0, time: "07:00", city: "Miami",    facility: "Main Gym",       activity: "Boxing" },
-    { day_offset: 0, time: "09:00", city: "Boston",    facility: "Pool",           activity: "Swimming" },
-    { day_offset: 0, time: "11:00", city: "NYC", facility: "Downtown Studio", activity: "Yoga" },
-    { day_offset: 0, time: "13:00", city: "NYC",  facility: "Beach Club",     activity: "Pilates" },
-    { day_offset: 1, time: "08:00", city: "NYC",    facility: "Main Gym",       activity: "CrossFit" },
-    { day_offset: 1, time: "10:00", city: "NYC",    facility: "Pool",           activity: "Swimming" },
-    { day_offset: 1, time: "12:00", city: "Boston", facility: "Downtown Studio", activity: "Pilates" },
-    { day_offset: 1, time: "17:00", city: "Miami",  facility: "Beach Club",     activity: "Yoga" },
-    { day_offset: 2, time: "07:30", city: "NYC",    facility: "Main Gym",       activity: "Boxing" },
-    { day_offset: 2, time: "09:30", city: "Boston", facility: "Downtown Studio", activity: "CrossFit" },
-    { day_offset: 2, time: "11:30", city: "Miami",  facility: "Beach Club",     activity: "Swimming" },
-    { day_offset: 2, time: "14:00", city: "NYC",    facility: "Pool",           activity: "Yoga" },
-    { day_offset: 3, time: "08:00", city: "NYC",    facility: "Pool",           activity: "Swimming" },
-    { day_offset: 3, time: "10:00", city: "NYC",    facility: "Main Gym",       activity: "Yoga" },
-    { day_offset: 3, time: "12:00", city: "Boston", facility: "Downtown Studio", activity: "Pilates" },
-    { day_offset: 3, time: "15:00", city: "Miami",  facility: "Beach Club",     activity: "Boxing" },
-    { day_offset: 4, time: "07:00", city: "NYC",    facility: "Main Gym",       activity: "CrossFit" },
-    { day_offset: 4, time: "09:00", city: "Boston", facility: "Downtown Studio", activity: "Yoga" },
-    { day_offset: 4, time: "11:00", city: "Miami",  facility: "Beach Club",     activity: "Swimming" },
-    { day_offset: 4, time: "16:00", city: "NYC",    facility: "Pool",           activity: "Pilates" },
-    { day_offset: 5, time: "09:00", city: "NYC",    facility: "Main Gym",       activity: "Yoga" },
-    { day_offset: 5, time: "11:00", city: "NYC",    facility: "Pool",           activity: "Swimming" },
-    { day_offset: 5, time: "13:00", city: "Boston", facility: "Downtown Studio", activity: "Boxing" },
-    { day_offset: 5, time: "15:00", city: "Miami",  facility: "Beach Club",     activity: "CrossFit" },
-    { day_offset: 6, time: "10:00", city: "NYC",    facility: "Main Gym",       activity: "Pilates" },
-    { day_offset: 6, time: "12:00", city: "Boston", facility: "Downtown Studio", activity: "Swimming" },
-    { day_offset: 6, time: "14:00", city: "Miami",  facility: "Beach Club",     activity: "Yoga" },
-    { day_offset: 6, time: "16:00", city: "NYC",    facility: "Pool",           activity: "CrossFit" }
-  ].freeze
-
-  CITIES     = MOCK_SESSIONS.map { |s| s[:city] }.uniq.sort.freeze
-  FACILITIES = MOCK_SESSIONS.map { |s| s[:facility] }.uniq.sort.freeze
-  ACTIVITIES = MOCK_SESSIONS.map { |s| s[:activity] }.uniq.sort.freeze
-
   def index
+    @cities = City.includes(:facilities).where(name: GymGhost::Scraper::ScrapeScheduleJob::CITIES).order(:name).all
+    @facilities = @cities.first.facilities.order(:name)
+    @class_types = ClassType.order(:name).all
+
+    @selected_city = find_city || @cities.first
+    @selected_facility = find_facility || @facilities.first
+    @selected_class_type = find_class_type || @class_types.first
+
     @selected_day = params[:day].to_i
+    @selected_date =  Time.current + @selected_day.days
 
-    sessions = MOCK_SESSIONS.select { |s| s[:day_offset] == @selected_day }
-    sessions = sessions.select { |s| s[:city]     == params[:city]     } if params[:city].present?
-    sessions = sessions.select { |s| s[:facility] == params[:facility] } if params[:facility].present?
-    sessions = sessions.select { |s| s[:activity] == params[:activity] } if params[:activity].present?
+    @schedules = fetch_schedules
 
-    @sessions   = sessions.sort_by { |s| s[:time] }
-    @cities     = CITIES
-    @facilities = FACILITIES
-    @activities = ACTIVITIES
+    if @schedules.empty?
+      GymGhost::Scraper::ScrapeScheduleJob.perform_now(
+        @selected_date,
+        @selected_facility.name,
+        ENV.fetch("SMOKE_GYM_URL"),
+        GymGhost::Scraper::ScraperFactory
+      )
+      @schedules = fetch_schedules
+    end
+  end
+
+  private
+
+  def fetch_schedules
+    Schedule.includes(:class_type, :facility).where(
+      start_time: @selected_date.beginning_of_day..@selected_date.end_of_day,
+      facility: @selected_facility
+    ).order(:start_time)
+  end
+
+  def find_city
+    City.find(params[:city]) if params[:city].present?
+  end
+
+  def find_facility
+    Facility.find(params[:facility]) if params[:facility].present?
+  end
+
+  def find_class_type
+    ClassType.find(params[:activity]) if params[:activity].present?
   end
 end
