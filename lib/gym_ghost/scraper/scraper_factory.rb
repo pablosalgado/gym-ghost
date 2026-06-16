@@ -4,7 +4,7 @@ module GymGhost
   module Scraper
     class ScraperFactory
       def self.build_scraper(url, username, password)
-        driver = DriverFactory.build_driver
+        driver = DriverFactory.build_headless_driver
         wait = DriverFactory.build_wait
         DefaultScraper.new(url, username, password, driver: driver, wait: wait)
       end
