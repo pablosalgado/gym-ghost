@@ -30,7 +30,7 @@ RSpec.describe GymGhost::Scraper::ScrapeScheduleJob, type: :job do
       aggregate_failures do
         next_times.each do |time|
           expect(time.wday).to eq(0), "expected Sunday (wday 0), got wday #{time.wday} for #{time}"
-          expect(time.hour).to eq(0), "expected hour 0, got #{time.hour} for #{time}"
+          expect(time.hour).to eq(5), "expected hour 5, got #{time.hour} for #{time}"
           expect(time.min).to eq(0), "expected minute 0, got #{time.min} for #{time}"
         end
       end
