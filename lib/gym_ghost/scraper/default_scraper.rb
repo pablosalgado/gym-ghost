@@ -26,6 +26,10 @@ module GymGhost
         build_and_merge_location(date: date, facility: facility, city: city)
       end
 
+      def end_session
+        @driver.quit
+      end
+
       private
 
       def navigate_to_cities
@@ -49,7 +53,7 @@ module GymGhost
 
       def navigate_to_schedule(city, facility, date)
         navigate_to_facility(city, facility)
-        click_date_element(date)
+        click_date_element(date, facility)
       end
 
       def navigate_to_facility(city, facility)
@@ -125,7 +129,7 @@ module GymGhost
         driver.execute_script("arguments[0].click();", facility_element)
       end
 
-      def click_date_element(date)
+      def click_date_element(date, facility)
         xpath = "//p[contains(., '#{date}')]/parent::*"
 
         wait.until { driver.find_element(xpath: xpath) }
@@ -134,7 +138,7 @@ module GymGhost
         wait.until { date_element.displayed? && date_element.enabled? }
         driver.execute_script("arguments[0].click();", date_element)
 
-        wait.until { driver.find_element(xpath: xpath) }
+        wait.until { driver.find_element(xpath: "//span[contains(., '#{ScrapeScheduleJob::FACILITIES_CODES[facility]}')]") }
       end
     end
   end
