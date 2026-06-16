@@ -1,13 +1,9 @@
 module SchedulesHelper
-  ACTIVITY_THEMES = {
-    "Boxing" => "boxing",
-    "CrossFit" => "crossfit",
-    "Pilates" => "pilates",
-    "Swimming" => "swimming",
-    "Yoga" => "yoga"
-  }.freeze
-
-  def activity_theme(activity)
-    ACTIVITY_THEMES.fetch(activity.to_s, "default")
+  def class_type_style(name)
+    hue = (name.hash.abs * 137.508) % 360
+    {
+      card: "hsl(#{hue}, 55%, 50%)",
+      card_bg: "hsl(#{hue}, 50%, 96%)"
+    }
   end
 end
