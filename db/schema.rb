@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_17_171025) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_03_163641) do
   create_table "cities", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "name", null: false
@@ -42,7 +42,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_17_171025) do
     t.integer "day_of_week", null: false
     t.integer "facility_id", null: false
     t.boolean "is_holiday_schedule", default: false, null: false
-    t.time "start_time", null: false
+    t.datetime "start_time", null: false
     t.datetime "updated_at", null: false
     t.index ["class_type_id"], name: "index_schedules_on_class_type_id"
     t.index ["facility_id"], name: "index_schedules_on_facility_id"
