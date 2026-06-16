@@ -49,7 +49,7 @@ module GymGhost
 
       def get_and_process_facilities(scraper, city, date, facility)
         Rails.logger.debug("Scraping facilities for #{city}")
-        scraper.scrape_facilities(city).intersection([facility]).each { |facility| get_and_process_day_schedule(scraper, city, facility, date) }
+        scraper.scrape_facilities(city).intersection([ facility ]).each { |facility| get_and_process_day_schedule(scraper, city, facility, date) }
       end
 
       def get_and_process_week_schedule(scraper, city, facility)
