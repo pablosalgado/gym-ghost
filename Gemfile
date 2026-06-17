@@ -72,5 +72,5 @@ end
 
 group :test do
   # Additional matchers for common Rails test assertions [https://github.com/thoughtbot/shoulda-matchers]
-  gem "shoulda-matchers", "~> 7.0"
+  gem "shoulda-matchers", "~> 8.0"
 end
