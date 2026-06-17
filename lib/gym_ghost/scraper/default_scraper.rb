@@ -22,6 +22,8 @@ module GymGhost
       end
 
       def scrape_schedule(city, facility, date)
+        Rails.logger.debug("Scraping day schedule for City: #{city}, Facility: #{facility} and Date: #{date}")
+
         navigate_to_schedule(city, facility, date)
         build_and_merge_location(date: date, facility: facility, city: city)
       end
@@ -130,15 +132,18 @@ module GymGhost
       end
 
       def click_date_element(date, facility)
-        xpath = "//p[contains(., '#{date}')]/parent::*"
-
+        day =  I18n.l(date, format: "%b %d").capitalize
+        xpath = "//p[contains(., '#{day}')]/parent::*"
         wait.until { driver.find_element(xpath: xpath) }
 
         date_element = driver.find_element(xpath: xpath)
         wait.until { date_element.displayed? && date_element.enabled? }
         driver.execute_script("arguments[0].click();", date_element)
 
-        wait.until { driver.find_element(xpath: "//span[contains(., '#{ScrapeScheduleJob::FACILITIES_CODES[facility]}')]") }
+        full_date = I18n.l(date, format: "%A, %e de %B de %Y").downcase
+        full_date_xpath = "//span[contains(@class, 'agenda_title_date')]"
+        facility_xpath = "//span[contains(@class, 'cardBook_selectedClubText')]"
+        wait.until { driver.find_element(xpath: full_date_xpath).text == full_date && driver.find_element(xpath: facility_xpath).text == ScrapeScheduleJob::FACILITIES_CODES[facility] }
       end
     end
   end

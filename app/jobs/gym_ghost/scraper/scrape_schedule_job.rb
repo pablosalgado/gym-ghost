@@ -61,43 +61,39 @@ module GymGhost
         end
       end
 
-      def get_and_process_day_schedule(scraper, city, facility, day)
-        Rails.logger.debug("Scraping day schedule for #{city} #{facility} and #{day}")
-        formatted_day =  I18n.l(day, format: "%b %d").capitalize
-        schedule = scraper.scrape_schedule(city, facility, formatted_day)
-        process_day_schedule(schedule, day)
+      def get_and_process_day_schedule(scraper, city, facility, date)
+        Rails.logger.tagged("City: #{city}, Facility: #{facility}, Date: #{date}") do
+          schedule = scraper.scrape_schedule(city, facility, date)
+          process_day_schedule(schedule, date)
+        end
       end
 
-      def process_day_schedule(schedule, day)
+      def process_day_schedule(schedule, date)
+        Rails.logger.debug("Processing schedule: #{schedule}")
+
         ActiveRecord::Base.transaction do
           schedule.each do |item|
-            Rails.logger.debug("Processing schedule #{item} for #{day}")
             city = find_or_create_city(item[:city])
-            add_schedule_to_city(city, day, item)
+            add_schedule_to_city(city, date, item)
           end
         end
       end
 
       def find_or_create_city(city)
-        Rails.logger.debug("Finding city #{city}")
         City.find_or_create_by!(name: city)
       end
 
       def add_schedule_to_city(city, day, item)
-        Rails.logger.debug("Adding schedule to city #{city} #{day}")
-
         facility = find_or_create_facility(city, item[:facility])
         add_schedule_to_facility(facility, day, item)
       end
 
       def find_or_create_facility(city, facility)
-        Rails.logger.debug("Finding facility #{facility}")
-
         city.facilities.find_or_create_by!(name: facility)
       end
 
       def add_schedule_to_facility(facility, date, item)
-        Rails.logger.debug("Adding schedule #{item} to facility #{item[:facility]} #{date}")
+        Rails.logger.debug("Creating day schedule: #{item}")
 
         start_time = Time.zone.parse("#{date.to_date} #{item[:time]}")
         class_type = find_or_create_class_type(item[:activity])
@@ -110,8 +106,6 @@ module GymGhost
       end
 
       def find_or_create_class_type(activity)
-        Rails.logger.debug("Finding class type #{activity}")
-
         ClassType.find_or_create_by!(name: activity, duration: 60)
       end
     end
