@@ -132,29 +132,54 @@ module GymGhost
       end
 
       def click_date_element(date, facility)
-        full_date = I18n.l(Date.today, format: "%A, %e de %B de %Y").downcase
+        Rails.logger.debug("click_date_element: Starting for date=#{date}, facility=#{facility}, formatted=#{I18n.l(date, format: '%b %d').capitalize}")
+
+        today_full_date = I18n.l(Date.today, format: "%A, %e de %B de %Y").downcase
         full_date_xpath = "//span[contains(@class, 'agenda_title_date')]"
         facility_xpath = "//span[contains(@class, 'cardBook_selectedClubText')]"
-        wait.until { driver.find_element(xpath: full_date_xpath).text == full_date && driver.find_element(xpath: facility_xpath).text == ScrapeScheduleJob::FACILITIES_CODES[facility] }
+        Rails.logger.debug("click_date_element: Waiting for initial page load — title='#{today_full_date}', facility='#{ScrapeScheduleJob::FACILITIES_CODES[facility]}'")
+        wait.until { driver.find_element(xpath: full_date_xpath).text == today_full_date && driver.find_element(xpath: facility_xpath).text == ScrapeScheduleJob::FACILITIES_CODES[facility] }
+        Rails.logger.debug("click_date_element: Initial page loaded successfully")
 
         agenda_days_xpath = "//p[contains(@class, 'agenda_days_date__')]"
         wait.until { driver.find_elements(xpath: agenda_days_xpath).first }
+        Rails.logger.debug("click_date_element: Agenda days visible")
 
         formatted_day =  I18n.l(date, format: "%b %d").capitalize
         agenda_day_xpath = "//p[contains(@class, 'agenda_days_date') and text() = '#{formatted_day}']/parent::*"
         agenda_day_element = driver.find_elements(xpath: agenda_day_xpath).first
 
-        if agenda_day_element.nil?
-          next_week_xpath = "//*[local-name() = 'svg' and contains(@class, 'agenda_arrow')]"
-          next_week_element = driver.find_elements(xpath: next_week_xpath).first
-          next_week_element.click
+        if agenda_day_element
+          Rails.logger.debug("click_date_element: Date '#{formatted_day}' found on current week")
         end
 
-        agenda_day_element = wait.until { driver.find_elements(xpath: agenda_day_xpath).first }
+        next_sunday = Date.today.next_week(:monday) - 1.day
+        week_offset = 1
+
+        while agenda_day_element.nil?
+          Rails.logger.debug("click_date_element: Date '#{formatted_day}' not found, navigating to week #{week_offset}")
+          next_week_xpath = "//*[local-name() = 'svg' and contains(@class, 'agenda_arrow')]"
+          next_week_element = wait.until { driver.find_elements(xpath: next_week_xpath).last }
+          Rails.logger.debug("click_date_element: Clicking next week arrow")
+          next_week_element.click
+
+          expected_title = I18n.l(next_sunday, format: "%A, %e de %B de %Y").downcase
+          next_sunday += 7.days
+          Rails.logger.debug("click_date_element: Waiting for agenda to advance to '#{expected_title}'")
+          wait.until { driver.find_element(xpath: full_date_xpath).text == expected_title && driver.find_element(xpath: facility_xpath).text == ScrapeScheduleJob::FACILITIES_CODES[facility] }
+          Rails.logger.debug("click_date_element: Agenda advanced to week #{week_offset}")
+
+          agenda_day_element = driver.find_elements(xpath: agenda_day_xpath).first
+          week_offset += 1
+        end
+
+        Rails.logger.debug("click_date_element: Date '#{formatted_day}' found, clicking it")
         driver.execute_script("arguments[0].click();", agenda_day_element)
 
-        full_date = I18n.l(date, format: "%A, %e de %B de %Y").downcase
-        wait.until { driver.find_element(xpath: full_date_xpath).text == full_date && driver.find_element(xpath: facility_xpath).text == ScrapeScheduleJob::FACILITIES_CODES[facility] }
+        target_title = I18n.l(date, format: "%A, %e de %B de %Y").downcase
+        Rails.logger.debug("click_date_element: Verifying schedule loaded for '#{target_title}'")
+        wait.until { driver.find_element(xpath: full_date_xpath).text == target_title && driver.find_element(xpath: facility_xpath).text == ScrapeScheduleJob::FACILITIES_CODES[facility] }
+        Rails.logger.debug("click_date_element: Schedule loaded successfully for #{date}")
       end
     end
   end
