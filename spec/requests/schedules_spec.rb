@@ -69,6 +69,47 @@ RSpec.describe SchedulesController, type: :request do
         get schedules_url, params: { day: 0, city: @city.id }
         expect(response.body).to include(@boxing.name)
       end
+
+      it "filters sessions by activity param" do
+        get schedules_url, params: { day: 0, activity: @yoga.id }
+        expect(response.body).to include(@yoga.name)
+        expect(response.body).not_to include("<strong>#{@boxing.name}")
+      end
+
+      it "shows all activities when no activity param is given" do
+        get schedules_url, params: { day: 0 }
+        expect(response.body).to include(@boxing.name, @yoga.name)
+      end
+    end
+
+    context "when no schedules exist for the day" do
+      around do |example|
+        ENV["SMOKE_GYM_URL"] = "http://example.com"
+        example.run
+      ensure
+        ENV.delete("SMOKE_GYM_URL")
+      end
+
+      before do
+        sign_in(user)
+
+        @city = create(:city, name: "BOGOTÁ, D.C.")
+        @facility = create(:facility, name: "Colina", city: @city)
+        create(:class_type, name: "Boxing", duration: 60)
+
+        allow(GymGhost::Scraper::ScrapeScheduleJob).to receive(:perform_now)
+      end
+
+      it "triggers a scrape and creates a ScrapeLog" do
+        expect { get schedules_url }.to change(ScrapeLog, :count).by(1)
+        expect(GymGhost::Scraper::ScrapeScheduleJob).to have_received(:perform_now)
+      end
+
+      it "does not scrape again on a second request" do
+        get schedules_url
+        get schedules_url
+        expect(GymGhost::Scraper::ScrapeScheduleJob).to have_received(:perform_now).once
+      end
     end
   end
 

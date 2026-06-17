@@ -6,31 +6,44 @@ class SchedulesController < ApplicationController
 
     @selected_city = find_city || @cities.first
     @selected_facility = find_facility || @facilities.first
-    @selected_class_type = find_class_type || @class_types.first
+    @selected_class_type = find_class_type
 
     @selected_day = params[:day].to_i
     @selected_date =  Time.current + @selected_day.days
 
     @schedules = fetch_schedules
 
-    if @schedules.empty?
-      GymGhost::Scraper::ScrapeScheduleJob.perform_now(
-        @selected_date,
-        @selected_facility.name,
-        ENV.fetch("SMOKE_GYM_URL"),
-        GymGhost::Scraper::ScraperFactory
-      )
-      @schedules = fetch_schedules
-    end
+    scrape_if_needed if @schedules.empty?
   end
 
   private
 
+  def scrape_if_needed
+    return unless @selected_facility
+
+    date = @selected_date.to_date
+    return if ScrapeLog.exists?(facility: @selected_facility.name, date: date)
+
+    ScrapeLog.create!(facility: @selected_facility.name, date: date)
+
+    GymGhost::Scraper::ScrapeScheduleJob.perform_now(
+      date,
+      @selected_facility.name,
+      ENV.fetch("SMOKE_GYM_URL"),
+      GymGhost::Scraper::ScraperFactory
+    )
+  rescue StandardError => e
+    Rails.logger.error("Error scraping schedule: #{e}")
+    ScrapeLog.find_by(facility: @selected_facility.name, date: date)&.update!(status: "failed", error_message: e.message)
+  end
+
   def fetch_schedules
-    Schedule.includes(:class_type, :facility).where(
-      start_time: @selected_date.beginning_of_day..@selected_date.end_of_day,
-      facility: @selected_facility
-    ).order(:start_time)
+    scope = Schedule.includes(:class_type, :facility)
+    scope = scope.where(start_time: @selected_date.beginning_of_day..@selected_date.end_of_day)
+    scope = scope.where(facility: @selected_facility)
+    scope = scope.where(class_type: @selected_class_type) if @selected_class_type.present?
+    scope = scope.order(:start_time)
+    scope
   end
 
   def find_city
