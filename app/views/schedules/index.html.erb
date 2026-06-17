@@ -42,7 +42,7 @@
 
             <div class="col-12 col-md-4">
               <%= f.select :activity,
-                    options_for_select([["All activities", ""]] + @class_types.map { |activity| [activity.name, activity.id] }, @selected_class_type),
+                    options_for_select([["All activities", ""]] + @class_types.map { |activity| [activity.name, activity.id] }, @selected_class_type&.id || ""),
                     {},
                     id: "activity_filter",
                     class: "form-select",
