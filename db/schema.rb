@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_03_163641) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_16_185107) do
   create_table "cities", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "name", null: false
@@ -47,6 +47,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_03_163641) do
     t.index ["class_type_id"], name: "index_schedules_on_class_type_id"
     t.index ["facility_id"], name: "index_schedules_on_facility_id"
     t.check_constraint "day_of_week >= 0 and day_of_week <= 6"
+  end
+
+  create_table "scrape_logs", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.date "date", null: false
+    t.text "error_message"
+    t.string "facility", null: false
+    t.string "status", default: "completed", null: false
+    t.datetime "updated_at", null: false
+    t.index ["facility", "date"], name: "index_scrape_logs_on_facility_and_date", unique: true
   end
 
   create_table "sessions", force: :cascade do |t|
