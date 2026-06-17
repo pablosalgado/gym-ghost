@@ -41,7 +41,7 @@ gem "thruster", require: false
 gem "image_processing", "~> 2.0"
 
 # Use Selenium for browser-based system tests [https://github.com/SeleniumHQ/selenium]
-gem "selenium-webdriver", "~> 4.44"
+gem "selenium-webdriver", "~> 4.45"
 
 gem "rails-i18n", "~> 8.1"
 
