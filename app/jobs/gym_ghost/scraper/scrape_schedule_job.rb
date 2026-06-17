@@ -26,8 +26,6 @@ module GymGhost
       def save_schedule(date, facility, url, scraper_factory)
         scraper = scraper_factory.build_scraper(url, username = nil, password = nil)
         get_and_process_cities(scraper, date, facility)
-      rescue StandardError => e
-        Rails.logger.error("Error scraping schedule for #{url}: #{e}")
       ensure
         scraper&.end_session
       end

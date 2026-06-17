@@ -4,7 +4,7 @@
   <div class="schedule-sticky-controls">
     <%# Day navigation %>
     <div class="day-strip mb-3" role="navigation" aria-label="Choose day">
-      <% (0..6).each do |offset| %>
+      <% (0..13).each do |offset| %>
         <% date = Date.today + offset %>
         <% is_active = offset == @selected_day %>
         <%= link_to schedules_path(day: offset, city: params[:city], facility: params[:facility], activity: params[:activity]),

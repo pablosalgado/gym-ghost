@@ -126,23 +126,34 @@ module GymGhost
       end
 
       def click_facility_element(facility)
-        facility_element = driver.find_element(xpath: "//span[. = '#{facility}']")
-        wait.until { facility_element.displayed? && facility_element.enabled? }
+        facility_element_xpath = "//button/span[. = '#{facility}']"
+        facility_element = wait.until { driver.find_elements(xpath: facility_element_xpath).first }
         driver.execute_script("arguments[0].click();", facility_element)
       end
 
       def click_date_element(date, facility)
-        day =  I18n.l(date, format: "%b %d").capitalize
-        xpath = "//p[contains(., '#{day}')]/parent::*"
-        wait.until { driver.find_element(xpath: xpath) }
-
-        date_element = driver.find_element(xpath: xpath)
-        wait.until { date_element.displayed? && date_element.enabled? }
-        driver.execute_script("arguments[0].click();", date_element)
-
-        full_date = I18n.l(date, format: "%A, %e de %B de %Y").downcase
+        full_date = I18n.l(Date.today, format: "%A, %e de %B de %Y").downcase
         full_date_xpath = "//span[contains(@class, 'agenda_title_date')]"
         facility_xpath = "//span[contains(@class, 'cardBook_selectedClubText')]"
+        wait.until { driver.find_element(xpath: full_date_xpath).text == full_date && driver.find_element(xpath: facility_xpath).text == ScrapeScheduleJob::FACILITIES_CODES[facility] }
+
+        agenda_days_xpath = "//p[contains(@class, 'agenda_days_date__')]"
+        wait.until { driver.find_elements(xpath: agenda_days_xpath).first }
+
+        formatted_day =  I18n.l(date, format: "%b %d").capitalize
+        agenda_day_xpath = "//p[contains(@class, 'agenda_days_date') and text() = '#{formatted_day}']/parent::*"
+        agenda_day_element = driver.find_elements(xpath: agenda_day_xpath).first
+
+        if agenda_day_element.nil?
+          next_week_xpath = "//*[local-name() = 'svg' and contains(@class, 'agenda_arrow')]"
+          next_week_element = driver.find_elements(xpath: next_week_xpath).first
+          next_week_element.click
+        end
+
+        agenda_day_element = wait.until { driver.find_elements(xpath: agenda_day_xpath).first }
+        driver.execute_script("arguments[0].click();", agenda_day_element)
+
+        full_date = I18n.l(date, format: "%A, %e de %B de %Y").downcase
         wait.until { driver.find_element(xpath: full_date_xpath).text == full_date && driver.find_element(xpath: facility_xpath).text == ScrapeScheduleJob::FACILITIES_CODES[facility] }
       end
     end
