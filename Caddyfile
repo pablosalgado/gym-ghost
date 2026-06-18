@@ -1,0 +1,6 @@
+# Caddy automatically provisions HTTPS for localhost via its local CA.
+# Run `caddy trust` once to install the CA cert in your system keychain.
+
+localhost {
+	reverse_proxy localhost:3000
+}
