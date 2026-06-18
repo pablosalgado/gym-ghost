@@ -1,31 +1,46 @@
-# Files in the config/locales directory are used for internationalization and
-# are automatically loaded by Rails. If you want to use locales other than
-# English, add the necessary files in this directory.
-#
-# To use the locales, use `I18n.t`:
-#
-#     I18n.t "hello"
-#
-# In views, this is aliased to just `t`:
-#
-#     <%= t("hello") %>
-#
-# To use a different locale, set it with `I18n.locale`:
-#
-#     I18n.locale = :es
-#
-# This would use the information in config/locales/es.yml.
-#
-# To learn more about the API, please read the Rails Internationalization guide
-# at https://guides.rubyonrails.org/i18n.html.
-#
-# Be aware that YAML interprets the following case-insensitive strings as
-# booleans: `true`, `false`, `on`, `off`, `yes`, `no`. Therefore, these strings
-# must be quoted to be interpreted as strings. For example:
-#
-#     en:
-#       "yes": yup
-#       enabled: "ON"
-
 en:
-  hello: "Hello world"
+  schedules:
+    index:
+      page_title: "Schedule"
+      loading: "Loading schedule..."
+      choose_day: "Choose day"
+      no_sessions: "No sessions available for the selected day and filters."
+      all_activities: "All activities"
+  sessions:
+    new:
+      page_title: "Sign in"
+      email_placeholder: "Enter your email address"
+      password_placeholder: "Enter your password"
+      forgot_password: "Forgot password?"
+      sign_in: "Sign in"
+  passwords:
+    new:
+      page_title: "Forgot your password?"
+      email_placeholder: "Enter your email address"
+      submit: "Email reset instructions"
+    edit:
+      page_title: "Update your password"
+      password_placeholder: "Enter new password"
+      password_confirmation_placeholder: "Repeat new password"
+      save: "Save"
+  passwords_mailer:
+    reset:
+      subject: "Reset your password"
+      link_text: "this password reset page"
+      reset_instructions_html: "You can reset your password on %{link}. This link will expire in %{time}."
+      reset_instructions_text: "You can reset your password on:\n%{url}\n\nThis link will expire in %{time}."
+  layouts:
+    application:
+      toggle_nav: "Toggle navigation menu"
+      menu: "Menu"
+      close: "Close"
+      schedule: "Schedule"
+      settings: "Settings"
+      sign_out: "Sign out"
+  flash:
+    try_again: "Try again later."
+    invalid_credentials: "Try another email address or password."
+    reset_sent: "Password reset instructions sent (if user with that email address exists)."
+    password_reset: "Password has been reset."
+    password_mismatch: "Passwords did not match."
+    invalid_token: "Password reset link is invalid or has expired."

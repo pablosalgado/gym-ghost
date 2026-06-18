@@ -3,15 +3,15 @@
     <p class="alert alert-danger" id="alert"><%= alert %></p>
   <% end %>
 
-  <h1 class="display-6 mb-4">Forgot your password?</h1>
+  <h1 class="display-6 mb-4"><%= t(".page_title") %></h1>
 
   <%= form_with url: passwords_path do |form| %>
     <div class="mb-3">
-      <%= form.email_field :email_address, required: true, autofocus: true, autocomplete: "username", placeholder: "Enter your email address", value: params[:email_address], class: "form-control" %>
+      <%= form.email_field :email_address, required: true, autofocus: true, autocomplete: "username", placeholder: t(".email_placeholder"), value: params[:email_address], class: "form-control" %>
     </div>
 
     <div>
-      <%= form.submit "Email reset instructions", class: "btn btn-primary" %>
+      <%= form.submit t(".submit"), class: "btn btn-primary" %>
     </div>
   <% end %>
 </div>

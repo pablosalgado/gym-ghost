@@ -1,21 +1,21 @@
-<% content_for :title, "Schedule" %>
+<% content_for :title, t(".page_title") %>
 
 <div class="py-2 schedule-shell" data-controller="loading">
   <div class="schedule-loading-overlay d-none" data-loading-target="overlay">
     <div class="spinner-border text-primary" role="status">
-      <span class="visually-hidden">Loading schedule...</span>
+      <span class="visually-hidden"><%= t(".loading") %></span>
     </div>
   </div>
   <div class="schedule-sticky-controls">
     <%# Day navigation %>
-    <div class="day-strip mb-3" role="navigation" aria-label="Choose day" data-controller="day-strip">
+    <div class="day-strip mb-3" role="navigation" aria-label="<%= t(".choose_day") %>" data-controller="day-strip">
       <% (0..13).each do |offset| %>
         <% date = Date.today + offset %>
         <% is_active = offset == @selected_day %>
           <%= link_to schedules_path(day: offset, city: params[:city], facility: params[:facility], activity: params[:activity]),
                 class: "btn #{is_active ? 'btn-primary' : 'btn-outline-secondary'} day-pill",
                 data: { turbo_prefetch: false } do %>
-          <span class="text-uppercase small fw-semibold"><%= date.strftime("%a") %></span>
+          <span class="text-uppercase small fw-semibold"><%= I18n.l(date, format: "%a") %></span>
           <span class="fw-bold"><%= date.day %></span>
         <% end %>
       <% end %>
@@ -48,7 +48,7 @@
 
             <div class="col-12 col-md-4">
               <%= f.select :activity,
-                    options_for_select([["All activities", ""]] + @class_types.map { |activity| [activity.name, activity.id] }, @selected_class_type&.id || ""),
+                    options_for_select([[t(".all_activities"), ""]] + @class_types.map { |activity| [activity.name, activity.id] }, @selected_class_type&.id || ""),
                     {},
                     id: "activity_filter",
                     class: "form-select",
@@ -78,7 +78,7 @@
     <% else %>
       <div class="card border-0 shadow-sm">
         <div class="card-body text-center text-secondary py-4">
-          No sessions available for the selected day and filters.
+          <%= t(".no_sessions") %>
         </div>
       </div>
     <% end %>
