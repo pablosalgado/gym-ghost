@@ -82,11 +82,11 @@ RSpec.describe GymGhost::Scraper::DefaultScraper do
 
       allow(driver).to receive(:find_elements)
         .with(xpath: "//span[contains(@class, 'agenda_title_date')]")
-        .and_return([title_element])
+        .and_return([ title_element ])
 
       allow(driver).to receive(:find_elements)
         .with(xpath: "//span[contains(@class, 'cardBook_selectedClubText')]")
-        .and_return([facility_element])
+        .and_return([ facility_element ])
 
       allow(driver).to receive(:find_element)
         .with(xpath: "//span[contains(@class, 'agenda_title_date')]")
