@@ -80,6 +80,14 @@ RSpec.describe GymGhost::Scraper::DefaultScraper do
 
       allow(wait).to receive(:until) { |&block| block.call }
 
+      allow(driver).to receive(:find_elements)
+        .with(xpath: "//span[contains(@class, 'agenda_title_date')]")
+        .and_return([title_element])
+
+      allow(driver).to receive(:find_elements)
+        .with(xpath: "//span[contains(@class, 'cardBook_selectedClubText')]")
+        .and_return([facility_element])
+
       allow(driver).to receive(:find_element)
         .with(xpath: "//span[contains(@class, 'agenda_title_date')]")
         .and_return(title_element)
@@ -90,18 +98,18 @@ RSpec.describe GymGhost::Scraper::DefaultScraper do
 
       allow(driver).to receive(:find_elements)
         .with(xpath: "//p[contains(@class, 'agenda_days_date__')]")
-        .and_return([agenda_day_element])
+        .and_return([ agenda_day_element ])
     end
 
     context "when the date is on the current week" do
       before do
         allow(driver).to receive(:find_elements)
           .with(xpath: "//p[contains(@class, 'agenda_days_date') and text() = '#{formatted_day}']/parent::*")
-          .and_return([agenda_day_element])
+          .and_return([ agenda_day_element ])
 
         allow(driver).to receive(:find_element)
           .with(xpath: "//span[contains(@class, 'agenda_title_date')]")
-          .and_return(title_element, target_title_element)
+          .and_return(target_title_element)
       end
 
       it "clicks the date element" do
@@ -119,7 +127,7 @@ RSpec.describe GymGhost::Scraper::DefaultScraper do
         click_date_element
         expect(driver).to have_received(:find_element)
           .with(xpath: "//span[contains(@class, 'agenda_title_date')]")
-          .at_least(:twice)
+          .once
       end
     end
 
@@ -134,15 +142,15 @@ RSpec.describe GymGhost::Scraper::DefaultScraper do
 
         allow(driver).to receive(:find_elements)
           .with(xpath: "//p[contains(@class, 'agenda_days_date') and text() = '#{formatted_day}']/parent::*")
-          .and_return([], [agenda_day_element])
+          .and_return([], [ agenda_day_element ])
 
         allow(driver).to receive(:find_elements)
           .with(xpath: "//*[local-name() = 'svg' and contains(@class, 'agenda_arrow')]")
-          .and_return([next_week_arrow])
+          .and_return([ next_week_arrow ])
 
         allow(driver).to receive(:find_element)
           .with(xpath: "//span[contains(@class, 'agenda_title_date')]")
-          .and_return(title_element, next_sunday_element, target_title_element)
+          .and_return(next_sunday_element, target_title_element)
       end
 
       it "clicks the next week arrow" do
@@ -159,7 +167,7 @@ RSpec.describe GymGhost::Scraper::DefaultScraper do
         click_date_element
         expect(driver).to have_received(:find_element)
           .with(xpath: "//span[contains(@class, 'agenda_title_date')]")
-          .exactly(3).times
+          .exactly(2).times
       end
     end
 
@@ -177,15 +185,15 @@ RSpec.describe GymGhost::Scraper::DefaultScraper do
 
         allow(driver).to receive(:find_elements)
           .with(xpath: "//p[contains(@class, 'agenda_days_date') and text() = '#{formatted_day}']/parent::*")
-          .and_return([], [], [agenda_day_element])
+          .and_return([], [], [ agenda_day_element ])
 
         allow(driver).to receive(:find_elements)
           .with(xpath: "//*[local-name() = 'svg' and contains(@class, 'agenda_arrow')]")
-          .and_return([next_week_arrow], [next_week_arrow])
+          .and_return([ next_week_arrow ], [ next_week_arrow ])
 
         allow(driver).to receive(:find_element)
           .with(xpath: "//span[contains(@class, 'agenda_title_date')]")
-          .and_return(title_element, first_sunday_element, second_sunday_element, target_title_element)
+          .and_return(first_sunday_element, second_sunday_element, target_title_element)
       end
 
       it "clicks the next week arrow twice" do
@@ -202,7 +210,7 @@ RSpec.describe GymGhost::Scraper::DefaultScraper do
         click_date_element
         expect(driver).to have_received(:find_element)
           .with(xpath: "//span[contains(@class, 'agenda_title_date')]")
-          .exactly(4).times
+          .exactly(3).times
       end
     end
   end
