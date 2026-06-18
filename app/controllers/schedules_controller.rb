@@ -13,7 +13,10 @@ class SchedulesController < ApplicationController
 
     @schedules = fetch_schedules
 
-    scrape_if_needed if @schedules.empty?
+    if @schedules.empty?
+      scrape_if_needed
+      @schedules = fetch_schedules
+    end
   end
 
   private
