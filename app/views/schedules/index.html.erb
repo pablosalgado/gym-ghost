@@ -30,7 +30,7 @@
           <div class="row g-3">
             <div class="col-12 col-md-4">
               <%= f.select :city,
-                    options_for_select([["All cities", ""]] + @cities.map { |city| [city.name, city.id] }, @selected_city.id),
+                    options_for_select(@cities.map { |city| [city.name, city.id] }, @selected_city.id),
                     {},
                     id: "city_filter",
                     class: "form-select",
