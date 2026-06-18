@@ -3,7 +3,7 @@
 <div class="py-2 schedule-shell">
   <div class="schedule-sticky-controls">
     <%# Day navigation %>
-    <div class="day-strip mb-3" role="navigation" aria-label="Choose day">
+    <div class="day-strip mb-3" role="navigation" aria-label="Choose day" data-controller="day-strip">
       <% (0..13).each do |offset| %>
         <% date = Date.today + offset %>
         <% is_active = offset == @selected_day %>
