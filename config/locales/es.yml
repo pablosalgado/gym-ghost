@@ -5,7 +5,7 @@ es:
       loading: "Cargando horario..."
       choose_day: "Elegir día"
       no_sessions: "No hay sesiones disponibles para el día y filtros seleccionados."
-      all_activities: "Todas las actividades"
+      all_activities: "Todas las modalidades"
   sessions:
     new:
       page_title: "Iniciar sesión"
@@ -37,6 +37,11 @@ es:
       schedule: "Horarios"
       settings: "Ajustes"
       sign_out: "Cerrar sesión"
+  settings:
+    show:
+      page_title: "Ajustes"
+      description: "Escanea el sitio web externo para descubrir nuevas ciudades y sedes."
+      scrape_button: "Escanear ubicaciones"
   flash:
     try_again: "Intenta de nuevo más tarde."
     invalid_credentials: "Correo electrónico o contraseña incorrectos."
@@ -44,3 +49,4 @@ es:
     password_reset: "Contraseña actualizada."
     password_mismatch: "Las contraseñas no coinciden."
     invalid_token: "El enlace de recuperación no es válido o ha expirado."
+    locations_scraping_started: "Escaneando ubicaciones. Las nuevas sedes aparecerán en unos momentos."
