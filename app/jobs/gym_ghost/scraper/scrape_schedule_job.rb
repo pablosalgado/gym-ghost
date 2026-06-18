@@ -3,10 +3,19 @@ module GymGhost
     class ScrapeScheduleJob < ApplicationJob
       CITIES = [ "BOGOTÁ, D.C." ].freeze
       FACILITIES_CODES = {
+        "Atlantis" => "Atlantis",
+        "C.C Multiplaza - La Felicidad" => "CCLaFelicidad",
         "C.C Parque La Colina" => "CCColina",
-        "Colina" => "Colina",
         "Cedro Bolivar" => "CedroBolivar",
-        "Corporate Center" => "HotelMarriotSalitre"
+        "Colina" => "Colina",
+        "Connecta 26" => "Connecta26",
+        "Connecta 80" => "Connecta80",
+        "Corporate Center" => "HotelMarriotSalitre",
+        "El Edén" => "ElEden",
+        "Éxito Chapinero" => "ExitoChapinero",
+        "Park1433" => "Park",
+        "Pepe Sierra" => "PepeSierra",
+        "Santafe Bogota" => "Santafe"
       }.freeze
 
       queue_as :default

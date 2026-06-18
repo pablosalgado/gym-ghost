@@ -11,6 +11,10 @@ Rails.application.routes.draw do
   get "manifest" => "rails/pwa#manifest", as: :pwa_manifest, defaults: { format: :json }
   get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker, defaults: { format: :js }
 
+  resource :settings, only: [ :show ] do
+    post :scrape_locations, on: :collection
+  end
+
   resources :schedules, only: [ :index ]
 
   root "schedules#index"

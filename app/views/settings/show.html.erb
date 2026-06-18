@@ -1,0 +1,7 @@
+<% content_for :title, t(".page_title") %>
+
+<h1 class="display-6 mb-4"><%= t(".page_title") %></h1>
+
+<p class="text-body-secondary"><%= t(".description") %></p>
+
+<%= button_to t(".scrape_button"), scrape_locations_settings_path, method: :post, class: "btn btn-primary" %>

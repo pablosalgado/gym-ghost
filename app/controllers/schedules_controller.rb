@@ -1,6 +1,15 @@
 class SchedulesController < ApplicationController
   def index
-    @cities = City.includes(:facilities).where(name: GymGhost::Scraper::ScrapeScheduleJob::CITIES).order(:name).all
+    @cities = City.includes(:facilities)
+                  .where(name: GymGhost::Scraper::ScrapeScheduleJob::CITIES)
+                  .order(:name)
+                  .all
+
+    GymGhost::Scraper::ScrapeLocationsJob.perform_now(
+      ENV.fetch("SMOKE_GYM_URL"),
+      GymGhost::Scraper::ScraperFactory
+    ) if @cities.empty?
+
     @facilities = @cities.first.facilities.order(:name)
     @class_types = ClassType.order(:name).all
 
