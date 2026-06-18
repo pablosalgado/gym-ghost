@@ -69,7 +69,8 @@ RSpec.describe GymGhost::Scraper::ScrapeScheduleJob, type: :job do
         end
 
         it "rolls back" do
-          job.perform(date, facility_name, url, scraper_factory)
+          expect { job.perform(date, facility_name, url, scraper_factory) }
+            .to raise_error(ActiveRecord::RecordInvalid)
           expect(scraper).to have_received(:end_session)
         end
       end
