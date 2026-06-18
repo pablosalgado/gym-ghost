@@ -12,8 +12,9 @@
       <% (0..13).each do |offset| %>
         <% date = Date.today + offset %>
         <% is_active = offset == @selected_day %>
-        <%= link_to schedules_path(day: offset, city: params[:city], facility: params[:facility], activity: params[:activity]),
-              class: "btn #{is_active ? 'btn-primary' : 'btn-outline-secondary'} day-pill" do %>
+          <%= link_to schedules_path(day: offset, city: params[:city], facility: params[:facility], activity: params[:activity]),
+                class: "btn #{is_active ? 'btn-primary' : 'btn-outline-secondary'} day-pill",
+                data: { turbo_prefetch: false } do %>
           <span class="text-uppercase small fw-semibold"><%= date.strftime("%a") %></span>
           <span class="fw-bold"><%= date.day %></span>
         <% end %>
