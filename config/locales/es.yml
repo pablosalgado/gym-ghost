@@ -1,2 +1,46 @@
 es:
-  hello: "Hola mundo"
+  schedules:
+    index:
+      page_title: "Horarios"
+      loading: "Cargando horario..."
+      choose_day: "Elegir día"
+      no_sessions: "No hay sesiones disponibles para el día y filtros seleccionados."
+      all_activities: "Todas las actividades"
+  sessions:
+    new:
+      page_title: "Iniciar sesión"
+      email_placeholder: "Ingresa tu correo electrónico"
+      password_placeholder: "Ingresa tu contraseña"
+      forgot_password: "¿Olvidaste tu contraseña?"
+      sign_in: "Iniciar sesión"
+  passwords:
+    new:
+      page_title: "¿Olvidaste tu contraseña?"
+      email_placeholder: "Ingresa tu correo electrónico"
+      submit: "Enviar instrucciones de recuperación"
+    edit:
+      page_title: "Actualizar tu contraseña"
+      password_placeholder: "Ingresa tu nueva contraseña"
+      password_confirmation_placeholder: "Repite tu nueva contraseña"
+      save: "Guardar"
+  passwords_mailer:
+    reset:
+      subject: "Restablece tu contraseña"
+      link_text: "esta página de recuperación"
+      reset_instructions_html: "Puedes restablecer tu contraseña en %{link}. Este enlace expirará en %{time}."
+      reset_instructions_text: "Puedes restablecer tu contraseña en: %{url}\n\nEste enlace expirará en %{time}."
+  layouts:
+    application:
+      toggle_nav: "Abrir menú de navegación"
+      menu: "Menú"
+      close: "Cerrar"
+      schedule: "Horarios"
+      settings: "Ajustes"
+      sign_out: "Cerrar sesión"
+  flash:
+    try_again: "Intenta de nuevo más tarde."
+    invalid_credentials: "Correo electrónico o contraseña incorrectos."
+    reset_sent: "Instrucciones de recuperación enviadas (si el correo existe en nuestros registros)."
+    password_reset: "Contraseña actualizada."
+    password_mismatch: "Las contraseñas no coinciden."
+    invalid_token: "El enlace de recuperación no es válido o ha expirado."
