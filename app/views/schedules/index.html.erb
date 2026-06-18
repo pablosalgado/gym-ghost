@@ -39,7 +39,7 @@
 
             <div class="col-12 col-md-4">
               <%= f.select :facility,
-                    options_for_select([["All facilities", ""]] + @facilities.map { |facility| [facility.name, facility.id] }, @selected_facility.id),
+                    options_for_select(@facilities.map { |facility| [facility.name, facility.id] }, @selected_facility.id),
                     {},
                     id: "facility_filter",
                     class: "form-select",
