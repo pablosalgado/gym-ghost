@@ -11,7 +11,7 @@ module GymGhost
       private
 
       def save_locations(url, scraper_factory)
-        scraper = scraper_factory.build_scraper(url, nil, nil)
+        scraper = scraper_factory.build_scraper(url)
         cities = scraper.scrape_cities
         cities.each { |city| process_city(scraper, city) }
       ensure

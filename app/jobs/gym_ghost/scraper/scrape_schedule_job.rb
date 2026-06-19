@@ -33,7 +33,7 @@ module GymGhost
       private
 
       def save_schedule(date, facility, url, scraper_factory)
-        scraper = scraper_factory.build_scraper(url, username = nil, password = nil)
+        scraper = scraper_factory.build_scraper(url)
         get_and_process_cities(scraper, date, facility)
       ensure
         scraper&.end_session

@@ -58,6 +58,184 @@ RSpec.describe GymGhost::Scraper::DefaultScraper do
     end
   end
 
+  describe "#login" do
+    let(:email_element) { instance_double(Selenium::WebDriver::Element) }
+    let(:password_element) { instance_double(Selenium::WebDriver::Element) }
+    let(:submit_element) { instance_double(Selenium::WebDriver::Element) }
+    let(:close_button) { instance_double(Selenium::WebDriver::Element) }
+    let(:login_element) { instance_double(Selenium::WebDriver::Element) }
+
+    before do
+      allow(driver).to receive(:get)
+      allow(driver).to receive(:execute_script)
+      allow(wait).to receive(:until) { |&block| block.call }
+
+      allow(driver).to receive(:find_element)
+        .with(xpath: "//button[@aria-label = 'Cerrar']")
+        .and_return(close_button)
+      allow(close_button).to receive(:click)
+
+      allow(driver).to receive(:find_elements)
+        .with(xpath: "//p[. = 'Inicia sesión']/parent::*")
+        .and_return([ login_element ])
+
+      allow(driver).to receive(:find_elements)
+        .with(:xpath, "//input[@type = 'email']")
+        .and_return([ email_element ])
+      allow(email_element).to receive(:send_keys)
+
+      allow(driver).to receive(:find_elements)
+        .with(:xpath, "//input[@type = 'password']")
+        .and_return([ password_element ])
+      allow(password_element).to receive(:send_keys)
+
+      allow(driver).to receive(:find_elements)
+        .with(:xpath, "//button[@type = 'submit']")
+        .and_return([ submit_element ])
+      allow(submit_element).to receive(:click)
+    end
+
+    it "closes the facility dialog and navigates to login" do
+      scraper.login
+      expect(driver).to have_received(:find_element)
+        .with(xpath: "//button[@aria-label = 'Cerrar']")
+      expect(close_button).to have_received(:click)
+      expect(driver).to have_received(:find_elements)
+        .with(xpath: "//p[. = 'Inicia sesión']/parent::*")
+      expect(driver).to have_received(:execute_script).with("arguments[0].click();", login_element)
+    end
+
+    it "fills in the email field" do
+      scraper.login
+      expect(driver).to have_received(:find_elements)
+        .with(:xpath, "//input[@type = 'email']")
+      expect(email_element).to have_received(:send_keys).with(username)
+    end
+
+    it "fills in the password field" do
+      scraper.login
+      expect(driver).to have_received(:find_elements)
+        .with(:xpath, "//input[@type = 'password']")
+      expect(password_element).to have_received(:send_keys).with(password)
+    end
+
+    it "submits the login form" do
+      scraper.login
+      expect(driver).to have_received(:find_elements)
+        .with(:xpath, "//button[@type = 'submit']")
+      expect(submit_element).to have_received(:click)
+    end
+
+    context "when username is nil" do
+      let(:username) { nil }
+
+      it "returns early without interacting with the page" do
+        scraper.login
+        expect(driver).not_to have_received(:find_element)
+          .with(xpath: "//button[@aria-label = 'Cerrar']")
+      end
+    end
+
+    context "when password is nil" do
+      let(:password) { nil }
+
+      it "returns early without interacting with the page" do
+        scraper.login
+        expect(driver).not_to have_received(:find_element)
+          .with(xpath: "//button[@aria-label = 'Cerrar']")
+      end
+    end
+
+    context "when both username and password are nil" do
+      let(:username) { nil }
+      let(:password) { nil }
+
+      it "returns early without interacting with the page" do
+        scraper.login
+        expect(driver).not_to have_received(:find_element)
+          .with(xpath: "//button[@aria-label = 'Cerrar']")
+      end
+    end
+
+    context "when the email input is not found" do
+      before do
+        allow(driver).to receive(:find_elements)
+          .with(:xpath, "//input[@type = 'email']")
+          .and_return([])
+
+        allow(wait).to receive(:until) { raise Selenium::WebDriver::Error::TimeoutError }
+      end
+
+      it "raises TimeoutError on nil" do
+        expect { scraper.login }.to raise_error(Selenium::WebDriver::Error::TimeoutError)
+      end
+    end
+
+    context "when the password input is not found" do
+      before do
+        allow(driver).to receive(:find_elements)
+          .with(:xpath, "//input[@type = 'password']")
+          .and_return([])
+
+        allow(wait).to receive(:until) { raise Selenium::WebDriver::Error::TimeoutError }
+      end
+
+      it "raises TimeoutError on nil" do
+        expect { scraper.login }.to raise_error(Selenium::WebDriver::Error::TimeoutError)
+      end
+    end
+
+    context "when the submit button is not found" do
+      before do
+        allow(driver).to receive(:find_elements)
+          .with(:xpath, "//button[@type = 'submit']")
+          .and_return([])
+
+        allow(wait).to receive(:until) { raise Selenium::WebDriver::Error::TimeoutError }
+      end
+
+      it "raises TimeoutError on nil" do
+        expect { scraper.login }.to raise_error(Selenium::WebDriver::Error::TimeoutError)
+      end
+    end
+  end
+
+  describe "#navigate_to_login" do
+    subject(:navigate_to_login) { scraper.send(:navigate_to_login) }
+
+    let(:close_button) { instance_double(Selenium::WebDriver::Element) }
+    let(:login_element) { instance_double(Selenium::WebDriver::Element) }
+
+    before do
+      allow(driver).to receive(:get)
+      allow(driver).to receive(:execute_script)
+      allow(wait).to receive(:until) { |&block| block.call }
+
+      allow(driver).to receive(:find_element)
+        .with(xpath: "//button[@aria-label = 'Cerrar']")
+        .and_return(close_button)
+      allow(close_button).to receive(:click)
+
+      allow(driver).to receive(:find_elements)
+        .with(xpath: "//p[. = 'Inicia sesión']/parent::*")
+        .and_return([ login_element ])
+    end
+
+    it "closes the facility popup" do
+      navigate_to_login
+      expect(driver).to have_received(:find_element)
+        .with(xpath: "//button[@aria-label = 'Cerrar']")
+      expect(close_button).to have_received(:click)
+    end
+
+    it "clicks the login button" do
+      navigate_to_login
+      expect(driver).to have_received(:find_elements)
+        .with(xpath: "//p[. = 'Inicia sesión']/parent::*")
+      expect(driver).to have_received(:execute_script).with("arguments[0].click();", login_element)
+    end
+  end
+
   describe "#click_date_element" do
     subject(:click_date_element) { scraper.send(:click_date_element, date, facility) }
 

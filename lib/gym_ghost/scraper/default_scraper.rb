@@ -32,6 +32,27 @@ module GymGhost
         @driver.quit
       end
 
+      def login
+        return if @username.nil? || @password.nil?
+
+        navigate_to_login
+
+        email_xpath = "//input[@type = 'email']"
+        password_xpath = "//input[@type = 'password']"
+
+        email_element = wait.until { driver.find_elements(:xpath, email_xpath).first }
+        password_element = wait.until { driver.find_elements(:xpath, password_xpath).first }
+
+        email_element.send_keys(@username)
+        password_element.send_keys(@password)
+
+        submit_xpath = "//button[@type = 'submit']"
+        submit_button = wait.until { driver.find_elements(:xpath, submit_xpath).first }
+        submit_button.click
+
+        puts submit_xpath
+      end
+
       private
 
       def navigate_to_cities
@@ -208,6 +229,15 @@ module GymGhost
         Rails.logger.debug("click_date_element: Verifying schedule loaded for '#{target_title}'")
         wait.until { driver.find_element(xpath: title_xpath).text == target_title && driver.find_element(xpath: facility_xpath).text == ScrapeScheduleJob::FACILITIES_CODES[facility] }
         Rails.logger.debug("click_date_element: Schedule loaded successfully for #{date}")
+      end
+
+      def navigate_to_login
+        close_facility_xpath = "//button[@aria-label = 'Cerrar']"
+        driver.find_element(xpath: close_facility_xpath).click
+
+        login_xpath = "//p[. = 'Inicia sesión']/parent::*"
+        login_element = wait.until { driver.find_elements(xpath: login_xpath).first }
+        click_element(login_element)
       end
     end
   end
