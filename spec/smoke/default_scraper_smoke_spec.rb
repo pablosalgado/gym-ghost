@@ -3,11 +3,10 @@
 # Smoke tests hit the REAL website and are excluded from the normal test suite.
 #
 # Run with:
-#   SMOKE_GYM_URL=https://... SMOKE_GYM_USERNAME=you@example.com SMOKE_GYM_PASSWORD=secret \
-#     bundle exec rspec spec/smoke --tag smoke --format documentation
+#   bundle exec rspec spec/smoke --tag smoke --format documentation
 #
 # Or via Rake:
-#   SMOKE_GYM_URL=... SMOKE_GYM_USERNAME=... SMOKE_GYM_PASSWORD=... bundle exec rake spec:smoke
+#   bundle exec rake spec:smoke
 
 require "rails_helper"
 require "gym_ghost/scraper/base"
@@ -20,9 +19,9 @@ RSpec.describe GymGhost::Scraper::DefaultScraper, :smoke do
 
   subject(:scraper) do
     described_class.new(
-      ENV.fetch("SMOKE_GYM_URL"),
-      ENV.fetch("SMOKE_GYM_USERNAME"),
-      ENV.fetch("SMOKE_GYM_PASSWORD"),
+      Rails.application.credentials.dig(:gym, :url),
+      Rails.application.credentials.dig(:gym, :username),
+      Rails.application.credentials.dig(:gym, :password),
       driver: driver,
       wait: wait
     )
@@ -62,11 +61,17 @@ RSpec.describe GymGhost::Scraper::DefaultScraper, :smoke do
 
   describe "#scrape_schedule" do
     it "returns a non-empty array of hashes" do
-      schedule = scraper.scrape_schedule("BOGOTÁ, D.C.", "Colina", I18n.l(Date.today, format: "%b %d").capitalize)
+      schedule = scraper.scrape_schedule("BOGOTÁ, D.C.", "Colina", Date.today)
 
       expect(schedule).to be_an(Array)
       expect(schedule).not_to be_empty
       expect(schedule).to all(be_a(Hash) & be_truthy)
+    end
+  end
+
+  describe "#login" do
+    it "logs in successfully with valid credentials" do
+      expect(scraper.login).to be true
     end
   end
 end

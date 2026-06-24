@@ -129,20 +129,16 @@ RSpec.describe GymGhost::Scraper::DefaultScraper do
     context "when username is nil" do
       let(:username) { nil }
 
-      it "returns early without interacting with the page" do
-        scraper.login
-        expect(driver).not_to have_received(:find_element)
-          .with(xpath: "//button[@aria-label = 'Cerrar']")
+      it "raises MissingCredentialsError" do
+        expect { scraper.login }.to raise_error(GymGhost::Scraper::MissingCredentialsError)
       end
     end
 
     context "when password is nil" do
       let(:password) { nil }
 
-      it "returns early without interacting with the page" do
-        scraper.login
-        expect(driver).not_to have_received(:find_element)
-          .with(xpath: "//button[@aria-label = 'Cerrar']")
+      it "raises MissingCredentialsError" do
+        expect { scraper.login }.to raise_error(GymGhost::Scraper::MissingCredentialsError)
       end
     end
 
@@ -150,10 +146,8 @@ RSpec.describe GymGhost::Scraper::DefaultScraper do
       let(:username) { nil }
       let(:password) { nil }
 
-      it "returns early without interacting with the page" do
-        scraper.login
-        expect(driver).not_to have_received(:find_element)
-          .with(xpath: "//button[@aria-label = 'Cerrar']")
+      it "raises MissingCredentialsError" do
+        expect { scraper.login }.to raise_error(GymGhost::Scraper::MissingCredentialsError)
       end
     end
 

@@ -15,6 +15,10 @@ module GymGhost
         driver.get(url)
       end
 
+      def end_session
+        @driver.quit
+      end
+
       def self.gym_id = raise NotImplementedError, "#{self} must implement .gym_id"
       def self.register! = raise NotImplementedError, "#{self} must implement .register!"
       def end_session = @driver.quit

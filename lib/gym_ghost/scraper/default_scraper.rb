@@ -28,12 +28,8 @@ module GymGhost
         build_and_merge_location(date: date, facility: facility, city: city)
       end
 
-      def end_session
-        @driver.quit
-      end
-
       def login
-        return if @username.nil? || @password.nil?
+        raise GymGhost::Scraper::MissingCredentialsError if @username.nil? || @password.nil?
 
         navigate_to_login
 
@@ -50,7 +46,7 @@ module GymGhost
         submit_button = wait.until { driver.find_elements(:xpath, submit_xpath).first }
         submit_button.click
 
-        puts submit_xpath
+        true
       end
 
       private
@@ -91,7 +87,7 @@ module GymGhost
       end
 
       def click_change_facility_button
-        driver.get(url)
+        # driver.get(url)
         button = driver.find_element(xpath: "//button[contains(., 'Cambiar de sede')]")
         wait.until { button.displayed? && button.enabled? }
         button.click

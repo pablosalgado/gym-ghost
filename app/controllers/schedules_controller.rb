@@ -6,7 +6,7 @@ class SchedulesController < ApplicationController
                   .all
 
     GymGhost::Scraper::ScrapeLocationsJob.perform_now(
-      ENV.fetch("SMOKE_GYM_URL"),
+      Rails.application.credentials.dig(:gym, :url),
       GymGhost::Scraper::ScraperFactory
     ) if @cities.empty?
 
@@ -41,7 +41,7 @@ class SchedulesController < ApplicationController
     GymGhost::Scraper::ScrapeScheduleJob.perform_now(
       date,
       @selected_facility.name,
-      ENV.fetch("SMOKE_GYM_URL"),
+      Rails.application.credentials.dig(:gym, :url),
       GymGhost::Scraper::ScraperFactory
     )
   rescue StandardError => e
