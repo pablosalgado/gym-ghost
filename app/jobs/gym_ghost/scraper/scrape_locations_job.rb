@@ -3,7 +3,7 @@ module GymGhost
     class ScrapeLocationsJob < ApplicationJob
       queue_as :default
 
-      def perform(url = ENV["SMOKE_GYM_URL"], scraper_factory = ScraperFactory)
+      def perform(url = Rails.application.credentials.dig(:gym, :url), scraper_factory = ScraperFactory)
         Rails.logger.info("Scraping locations for #{url}")
         save_locations(url, scraper_factory)
       end
@@ -11,7 +11,7 @@ module GymGhost
       private
 
       def save_locations(url, scraper_factory)
-        scraper = scraper_factory.build_scraper(url, nil, nil)
+        scraper = scraper_factory.build_scraper(url)
         cities = scraper.scrape_cities
         cities.each { |city| process_city(scraper, city) }
       ensure

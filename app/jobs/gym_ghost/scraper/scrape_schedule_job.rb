@@ -20,7 +20,7 @@ module GymGhost
 
       queue_as :default
 
-      def perform(date, facility, url = ENV["SMOKE_GYM_URL"], scraper_factory = ScraperFactory)
+      def perform(date, facility, url = Rails.application.credentials.dig(:gym, :url), scraper_factory = ScraperFactory)
         Rails.logger.info("Scraping schedule for #{url}")
         save_schedule(date, facility, url, scraper_factory)
       end
@@ -33,7 +33,7 @@ module GymGhost
       private
 
       def save_schedule(date, facility, url, scraper_factory)
-        scraper = scraper_factory.build_scraper(url, username = nil, password = nil)
+        scraper = scraper_factory.build_scraper(url)
         get_and_process_cities(scraper, date, facility)
       ensure
         scraper&.end_session
