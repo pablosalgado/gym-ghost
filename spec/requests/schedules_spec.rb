@@ -83,13 +83,6 @@ RSpec.describe SchedulesController, type: :request do
     end
 
     context "when no schedules exist for the day" do
-      around do |example|
-        ENV["SMOKE_GYM_URL"] = "http://example.com"
-        example.run
-      ensure
-        ENV.delete("SMOKE_GYM_URL")
-      end
-
       before do
         sign_in(user)
 

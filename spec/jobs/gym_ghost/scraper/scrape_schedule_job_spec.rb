@@ -52,7 +52,7 @@ RSpec.describe GymGhost::Scraper::ScrapeScheduleJob, type: :job do
 
         before do
           allow(scraper_factory).to receive(:build_scraper)
-                                       .with(url, nil, nil)
+                                       .with(url)
                                        .and_return(scraper)
 
           allow(scraper).to receive(:scrape_cities)

@@ -11,6 +11,12 @@ module GymGhost
         @password = password
         @driver = driver
         @wait = wait
+
+        driver.get(url)
+      end
+
+      def end_session
+        @driver.quit
       end
 
       def self.gym_id = raise NotImplementedError, "#{self} must implement .gym_id"
@@ -19,6 +25,7 @@ module GymGhost
       def scrape_cities = raise NotImplementedError, "#{self.class} must implement #scrape_cities"
       def scrape_facilities = raise NotImplementedError, "#{self.class} must implement #scrape_facilities"
       def scrape_schedule = raise NotImplementedError, "#{self.class} must implement #scrape_schedule"
+      def login = raise NotImplementedError, "#{self.class} must implement #login"
     end
   end
 end
