@@ -55,7 +55,8 @@ class SchedulesController < ApplicationController
 
   def fetch_schedules
     scope = Schedule.includes(:class_type, :facility)
-    scope = scope.where(start_time: @selected_date.beginning_of_day..@selected_date.end_of_day)
+    lower_bound = @selected_day == 0 ? Time.current : @selected_date.beginning_of_day
+    scope = scope.where(start_time: lower_bound..@selected_date.end_of_day)
     scope = scope.where(facility: @selected_facility)
     scope = scope.where(class_type: @selected_class_type) if @selected_class_type.present?
     scope = scope.order(:start_time)
