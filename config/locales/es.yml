@@ -6,6 +6,9 @@ es:
       choose_day: "Elegir día"
       no_sessions: "No hay sesiones disponibles para el día y filtros seleccionados."
       all_activities: "Todas las modalidades"
+      status_programmed: "Programada"
+      status_reserved: "Reservada"
+      status_failed: "Fallida"
   sessions:
     new:
       page_title: "Iniciar sesión"

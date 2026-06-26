@@ -6,6 +6,9 @@ en:
       choose_day: "Choose day"
       no_sessions: "No sessions available for the selected day and filters."
       all_activities: "All activities"
+      status_programmed: "Programmed"
+      status_reserved: "Reserved"
+      status_failed: "Failed"
   sessions:
     new:
       page_title: "Sign in"
