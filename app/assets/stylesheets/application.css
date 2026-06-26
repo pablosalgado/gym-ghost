@@ -87,8 +87,37 @@ body {
   box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.25);
 }
 
-.schedule-card.programmed {
+.schedule-card.card-programmed {
+  box-shadow: 0 0 0 1px #0d6efd;
+}
+
+.schedule-card.card-reserved {
   box-shadow: 0 0 0 1px #198754;
+}
+
+.schedule-card.card-failed {
+  box-shadow: 0 0 0 1px #dc3545;
+}
+
+.status-icon {
+  opacity: 0.2;
+  color: #6c757d;
+  transition: opacity 0.2s ease;
+}
+
+.status-icon.active-programmed {
+  opacity: 1;
+  color: #0d6efd;
+}
+
+.status-icon.active-reserved {
+  opacity: 1;
+  color: #198754;
+}
+
+.status-icon.active-failed {
+  opacity: 1;
+  color: #dc3545;
 }
 
 .activity-badge {
