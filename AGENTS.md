@@ -19,18 +19,31 @@
 - Prefer short, single-purpose methods
 - Use `Time.zone` helpers over raw `Time`
 
+## Workflow (mandatory, in order)
+
+Phases:
+- **Discussion** — Questions, proposals, "what do you think?" → conversation only, no issues or branches.
+- **Work** — An explicit go-ahead ("yes, implement it", "go ahead", "let's do it", or a direct instruction to build something). This triggers the sequence below.
+
+When in **work** phase, follow this exact order:
+
+1. **Issue first** — Create a GitHub issue before writing any code. Issues are descriptive, minimal, and actionable.
+2. **Branch second** — Create a feature branch before editing any file. Never edit on `main`.
+3. **Work third** — Implement on the branch, committing as you go.
+4. **Show** — Present the result for review.
+5. **PR on go-ahead** — Only open a PR when I explicitly say so.
+
 ## Git
-- Protected `main` — work in feature branches, PR via GitHub
-- No commits directly to any branch
+- Never commit or edit on `main`. Always branch first, before touching any file. If you land on `main` when a task starts, the first step is `git checkout -b <branch>`.
 - Branch naming: `fix/short-description`, `feat/short-description`, `chore/short-description`
 
-## GitHub (solo project with AI-assisted issue tracking)
-- Create issues before starting work; issues are descriptive, minimal, and actionable
-- Workflow: work on an issue → show the result to me for review → only then open a PR on my go-ahead
-- Title: descriptive, minimal; body: short context, no template
+## GitHub issues
 - No labels, milestones, or assignees
-- PRs reference issues when applicable: `Closes #N` or `Refs #N` in body
-- PR title: concise, conventional-commit style (e.g., `Fix: description`, `Add: description`)
-- PR body: auto-generated bullet summary from the diff
+- Title: descriptive, minimal; body: short context, no template
+
+## Pull requests
+- Reference issues: `Closes #N` or `Refs #N` in body
+- Title: concise, conventional-commit style (e.g., `Fix: description`, `Add: description`)
+- Body: auto-generated bullet summary from the diff
 - Open as ready (not draft); skip labels and reviewers
 - Pre-PR: `bundle exec rspec` must pass, smoke test must pass
