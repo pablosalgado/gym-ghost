@@ -26,6 +26,7 @@ module GymGhost
       def scrape_facilities = raise NotImplementedError, "#{self.class} must implement #scrape_facilities"
       def scrape_schedule = raise NotImplementedError, "#{self.class} must implement #scrape_schedule"
       def login = raise NotImplementedError, "#{self.class} must implement #login"
+      def reserve_class = raise NotImplementedError, "#{self.class} must implement #reserve_class"
     end
   end
 end

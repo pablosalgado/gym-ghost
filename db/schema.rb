@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_16_185107) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_26_172802) do
   create_table "cities", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "name", null: false
@@ -34,6 +34,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_16_185107) do
     t.datetime "updated_at", null: false
     t.index ["city_id"], name: "index_facilities_on_city_id"
     t.check_constraint "length(name) >= 3 and length(name) <= 50"
+  end
+
+  create_table "programmed_classes", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "schedule_id", null: false
+    t.string "status", default: "programmed", null: false
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.index ["schedule_id", "user_id"], name: "index_programmed_classes_on_schedule_id_and_user_id", unique: true
+    t.index ["schedule_id"], name: "index_programmed_classes_on_schedule_id"
+    t.index ["user_id"], name: "index_programmed_classes_on_user_id"
   end
 
   create_table "schedules", force: :cascade do |t|
@@ -77,6 +88,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_16_185107) do
   end
 
   add_foreign_key "facilities", "cities"
+  add_foreign_key "programmed_classes", "schedules"
+  add_foreign_key "programmed_classes", "users"
   add_foreign_key "schedules", "class_types"
   add_foreign_key "schedules", "facilities"
   add_foreign_key "sessions", "users"

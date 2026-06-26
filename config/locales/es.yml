@@ -35,6 +35,7 @@ es:
       menu: "Menú"
       close: "Cerrar"
       schedule: "Horarios"
+      my_bookings: "Mis reservas"
       settings: "Ajustes"
       sign_out: "Cerrar sesión"
   settings:
@@ -42,6 +43,15 @@ es:
       page_title: "Ajustes"
       description: "Escanea el sitio web externo para descubrir nuevas ciudades y sedes."
       scrape_button: "Escanear ubicaciones"
+  programmed_classes:
+    index:
+      page_title: "Mis reservas"
+      heading: "Mis reservas"
+      empty: "Aún no hay clases programadas. Toca una clase en el horario para programarla."
+    create:
+      programmed: "Clase programada. La reservaremos 24h antes."
+    destroy:
+      canceled: "Clase cancelada."
   flash:
     try_again: "Intenta de nuevo más tarde."
     invalid_credentials: "Correo electrónico o contraseña incorrectos."

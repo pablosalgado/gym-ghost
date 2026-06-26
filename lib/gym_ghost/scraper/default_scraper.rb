@@ -28,6 +28,43 @@ module GymGhost
         build_and_merge_location(date: date, facility: facility, city: city)
       end
 
+      def reserve_class(city, facility, date, time)
+        raise GymGhost::Scraper::MissingCredentialsError if @username.nil? || @password.nil?
+
+        login
+
+        navigate_to_schedule(city, facility, date)
+
+        card_xpath = "//div[starts-with(@class, 'cardBook_info_container_main')]"
+        wait.until { driver.find_elements(xpath: card_xpath).any? }
+
+        cards = driver.find_elements(xpath: card_xpath)
+        target_card = cards.find do |card|
+          time_element = card.find_element(xpath: ".//span[starts-with(@class, 'cardBook_time')]")
+          time_element.text.strip == time
+        rescue Selenium::WebDriver::Error::NoSuchElementError
+          false
+        end
+
+        raise "Class at #{time} not found on #{date}" unless target_card
+
+        reserve_xpath = ".//button[contains(translate(., 'RESERVAR', 'reservar'), 'reservar')]"
+        reserve_button = target_card.find_element(xpath: reserve_xpath)
+        wait.until { reserve_button.displayed? && reserve_button.enabled? }
+        reserve_button.click
+
+        confirm_xpath = "//button[contains(translate(., 'CONFIRMAR', 'confirmar'), 'confirmar')]"
+        confirm_button = driver.find_element(xpath: confirm_xpath)
+        wait.until { confirm_button.displayed? && confirm_button.enabled? }
+        confirm_button.click
+        true
+      rescue GymGhost::Scraper::MissingCredentialsError
+        raise
+      rescue StandardError => e
+        Rails.logger.error("Failed to reserve class: #{e}")
+        false
+      end
+
       def login
         raise GymGhost::Scraper::MissingCredentialsError if @username.nil? || @password.nil?
 

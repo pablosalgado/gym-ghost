@@ -16,6 +16,7 @@ Rails.application.routes.draw do
   end
 
   resources :schedules, only: [ :index ]
+  resources :programmed_classes, only: [ :index, :create, :destroy ]
 
   root "schedules#index"
 end

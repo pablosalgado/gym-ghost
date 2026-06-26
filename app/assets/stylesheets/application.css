@@ -77,6 +77,18 @@ body {
 .schedule-card {
   border: 0;
   border-left: 0.35rem solid #64748b;
+  cursor: pointer;
+  transition: box-shadow 0.15s ease;
+  text-align: left;
+  width: 100%;
+}
+
+.schedule-card:active {
+  box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.25);
+}
+
+.schedule-card.programmed {
+  box-shadow: 0 0 0 1px #198754;
 }
 
 .activity-badge {

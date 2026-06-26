@@ -50,6 +50,7 @@
         <div class="offcanvas-body p-0" data-controller="offcanvas-nav">
           <div class="list-group list-group-flush">
             <%= link_to t(".schedule"), schedules_path, class: "list-group-item list-group-item-action", data: { action: "click->offcanvas-nav#navigate" } %>
+            <%= link_to t(".my_bookings"), programmed_classes_path, class: "list-group-item list-group-item-action", data: { action: "click->offcanvas-nav#navigate" } %>
             <%= link_to t(".settings"), settings_path, class: "list-group-item list-group-item-action", data: { action: "click->offcanvas-nav#navigate" } %>
             <%= button_to t(".sign_out"), session_path, method: :delete, class: "list-group-item list-group-item-action text-danger text-start border-0 bg-transparent", data: { bs_dismiss: "offcanvas" } %>
           </div>
