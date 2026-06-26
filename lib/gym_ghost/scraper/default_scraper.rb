@@ -87,7 +87,7 @@ module GymGhost
       end
 
       def click_change_facility_button
-        # driver.get(url)
+        driver.get(url)
         button = driver.find_element(xpath: "//button[contains(., 'Cambiar de sede')]")
         wait.until { button.displayed? && button.enabled? }
         button.click
@@ -228,6 +228,7 @@ module GymGhost
       end
 
       def navigate_to_login
+        driver.get(@url)
         close_facility_xpath = "//button[@aria-label = 'Cerrar']"
         driver.find_element(xpath: close_facility_xpath).click
 
