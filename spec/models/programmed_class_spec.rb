@@ -48,7 +48,7 @@ RSpec.describe ProgrammedClass, type: :model do
       later_pc = create(:programmed_class, schedule: later, user: user)
       earlier_pc = create(:programmed_class, schedule: earlier, user: user)
 
-      expect(described_class.upcoming).to eq([earlier_pc, later_pc])
+      expect(described_class.upcoming).to eq([ earlier_pc, later_pc ])
     end
   end
 end

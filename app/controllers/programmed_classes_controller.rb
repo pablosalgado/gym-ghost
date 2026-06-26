@@ -1,7 +1,7 @@
 class ProgrammedClassesController < ApplicationController
   def index
     @programmed_classes = Current.user.programmed_classes
-      .includes(schedule: [:class_type, :facility])
+      .includes(schedule: [ :class_type, :facility ])
       .upcoming
   end
 
