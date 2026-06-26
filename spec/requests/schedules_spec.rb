@@ -28,9 +28,9 @@ RSpec.describe SchedulesController, type: :request do
         tomorrow_start = 1.day.from_now.beginning_of_day
 
         create(:schedule, facility: @facility, class_type: @boxing,
-               start_time: today_start + 7.hours, day_of_week: Time.current.wday)
+               start_time: Time.current + 1.hour, day_of_week: Time.current.wday)
         create(:schedule, facility: @facility, class_type: @yoga,
-               start_time: today_start + 9.hours, day_of_week: Time.current.wday)
+               start_time: Time.current + 3.hours, day_of_week: Time.current.wday)
         create(:schedule, facility: @facility, class_type: @boxing,
                start_time: tomorrow_start + 8.hours, day_of_week: 1.day.from_now.wday)
       end
@@ -114,7 +114,7 @@ RSpec.describe SchedulesController, type: :request do
         facility = create(:facility, name: "Colina", city: city)
         class_type = create(:class_type, name: "Boxing", duration: 60)
         create(:schedule, facility: facility, class_type: class_type,
-               start_time: Time.current.beginning_of_day + 7.hours, day_of_week: Time.current.wday)
+               start_time: Time.current + 1.hour, day_of_week: Time.current.wday)
       end
 
       it "returns http success" do
