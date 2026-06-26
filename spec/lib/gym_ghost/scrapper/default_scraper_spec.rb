@@ -386,4 +386,132 @@ RSpec.describe GymGhost::Scraper::DefaultScraper do
       end
     end
   end
+
+  describe "#reserve_class" do
+    subject(:reserve) { scraper.reserve_class(city, facility, date, time) }
+
+    let(:city) { "BOGOTÁ, D.C." }
+    let(:facility) { "Colina" }
+    let(:date) { Date.new(2026, 6, 17) }
+    let(:time) { "07:00" }
+    let(:close_button) { instance_double(Selenium::WebDriver::Element) }
+    let(:login_element) { instance_double(Selenium::WebDriver::Element) }
+    let(:email_element) { instance_double(Selenium::WebDriver::Element) }
+    let(:password_element) { instance_double(Selenium::WebDriver::Element) }
+    let(:submit_element) { instance_double(Selenium::WebDriver::Element) }
+    let(:time_element) { instance_double(Selenium::WebDriver::Element, text: time) }
+    let(:card) { instance_double(Selenium::WebDriver::Element) }
+    let(:reserve_button) { instance_double(Selenium::WebDriver::Element) }
+    let(:confirm_button) { instance_double(Selenium::WebDriver::Element) }
+
+    before do
+      allow(driver).to receive(:get)
+      allow(driver).to receive(:execute_script)
+      allow(wait).to receive(:until) { |&block| block.call }
+
+      # Login stubs
+      allow(driver).to receive(:find_element)
+        .with(xpath: "//button[@aria-label = 'Cerrar']")
+        .and_return(close_button)
+      allow(close_button).to receive(:click)
+
+      allow(driver).to receive(:find_elements)
+        .with(xpath: "//p[. = 'Inicia sesión']/parent::*")
+        .and_return([ login_element ])
+
+      allow(driver).to receive(:find_elements)
+        .with(:xpath, "//input[@type = 'email']")
+        .and_return([ email_element ])
+      allow(email_element).to receive(:send_keys)
+
+      allow(driver).to receive(:find_elements)
+        .with(:xpath, "//input[@type = 'password']")
+        .and_return([ password_element ])
+      allow(password_element).to receive(:send_keys)
+
+      allow(driver).to receive(:find_elements)
+        .with(:xpath, "//button[@type = 'submit']")
+        .and_return([ submit_element ])
+      allow(submit_element).to receive(:click)
+
+      # Stub the navigation phase — it is tested separately
+      allow(scraper).to receive(:navigate_to_schedule)
+
+      allow(driver).to receive(:find_elements)
+        .with(xpath: "//div[starts-with(@class, 'cardBook_info_container_main')]")
+        .and_return([ card ])
+
+      allow(card).to receive(:find_element)
+        .with(xpath: ".//span[starts-with(@class, 'cardBook_time')]")
+        .and_return(time_element)
+
+      allow(card).to receive(:find_element)
+        .with(xpath: ".//button[contains(translate(., 'RESERVAR', 'reservar'), 'reservar')]")
+        .and_return(reserve_button)
+      allow(reserve_button).to receive(:displayed?).and_return(true)
+      allow(reserve_button).to receive(:enabled?).and_return(true)
+      allow(reserve_button).to receive(:click)
+
+      allow(driver).to receive(:find_element)
+        .with(xpath: "//button[contains(translate(., 'CONFIRMAR', 'confirmar'), 'confirmar')]")
+        .and_return(confirm_button)
+      allow(confirm_button).to receive(:displayed?).and_return(true)
+      allow(confirm_button).to receive(:enabled?).and_return(true)
+      allow(confirm_button).to receive(:click)
+    end
+
+    it "logs in" do
+      reserve
+      expect(driver).to have_received(:find_elements)
+        .with(:xpath, "//input[@type = 'email']")
+    end
+
+    it "navigates to the schedule" do
+      reserve
+      expect(scraper).to have_received(:navigate_to_schedule).with(city, facility, date)
+    end
+
+    it "finds the class card by time" do
+      reserve
+      expect(card).to have_received(:find_element)
+        .with(xpath: ".//span[starts-with(@class, 'cardBook_time')]")
+    end
+
+    it "clicks the reserve button" do
+      reserve
+      expect(reserve_button).to have_received(:click)
+    end
+
+    it "clicks the confirm button" do
+      reserve
+      expect(confirm_button).to have_received(:click)
+    end
+
+    it "returns true" do
+      expect(reserve).to be true
+    end
+
+    context "when credentials are missing" do
+      let(:username) { nil }
+
+      it "raises MissingCredentialsError" do
+        expect { reserve }.to raise_error(GymGhost::Scraper::MissingCredentialsError)
+      end
+    end
+
+    context "when the class is not found" do
+      let(:time) { "99:99" }
+      let(:other_time_element) { instance_double(Selenium::WebDriver::Element, text: "08:00") }
+
+      before do
+        allow(card).to receive(:find_element)
+          .with(xpath: ".//span[starts-with(@class, 'cardBook_time')]")
+          .and_return(other_time_element)
+      end
+
+      it "returns false" do
+        expect(reserve).to be false
+      end
+    end
+  end
 end

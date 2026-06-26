@@ -26,6 +26,10 @@ class SchedulesController < ApplicationController
       scrape_if_needed
       @schedules = fetch_schedules
     end
+
+    @programmed_schedule_ids = Current.user.programmed_classes
+      .where(schedule_id: @schedules.map(&:id))
+      .pluck(:schedule_id)
   end
 
   private

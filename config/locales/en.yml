@@ -35,6 +35,7 @@ en:
       menu: "Menu"
       close: "Close"
       schedule: "Schedule"
+      my_bookings: "My bookings"
       settings: "Settings"
       sign_out: "Sign out"
   settings:
@@ -42,6 +43,15 @@ en:
       page_title: "Settings"
       description: "Scan the external website to discover new cities and facilities."
       scrape_button: "Scan locations"
+  programmed_classes:
+    index:
+      page_title: "My bookings"
+      heading: "My bookings"
+      empty: "No programmed classes yet. Tap a class on the schedule to program it."
+    create:
+      programmed: "Class programmed. We'll book it 24h before."
+    destroy:
+      canceled: "Class canceled."
   flash:
     try_again: "Try again later."
     invalid_credentials: "Try another email address or password."
