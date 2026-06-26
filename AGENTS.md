@@ -25,7 +25,8 @@
 - Branch naming: `fix/short-description`, `feat/short-description`, `chore/short-description`
 
 ## GitHub (solo project with AI-assisted issue tracking)
-- AI creates issues proactively — tech debt, UX paper cuts, potential bugs, refactoring opportunities
+- Create issues before starting work; issues are descriptive, minimal, and actionable
+- Workflow: work on an issue → show the result to me for review → only then open a PR on my go-ahead
 - Title: descriptive, minimal; body: short context, no template
 - No labels, milestones, or assignees
 - PRs reference issues when applicable: `Closes #N` or `Refs #N` in body
@@ -33,4 +34,3 @@
 - PR body: auto-generated bullet summary from the diff
 - Open as ready (not draft); skip labels and reviewers
 - Pre-PR: `bundle exec rspec` must pass, smoke test must pass
-- Workflow: fix an issue → show the result to me for review → only then open a PR on my go-ahead
