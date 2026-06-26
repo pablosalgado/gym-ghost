@@ -11,8 +11,6 @@ module GymGhost
         @password = password
         @driver = driver
         @wait = wait
-
-        driver.get(url)
       end
 
       def end_session
