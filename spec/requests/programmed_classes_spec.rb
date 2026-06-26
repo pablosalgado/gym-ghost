@@ -7,10 +7,10 @@ RSpec.describe "ProgrammedClasses", type: :request do
     post session_url, params: { email_address: user.email_address, password: "password" }
   end
 
-  let(:schedule) { create(:schedule, start_time: 2.days.from_now) }
-
   describe "POST /programmed_classes" do
     context "when not authenticated" do
+      let(:schedule) { create(:schedule, start_time: 2.days.from_now) }
+
       it "redirects to sign in" do
         post programmed_classes_path(schedule_id: schedule.id)
         expect(response).to redirect_to(new_session_url)
@@ -20,34 +20,72 @@ RSpec.describe "ProgrammedClasses", type: :request do
     context "when authenticated" do
       before { sign_in(user) }
 
-      it "creates a programmed class" do
-        expect {
+      context "when class starts more than 24 hours away" do
+        let(:schedule) { create(:schedule, start_time: 2.days.from_now) }
+
+        it "creates a programmed class" do
+          expect {
+            post programmed_classes_path(schedule_id: schedule.id)
+          }.to change { user.programmed_classes.count }.by(1)
+        end
+
+        it "sets status to programmed" do
           post programmed_classes_path(schedule_id: schedule.id)
-        }.to change { user.programmed_classes.count }.by(1)
-      end
+          expect(user.programmed_classes.last).to be_programmed
+        end
 
-      it "sets status to programmed" do
-        post programmed_classes_path(schedule_id: schedule.id)
-        expect(user.programmed_classes.last).to be_programmed
-      end
-
-      it "redirects back" do
-        post programmed_classes_path(schedule_id: schedule.id)
-        expect(response).to redirect_to(schedules_url)
-      end
-
-      context "when already programmed" do
-        let!(:pc) { create(:programmed_class, schedule: schedule, user: user) }
-
-        it "cancels the programmed class" do
+        it "redirects back" do
           post programmed_classes_path(schedule_id: schedule.id)
-          expect(pc.reload).to be_canceled
+          expect(response).to redirect_to(schedules_url)
+        end
+
+        it "enqueues the reserve job 24 hours before start" do
+          post programmed_classes_path(schedule_id: schedule.id)
+          expect(GymGhost::Scraper::ReserveClassJob)
+            .to have_been_enqueued.with(user.programmed_classes.last.id)
+            .at(schedule.start_time - 24.hours)
+        end
+
+        context "when already programmed" do
+          let!(:pc) { create(:programmed_class, schedule: schedule, user: user) }
+
+          it "cancels the programmed class" do
+            post programmed_classes_path(schedule_id: schedule.id)
+            expect(pc.reload).to be_canceled
+          end
+        end
+      end
+
+      context "when class starts within 24 hours" do
+        let(:schedule) { create(:schedule, start_time: 1.hour.from_now) }
+
+        it "creates a programmed class" do
+          expect {
+            post programmed_classes_path(schedule_id: schedule.id)
+          }.to change { user.programmed_classes.count }.by(1)
+        end
+
+        it "sets status to programmed" do
+          post programmed_classes_path(schedule_id: schedule.id)
+          expect(user.programmed_classes.last).to be_programmed
+        end
+
+        it "redirects back" do
+          post programmed_classes_path(schedule_id: schedule.id)
+          expect(response).to redirect_to(schedules_url)
+        end
+
+        it "enqueues the reserve job immediately" do
+          post programmed_classes_path(schedule_id: schedule.id)
+          expect(GymGhost::Scraper::ReserveClassJob)
+            .to have_been_enqueued.with(user.programmed_classes.last.id)
         end
       end
     end
   end
 
   describe "DELETE /programmed_classes/:id" do
+    let(:schedule) { create(:schedule, start_time: 2.days.from_now) }
     let!(:pc) { create(:programmed_class, schedule: schedule, user: user) }
 
     context "when not authenticated" do
@@ -68,6 +106,9 @@ RSpec.describe "ProgrammedClasses", type: :request do
   end
 
   describe "GET /programmed_classes" do
+    let(:schedule) { create(:schedule, start_time: 2.days.from_now) }
+    let!(:pc) { create(:programmed_class, schedule: schedule, user: user) }
+
     context "when not authenticated" do
       it "redirects to sign in" do
         get programmed_classes_path
