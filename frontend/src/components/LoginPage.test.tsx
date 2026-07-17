@@ -41,7 +41,7 @@ describe('LoginPage', () => {
         name: 'Log in',
       })
     ).toBeInTheDocument()
-    expect(container.firstChild).toHaveClass('min-h-full')
+    expect(container.firstChild).toHaveClass('min-h-dvh')
   })
 
   it('applies a 44px minimum touch target to the form controls', () => {
