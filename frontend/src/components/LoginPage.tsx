@@ -37,7 +37,7 @@ export default function LoginPage({ login: loginProp, isLoading: isLoadingProp, 
             required
             value={email}
             onChange={(event) => setEmail(event.target.value)}
-            className="w-full rounded border border-gray-300 px-3 py-2"
+            className="min-h-11 w-full rounded border border-gray-300 px-3 py-2"
           />
         </div>
         <div>
@@ -52,14 +52,14 @@ export default function LoginPage({ login: loginProp, isLoading: isLoadingProp, 
             required
             value={password}
             onChange={(event) => setPassword(event.target.value)}
-            className="w-full rounded border border-gray-300 px-3 py-2"
+            className="min-h-11 w-full rounded border border-gray-300 px-3 py-2"
           />
         </div>
         {error && <p className="text-sm text-red-700" role="alert">{error}</p>}
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full rounded bg-blue-600 px-4 py-2 text-white disabled:opacity-60"
+          className="min-h-11 w-full rounded bg-blue-600 px-4 py-2 text-white disabled:opacity-60"
         >
           {isLoading ? 'Logging in...' : 'Log in'}
         </button>

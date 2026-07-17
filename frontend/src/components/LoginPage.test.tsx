@@ -44,6 +44,16 @@ describe('LoginPage', () => {
     expect(container.firstChild).toHaveClass('min-h-dvh')
   })
 
+  it('applies a 44px minimum touch target to the form controls', () => {
+    mockedUseAuth.mockReturnValue(buildUseAuthMock())
+
+    render(<LoginPage />)
+
+    expect(screen.getByLabelText('Email')).toHaveClass('min-h-11')
+    expect(screen.getByLabelText('Password')).toHaveClass('min-h-11')
+    expect(screen.getByRole('button', { name: 'Log in' })).toHaveClass('min-h-11')
+  })
+
   it('shows an error message for invalid credentials', () => {
     mockedUseAuth.mockReturnValue(
       buildUseAuthMock({

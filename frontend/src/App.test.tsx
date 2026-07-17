@@ -111,6 +111,23 @@ describe('App', () => {
     expect(logoutMock).toHaveBeenCalled()
   })
 
+  it('applies a 44px minimum touch target to the logout button', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve({ message: 'Hello' }),
+    }))
+    mockedUseAuth.mockReturnValue(
+      buildUseAuthMock({ isAuthenticated: true, token: 'test-token' })
+    )
+
+    render(<App />)
+
+    const logoutButton = await screen.findByRole('button', { name: 'Log out' })
+
+    expect(logoutButton).toHaveClass('min-h-11')
+  })
+
   it('calls logout on 401 response', async () => {
     const logoutMock = vi.fn()
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
