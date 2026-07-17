@@ -67,7 +67,7 @@ describe('App', () => {
     const { container } = render(<App />)
 
     await screen.findByText('Hello from Gym Ghost')
-    expect(container.firstChild).toHaveClass('min-h-full')
+    expect(container.firstChild).toHaveClass('min-h-dvh')
   })
 
   it('fetches greeting with Authorization header when authenticated', async () => {

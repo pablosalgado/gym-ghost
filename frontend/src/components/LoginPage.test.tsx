@@ -41,7 +41,7 @@ describe('LoginPage', () => {
         name: 'Log in',
       })
     ).toBeInTheDocument()
-    expect(container.firstChild).toHaveClass('min-h-full')
+    expect(container.firstChild).toHaveClass('min-h-dvh')
   })
 
   it('shows an error message for invalid credentials', () => {
