@@ -31,7 +31,7 @@ describe('LoginPage', () => {
   it('renders the login form', () => {
     mockedUseAuth.mockReturnValue(buildUseAuthMock())
 
-    render(<LoginPage />)
+    const { container } = render(<LoginPage />)
 
     expect(screen.getByRole('heading', { name: 'Log in' })).toBeInTheDocument()
     expect(screen.getByLabelText('Email')).toBeInTheDocument()
@@ -41,6 +41,7 @@ describe('LoginPage', () => {
         name: 'Log in',
       })
     ).toBeInTheDocument()
+    expect(container.firstChild).toHaveClass('min-h-full')
   })
 
   it('shows an error message for invalid credentials', () => {

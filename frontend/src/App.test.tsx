@@ -8,7 +8,7 @@ vi.mock('./hooks/useAuth', () => ({
 }))
 
 vi.mock('./components/LoginPage', () => ({
-  default: () => <div>Login Page</div>,
+  default: () => <div data-testid="login-page">Login Page</div>,
 }))
 
 const mockedUseAuth = vi.mocked(useAuth)
@@ -35,7 +35,7 @@ describe('App', () => {
 
     render(<App />)
 
-    expect(screen.getByText('Login Page')).toBeInTheDocument()
+    expect(screen.getByTestId('login-page')).toBeInTheDocument()
   })
 
   it('renders greeting when authenticated', async () => {
@@ -52,6 +52,22 @@ describe('App', () => {
 
     expect(await screen.findByText('Hello from Gym Ghost')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Log out' })).toBeInTheDocument()
+  })
+
+  it('uses a full-height shell that works with body safe-area padding', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve({ message: 'Hello from Gym Ghost' }),
+    }))
+    mockedUseAuth.mockReturnValue(
+      buildUseAuthMock({ isAuthenticated: true, token: 'test-token' })
+    )
+
+    const { container } = render(<App />)
+
+    await screen.findByText('Hello from Gym Ghost')
+    expect(container.firstChild).toHaveClass('min-h-full')
   })
 
   it('fetches greeting with Authorization header when authenticated', async () => {
