@@ -22,7 +22,7 @@ export default function LoginPage({ login: loginProp, isLoading: isLoadingProp, 
   }
 
   return (
-    <div className="min-h-full flex items-center justify-center px-4">
+    <div className="min-h-dvh flex items-center justify-center px-4">
       <form className="w-full max-w-sm space-y-4" onSubmit={handleSubmit}>
         <h1 className="text-2xl font-bold">Log in</h1>
         <div>
