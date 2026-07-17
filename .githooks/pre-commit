@@ -1,0 +1,14 @@
+#!/bin/sh
+
+echo "Running pre-commit checks..."
+
+echo "\n→ RuboCop"
+bin/rubocop || exit 1
+
+echo "\n→ TypeScript typecheck"
+(cd frontend && npm run typecheck) || exit 1
+
+echo "\n→ Bundle audit"
+bundle exec bundle-audit check --update || exit 1
+
+echo "\nAll checks passed."

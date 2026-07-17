@@ -1,0 +1,86 @@
+# See https://docs.docker.com/engine/reference/builder/#dockerignore-file for more about ignoring files.
+
+# Ignore git directory.
+/.git/
+/.gitignore
+
+# Ignore bundler config.
+/.bundle
+/vendor/bundle
+
+# Ignore all environment files.
+/.env*
+/frontend/.env*
+
+# Ignore all default key files.
+/config/master.key
+/config/credentials/*.key
+*.key
+*.pem
+*.p12
+*.pfx
+
+# Ignore all logfiles and tempfiles.
+/log/*
+/tmp/*
+!/log/.keep
+!/tmp/.keep
+
+# Ignore pidfiles, but keep the directory.
+/tmp/pids/*
+!/tmp/pids/.keep
+
+# Ignore storage (uploaded files in development and any SQLite databases).
+/storage/*
+!/storage/.keep
+/tmp/storage/*
+!/tmp/storage/.keep
+
+# Ignore CI service files.
+/.github
+
+# Ignore Kamal files.
+/config/deploy*.yml
+/.kamal
+
+# Ignore development files
+/.devcontainer
+/.idea
+/.DS_Store
+/.byebug_history
+/.ruby-lsp
+/spec
+/test
+/coverage
+/.rspec
+/.rubocop.yml
+/.ruby-version
+/config/ci.rb
+/config/bundler-audit.yml
+/bin/brakeman
+/bin/bundler-audit
+/bin/ci
+/bin/dev
+/bin/rake
+/bin/rubocop
+/bin/setup
+/bin/thrust
+/CODE_OF_CONDUCT.md
+/LICENSE
+/README.md
+/.gitattributes
+/docker-compose.yml
+
+# Frontend dependencies and build output are created in the image.
+/frontend/node_modules
+/frontend/.vite
+/frontend/dist
+/public/index.html
+/public/assets
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Ignore Docker-related files
+/.dockerignore
+/Dockerfile*

@@ -1,0 +1,12 @@
+development:
+  adapter: async
+
+test:
+  adapter: test
+
+production:
+  adapter: solid_cable
+  connects:
+    cable: primary
+  polling_interval: 0.1
+  message_expiration_period: 604800

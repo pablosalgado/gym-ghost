@@ -1,0 +1,32 @@
+services:
+  web:
+    build:
+      context: .
+    image: gym-ghost:latest
+    ports:
+      - "127.0.0.1:${HOST_PORT:-3000}:3000"
+    environment:
+      RAILS_ENV: production
+      RAILS_LOG_LEVEL: "${RAILS_LOG_LEVEL:-info}"
+      APP_HOSTS: "${APP_HOSTS:?Set APP_HOSTS in .env}"
+      SECRET_KEY_BASE: "${SECRET_KEY_BASE:?Set SECRET_KEY_BASE in .env}"
+    volumes:
+      - gym_ghost_storage:/app/storage
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "ruby",
+          "-rnet/http",
+          "-ruri",
+          "-e",
+          "response = Net::HTTP.get_response(URI('http://127.0.0.1:3000/up')); exit(response.is_a?(Net::HTTPSuccess) ? 0 : 1)"
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  gym_ghost_storage:
