@@ -21,9 +21,8 @@ trap cleanup EXIT
 docker compose --project-name "$project_name" up --build --detach
 
 for _ in $(seq 1 30); do
-  if curl --fail --silent "http://127.0.0.1:${HOST_PORT}/up" >/dev/null; then
-    curl --fail --silent --header "Host: ${APP_HOSTS}" \
-      "http://127.0.0.1:${HOST_PORT}/api/v1/hello" >/dev/null
+  if curl --fail --silent --header "Host: ${APP_HOSTS}" \
+      "http://127.0.0.1:${HOST_PORT}/up" >/dev/null; then
     docker compose --project-name "$project_name" exec --no-TTY web sh -c '
       process_uid=$(awk "/^Uid:/ { print \$2 }" /proc/1/status)
       test "$process_uid" = "$(id -u app)"
