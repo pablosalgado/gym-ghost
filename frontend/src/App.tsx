@@ -67,7 +67,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center gap-4">
+    <div className="min-h-full flex flex-col items-center justify-center gap-4">
       <h1 className="text-3xl font-bold">
         {fetchError || message || 'Loading greeting...'}
       </h1>
