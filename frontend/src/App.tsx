@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react'
+import { useAuth } from './hooks/useAuth'
+import LoginPage from './components/LoginPage'
 
 interface GreetingResponse {
   message: string
@@ -14,15 +16,28 @@ function isGreetingResponse(payload: unknown): payload is GreetingResponse {
 }
 
 export default function App() {
+  const { isAuthenticated, token, logout, login, isLoading, error } = useAuth()
   const [message, setMessage] = useState<string | null>(null)
-  const [error, setError] = useState<string | null>(null)
+  const [fetchError, setFetchError] = useState<string | null>(null)
 
   useEffect(() => {
+    if (!isAuthenticated || !token) return
+
     const controller = new AbortController()
 
     async function loadGreeting() {
       try {
-        const response = await fetch('/api/v1/hello', { signal: controller.signal })
+        const response = await fetch('/api/v1/hello', {
+          signal: controller.signal,
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+
+        if (response.status === 401) {
+          logout()
+          return
+        }
 
         if (!response.ok) {
           throw new Error(`Request failed with status ${response.status}`)
@@ -37,7 +52,7 @@ export default function App() {
         setMessage(payload.message)
       } catch {
         if (!controller.signal.aborted) {
-          setError('Unable to load the greeting. Please try again later.')
+          setFetchError('Unable to load the greeting. Please try again later.')
         }
       }
     }
@@ -45,13 +60,23 @@ export default function App() {
     loadGreeting()
 
     return () => controller.abort()
-  }, [])
+  }, [isAuthenticated, token, logout])
+
+  if (!isAuthenticated) {
+    return <LoginPage login={login} isLoading={isLoading} error={error} />
+  }
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
+    <div className="min-h-screen flex flex-col items-center justify-center gap-4">
       <h1 className="text-3xl font-bold">
-        {error || message || 'Loading greeting...'}
+        {fetchError || message || 'Loading greeting...'}
       </h1>
+      <button
+        onClick={logout}
+        className="rounded bg-gray-200 px-4 py-2 hover:bg-gray-300"
+      >
+        Log out
+      </button>
     </div>
   )
 }

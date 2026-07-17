@@ -1,8 +1,18 @@
 import { FormEvent, useState } from 'react'
-import { useAuth } from '../hooks/useAuth'
+import { useAuth, type UseAuthResult } from '../hooks/useAuth'
 
-export default function LoginPage() {
-  const { login, isLoading, error, isAuthenticated } = useAuth()
+interface LoginPageProps {
+  login?: UseAuthResult['login']
+  isLoading?: boolean
+  error?: string | null
+}
+
+export default function LoginPage({ login: loginProp, isLoading: isLoadingProp, error: errorProp }: LoginPageProps = {}) {
+  const auth = useAuth()
+  const login = loginProp ?? auth.login
+  const isLoading = isLoadingProp ?? auth.isLoading
+  const error = errorProp !== undefined ? errorProp : auth.error
+
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
 
@@ -46,11 +56,6 @@ export default function LoginPage() {
           />
         </div>
         {error && <p className="text-sm text-red-700" role="alert">{error}</p>}
-        {isAuthenticated && !error && (
-          <p className="text-sm text-green-700" role="status">
-            Authenticated.
-          </p>
-        )}
         <button
           type="submit"
           disabled={isLoading}
