@@ -43,6 +43,7 @@ git worktree remove ../gym-ghost-<branch-name>
 - For a non-Docker static deployment, build in `frontend/`, then copy `frontend/dist/.` into `public/`. The production Docker image performs that handoff itself; `docker-compose.yml` runs it with a persistent SQLite volume and requires `APP_HOSTS` and `SECRET_KEY_BASE` in a local `.env` file. Production assumes a TLS-terminating proxy that forwards the original HTTPS scheme.
 - Local development and test data use SQLite databases under `storage/`. The test database schema is maintained automatically by `spec/rails_helper.rb`.
 - `config/initializers/cors.rb` is only a commented template, and `rack-cors` is not enabled. Configure both deliberately before browser code makes cross-origin calls from Vite to the Rails API.
+- Date and time handling rules live in `.github/instructions/date-time.instructions.md`; the app default zone is America/Bogota and the API contract stays UTC.
 
 ## File structure
 
