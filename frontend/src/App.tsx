@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Navigate, Route, Routes } from 'react-router'
 import { useAuth } from './hooks/useAuth'
 import LoginPage from './components/LoginPage'
+import RequireAuth from './components/RequireAuth'
 
 interface GreetingResponse {
   message: string
@@ -16,14 +18,15 @@ function isGreetingResponse(payload: unknown): payload is GreetingResponse {
   )
 }
 
-export default function App() {
-  const { isAuthenticated, token, logout, login, isLoading, error } = useAuth()
+// Temporary home content until the landing page replaces it.
+function GreetingHomePage() {
+  const { token, logout } = useAuth()
   const { t } = useTranslation()
   const [message, setMessage] = useState<string | null>(null)
   const [fetchError, setFetchError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!isAuthenticated || !token) return
+    if (!token) return
 
     const controller = new AbortController()
 
@@ -62,11 +65,7 @@ export default function App() {
     loadGreeting()
 
     return () => controller.abort()
-  }, [isAuthenticated, token, logout])
-
-  if (!isAuthenticated) {
-    return <LoginPage login={login} isLoading={isLoading} error={error} />
-  }
+  }, [token, logout])
 
   return (
     <div className="min-h-dvh flex flex-col items-center justify-center gap-4">
@@ -80,5 +79,17 @@ export default function App() {
         {t('auth.logOut')}
       </button>
     </div>
+  )
+}
+
+export default function App() {
+  return (
+    <Routes>
+      <Route path="/login" element={<LoginPage />} />
+      <Route element={<RequireAuth />}>
+        <Route path="/" element={<GreetingHomePage />} />
+      </Route>
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   )
 }

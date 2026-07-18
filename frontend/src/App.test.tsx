@@ -1,4 +1,5 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { MemoryRouter } from 'react-router'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import App from './App'
 import { useAuth, type UseAuthResult } from './hooks/useAuth'
@@ -25,6 +26,14 @@ function buildUseAuthMock(overrides: Partial<UseAuthResult> = {}): UseAuthResult
   }
 }
 
+function renderApp() {
+  return render(
+    <MemoryRouter>
+      <App />
+    </MemoryRouter>
+  )
+}
+
 describe('App', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -33,7 +42,7 @@ describe('App', () => {
   it('renders LoginPage when not authenticated', () => {
     mockedUseAuth.mockReturnValue(buildUseAuthMock({ isAuthenticated: false }))
 
-    render(<App />)
+    renderApp()
 
     expect(screen.getByTestId('login-page')).toBeInTheDocument()
   })
@@ -48,7 +57,7 @@ describe('App', () => {
       buildUseAuthMock({ isAuthenticated: true, token: 'test-token' })
     )
 
-    render(<App />)
+    renderApp()
 
     expect(await screen.findByText('Hello from Gym Ghost')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Cerrar sesión' })).toBeInTheDocument()
@@ -64,7 +73,7 @@ describe('App', () => {
       buildUseAuthMock({ isAuthenticated: true, token: 'test-token' })
     )
 
-    const { container } = render(<App />)
+    const { container } = renderApp()
 
     await screen.findByText('Hello from Gym Ghost')
     expect(container.firstChild).toHaveClass('min-h-dvh')
@@ -81,7 +90,7 @@ describe('App', () => {
       buildUseAuthMock({ isAuthenticated: true, token: 'test-token' })
     )
 
-    render(<App />)
+    renderApp()
 
     await screen.findByText('Hello from Gym Ghost')
     expect(fetchMock).toHaveBeenCalledWith(
@@ -103,7 +112,7 @@ describe('App', () => {
       buildUseAuthMock({ isAuthenticated: true, token: 'test-token', logout: logoutMock })
     )
 
-    render(<App />)
+    renderApp()
 
     await screen.findByText('Hello')
     fireEvent.click(screen.getByRole('button', { name: 'Cerrar sesión' }))
@@ -121,7 +130,7 @@ describe('App', () => {
       buildUseAuthMock({ isAuthenticated: true, token: 'test-token' })
     )
 
-    render(<App />)
+    renderApp()
 
     const logoutButton = await screen.findByRole('button', { name: 'Cerrar sesión' })
 
@@ -138,7 +147,7 @@ describe('App', () => {
       buildUseAuthMock({ isAuthenticated: true, token: 'expired-token', logout: logoutMock })
     )
 
-    render(<App />)
+    renderApp()
 
     await waitFor(() => {
       expect(logoutMock).toHaveBeenCalled()
