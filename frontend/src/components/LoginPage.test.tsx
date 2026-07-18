@@ -33,12 +33,14 @@ describe('LoginPage', () => {
 
     const { container } = render(<LoginPage />)
 
-    expect(screen.getByRole('heading', { name: 'Log in' })).toBeInTheDocument()
-    expect(screen.getByLabelText('Email')).toBeInTheDocument()
-    expect(screen.getByLabelText('Password')).toBeInTheDocument()
+    expect(
+      screen.getByRole('heading', { name: 'Iniciar sesión' })
+    ).toBeInTheDocument()
+    expect(screen.getByLabelText('Correo electrónico')).toBeInTheDocument()
+    expect(screen.getByLabelText('Contraseña')).toBeInTheDocument()
     expect(
       screen.getByRole('button', {
-        name: 'Log in',
+        name: 'Iniciar sesión',
       })
     ).toBeInTheDocument()
     expect(container.firstChild).toHaveClass('min-h-dvh')
@@ -49,21 +51,37 @@ describe('LoginPage', () => {
 
     render(<LoginPage />)
 
-    expect(screen.getByLabelText('Email')).toHaveClass('min-h-11')
-    expect(screen.getByLabelText('Password')).toHaveClass('min-h-11')
-    expect(screen.getByRole('button', { name: 'Log in' })).toHaveClass('min-h-11')
+    expect(screen.getByLabelText('Correo electrónico')).toHaveClass('min-h-11')
+    expect(screen.getByLabelText('Contraseña')).toHaveClass('min-h-11')
+    expect(
+      screen.getByRole('button', { name: 'Iniciar sesión' })
+    ).toHaveClass('min-h-11')
   })
 
-  it('shows an error message for invalid credentials', () => {
+  it('shows a server-provided error message verbatim in any locale', () => {
     mockedUseAuth.mockReturnValue(
       buildUseAuthMock({
-        error: 'Invalid credentials',
+        error: { kind: 'server', detail: 'Invalid credentials' },
       })
     )
 
     render(<LoginPage />)
 
     expect(screen.getByRole('alert')).toHaveTextContent('Invalid credentials')
+  })
+
+  it('shows a translated error for client-side failures', () => {
+    mockedUseAuth.mockReturnValue(
+      buildUseAuthMock({
+        error: { kind: 'key', key: 'auth.invalidCredentials' },
+      })
+    )
+
+    render(<LoginPage />)
+
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'Correo o contraseña inválidos.'
+    )
   })
 
   it('calls login on submit', async () => {
@@ -76,15 +94,15 @@ describe('LoginPage', () => {
 
     render(<LoginPage />)
 
-    fireEvent.change(screen.getByLabelText('Email'), {
+    fireEvent.change(screen.getByLabelText('Correo electrónico'), {
       target: { value: 'member@example.com' },
     })
-    fireEvent.change(screen.getByLabelText('Password'), {
+    fireEvent.change(screen.getByLabelText('Contraseña'), {
       target: { value: 'secret' },
     })
     fireEvent.click(
       screen.getByRole('button', {
-        name: 'Log in',
+        name: 'Iniciar sesión',
       })
     )
 

@@ -51,7 +51,7 @@ describe('App', () => {
     render(<App />)
 
     expect(await screen.findByText('Hello from Gym Ghost')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Log out' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Cerrar sesión' })).toBeInTheDocument()
   })
 
   it('uses a full-height shell that works with body safe-area padding', async () => {
@@ -106,7 +106,7 @@ describe('App', () => {
     render(<App />)
 
     await screen.findByText('Hello')
-    fireEvent.click(screen.getByRole('button', { name: 'Log out' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Cerrar sesión' }))
 
     expect(logoutMock).toHaveBeenCalled()
   })
@@ -123,7 +123,7 @@ describe('App', () => {
 
     render(<App />)
 
-    const logoutButton = await screen.findByRole('button', { name: 'Log out' })
+    const logoutButton = await screen.findByRole('button', { name: 'Cerrar sesión' })
 
     expect(logoutButton).toHaveClass('min-h-11')
   })

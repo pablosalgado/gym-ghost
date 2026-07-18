@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from './hooks/useAuth'
 import LoginPage from './components/LoginPage'
 
@@ -17,6 +18,7 @@ function isGreetingResponse(payload: unknown): payload is GreetingResponse {
 
 export default function App() {
   const { isAuthenticated, token, logout, login, isLoading, error } = useAuth()
+  const { t } = useTranslation()
   const [message, setMessage] = useState<string | null>(null)
   const [fetchError, setFetchError] = useState<string | null>(null)
 
@@ -75,7 +77,7 @@ export default function App() {
         onClick={logout}
         className="min-h-11 rounded bg-gray-200 px-4 py-2 hover:bg-gray-300"
       >
-        Log out
+        {t('auth.logOut')}
       </button>
     </div>
   )

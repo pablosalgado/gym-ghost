@@ -1,14 +1,16 @@
 import { FormEvent, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useAuth, type UseAuthResult } from '../hooks/useAuth'
 
 interface LoginPageProps {
   login?: UseAuthResult['login']
   isLoading?: boolean
-  error?: string | null
+  error?: UseAuthResult['error']
 }
 
 export default function LoginPage({ login: loginProp, isLoading: isLoadingProp, error: errorProp }: LoginPageProps = {}) {
   const auth = useAuth()
+  const { t } = useTranslation()
   const login = loginProp ?? auth.login
   const isLoading = isLoadingProp ?? auth.isLoading
   const error = errorProp !== undefined ? errorProp : auth.error
@@ -24,10 +26,10 @@ export default function LoginPage({ login: loginProp, isLoading: isLoadingProp, 
   return (
     <div className="min-h-dvh flex items-center justify-center px-4">
       <form className="w-full max-w-sm space-y-4" onSubmit={handleSubmit}>
-        <h1 className="text-2xl font-bold">Log in</h1>
+        <h1 className="text-2xl font-bold">{t('auth.loginTitle')}</h1>
         <div>
           <label className="block text-sm font-medium mb-1" htmlFor="email">
-            Email
+            {t('auth.email')}
           </label>
           <input
             id="email"
@@ -42,7 +44,7 @@ export default function LoginPage({ login: loginProp, isLoading: isLoadingProp, 
         </div>
         <div>
           <label className="block text-sm font-medium mb-1" htmlFor="password">
-            Password
+            {t('auth.password')}
           </label>
           <input
             id="password"
@@ -55,13 +57,17 @@ export default function LoginPage({ login: loginProp, isLoading: isLoadingProp, 
             className="min-h-11 w-full rounded border border-gray-300 px-3 py-2"
           />
         </div>
-        {error && <p className="text-sm text-red-700" role="alert">{error}</p>}
+        {error && (
+          <p className="text-sm text-red-700" role="alert">
+            {error.kind === 'server' ? error.detail : t(error.key)}
+          </p>
+        )}
         <button
           type="submit"
           disabled={isLoading}
           className="min-h-11 w-full rounded bg-blue-600 px-4 py-2 text-white disabled:opacity-60"
         >
-          {isLoading ? 'Logging in...' : 'Log in'}
+          {isLoading ? t('auth.loggingIn') : t('auth.logIn')}
         </button>
       </form>
     </div>

@@ -64,7 +64,70 @@ describe('useAuth', () => {
     expect(result.current.token).toBeNull()
     expect(result.current.isAuthenticated).toBe(false)
     expect(localStorage.getItem(AUTH_TOKEN_STORAGE_KEY)).toBeNull()
-    expect(result.current.error).toBe('Invalid credentials')
+    expect(result.current.error).toEqual({
+      kind: 'server',
+      detail: 'Invalid credentials',
+    })
+  })
+
+  it('sets a key error when the failure payload has no server detail', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: false,
+        json: () => Promise.resolve({}),
+      })
+    )
+
+    const { result } = renderHook(() => useAuth())
+
+    await act(async () => {
+      await result.current.login('member@example.com', 'wrong-password')
+    })
+
+    expect(result.current.error).toEqual({
+      kind: 'key',
+      key: 'auth.invalidCredentials',
+    })
+  })
+
+  it('sets a key error when the success response is malformed', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ unexpected: true }),
+      })
+    )
+
+    const { result } = renderHook(() => useAuth())
+
+    await act(async () => {
+      await result.current.login('member@example.com', 'secret')
+    })
+
+    expect(result.current.error).toEqual({
+      kind: 'key',
+      key: 'auth.invalidAuthResponse',
+    })
+  })
+
+  it('sets a key error when the request fails to reach the server', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockRejectedValue(new Error('network down'))
+    )
+
+    const { result } = renderHook(() => useAuth())
+
+    await act(async () => {
+      await result.current.login('member@example.com', 'secret')
+    })
+
+    expect(result.current.error).toEqual({
+      kind: 'key',
+      key: 'auth.loginUnavailable',
+    })
   })
 
   it('clears token and state on logout', () => {
