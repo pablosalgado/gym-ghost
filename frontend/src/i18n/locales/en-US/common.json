@@ -32,5 +32,8 @@
   },
   "common": {
     "loading": "Loading..."
+  },
+  "mobileMenu": {
+    "toggle": "Open navigation menu"
   }
 }
