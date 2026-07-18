@@ -1,0 +1,21 @@
+{
+  "auth": {
+    "loginTitle": "Iniciar sesión",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "loggingIn": "Iniciando sesión...",
+    "logIn": "Iniciar sesión",
+    "logOut": "Cerrar sesión",
+    "invalidCredentials": "Correo o contraseña inválidos.",
+    "loginUnavailable": "No se pudo iniciar sesión. Inténtalo de nuevo.",
+    "invalidAuthResponse": "La respuesta de autenticación no es válida."
+  },
+  "language": {
+    "switcherLabel": "Idioma",
+    "es-CO": "Español (Colombia)",
+    "en-US": "English (US)"
+  },
+  "common": {
+    "loading": "Cargando..."
+  }
+}
