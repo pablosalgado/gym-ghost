@@ -10,6 +10,7 @@ services:
       RAILS_LOG_LEVEL: "${RAILS_LOG_LEVEL:-info}"
       APP_HOSTS: "${APP_HOSTS:?Set APP_HOSTS in .env}"
       SECRET_KEY_BASE: "${SECRET_KEY_BASE:?Set SECRET_KEY_BASE in .env}"
+      ATTR_ENCRYPTED_KEY: "${ATTR_ENCRYPTED_KEY:?Set ATTR_ENCRYPTED_KEY in .env}"
     volumes:
       - gym_ghost_storage:/app/storage
     restart: unless-stopped

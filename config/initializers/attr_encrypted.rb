@@ -1,4 +1,9 @@
 # frozen_string_literal: true
 
-# attr_encrypted encryption key is configured via ENV['ATTR_ENCRYPTED_KEY'].
-# Set this in credentials or your deployment environment. Never commit real keys.
+key = Rails.application.credentials.attr_encrypted_key || ENV["ATTR_ENCRYPTED_KEY"]
+
+if key.nil? && Rails.env.production?
+  raise "ATTR_ENCRYPTED_KEY must be set in credentials or ENV for production"
+end
+
+ENV["ATTR_ENCRYPTED_KEY"] = key if key
