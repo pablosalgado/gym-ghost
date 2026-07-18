@@ -1,0 +1,21 @@
+{
+  "auth": {
+    "loginTitle": "Log in",
+    "email": "Email",
+    "password": "Password",
+    "loggingIn": "Logging in...",
+    "logIn": "Log in",
+    "logOut": "Log out",
+    "invalidCredentials": "Invalid email or password.",
+    "loginUnavailable": "Unable to log in. Please try again.",
+    "invalidAuthResponse": "Authentication response was invalid."
+  },
+  "language": {
+    "switcherLabel": "Language",
+    "es-CO": "Español (Colombia)",
+    "en-US": "English (US)"
+  },
+  "common": {
+    "loading": "Loading..."
+  }
+}

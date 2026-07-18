@@ -32,12 +32,21 @@ function isApiErrorResponse(payload: unknown): payload is ApiErrorResponse {
   )
 }
 
-function getErrorMessage(payload: unknown): string {
+export type AuthErrorKey =
+  | 'auth.invalidCredentials'
+  | 'auth.loginUnavailable'
+  | 'auth.invalidAuthResponse'
+
+export type AuthError =
+  | { kind: 'server'; detail: string }
+  | { kind: 'key'; key: AuthErrorKey }
+
+function getAuthError(payload: unknown): AuthError {
   if (isApiErrorResponse(payload) && payload.errors.length > 0) {
-    return payload.errors[0].detail
+    return { kind: 'server', detail: payload.errors[0].detail }
   }
 
-  return 'Invalid email or password.'
+  return { kind: 'key', key: 'auth.invalidCredentials' }
 }
 
 export interface UseAuthResult {
@@ -46,7 +55,7 @@ export interface UseAuthResult {
   login: (email: string, password: string) => Promise<boolean>
   logout: () => void
   isLoading: boolean
-  error: string | null
+  error: AuthError | null
 }
 
 export function useAuth(): UseAuthResult {
@@ -54,7 +63,7 @@ export function useAuth(): UseAuthResult {
     localStorage.getItem(AUTH_TOKEN_STORAGE_KEY)
   )
   const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<AuthError | null>(null)
 
   const login = useCallback(async (email: string, password: string) => {
     setIsLoading(true)
@@ -72,12 +81,12 @@ export function useAuth(): UseAuthResult {
       const payload: unknown = await response.json()
 
       if (!response.ok) {
-        setError(getErrorMessage(payload))
+        setError(getAuthError(payload))
         return false
       }
 
       if (!isAuthSuccessResponse(payload)) {
-        setError('Authentication response was invalid.')
+        setError({ kind: 'key', key: 'auth.invalidAuthResponse' })
         return false
       }
 
@@ -85,7 +94,7 @@ export function useAuth(): UseAuthResult {
       setToken(payload.token)
       return true
     } catch {
-      setError('Unable to log in. Please try again.')
+      setError({ kind: 'key', key: 'auth.loginUnavailable' })
       return false
     } finally {
       setIsLoading(false)
