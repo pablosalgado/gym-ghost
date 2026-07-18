@@ -26,7 +26,7 @@ jobs:
     name: Tests
     runs-on: ubuntu-latest
     env:
-      ATTR_ENCRYPTED_KEY: test-ci-only-not-a-real-key-32chars!!
+      ATTR_ENCRYPTED_KEY: "0123456789abcdef0123456789abcdef"
     steps:
       - uses: actions/checkout@v7
       - uses: ruby/setup-ruby@v1
