@@ -1,0 +1,37 @@
+import { Link, Outlet, useNavigate } from 'react-router'
+import { useTranslation } from 'react-i18next'
+import { useAuth } from '../hooks/useAuth'
+import LanguageSwitcher from './LanguageSwitcher'
+
+export default function AppShell() {
+  const { logout } = useAuth()
+  const { t } = useTranslation()
+  const navigate = useNavigate()
+
+  function handleLogout() {
+    logout()
+    navigate('/login')
+  }
+
+  return (
+    <div className="min-h-dvh flex flex-col">
+      <header className="flex items-center justify-between gap-4 border-b border-gray-200 px-4 py-3">
+        <Link to="/" className="text-lg font-bold">
+          Gym Ghost
+        </Link>
+        <div className="flex items-center gap-4">
+          <LanguageSwitcher />
+          <button
+            onClick={handleLogout}
+            className="min-h-11 rounded bg-gray-200 px-4 py-2 hover:bg-gray-300"
+          >
+            {t('auth.logOut')}
+          </button>
+        </div>
+      </header>
+      <main className="flex-1">
+        <Outlet />
+      </main>
+    </div>
+  )
+}

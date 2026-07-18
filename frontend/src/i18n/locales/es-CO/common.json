@@ -15,6 +15,18 @@
     "es-CO": "Español (Colombia)",
     "en-US": "English (US)"
   },
+  "landing": {
+    "title": "Bienvenido a Gym Ghost",
+    "subtitle": "Tu compañero para reservar clases de gimnasio.",
+    "ctaTitle": "Explorar el horario",
+    "ctaDescription": "Navega las clases de las próximas dos semanas y filtra por ciudad, sede y clase."
+  },
+  "schedule": {
+    "placeholder": {
+      "title": "Horario",
+      "comingSoon": "Próximamente: el horario de clases."
+    }
+  },
   "common": {
     "loading": "Cargando..."
   }

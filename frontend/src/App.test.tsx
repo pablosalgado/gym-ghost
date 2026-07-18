@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import { MemoryRouter } from 'react-router'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import App from './App'
@@ -26,9 +26,9 @@ function buildUseAuthMock(overrides: Partial<UseAuthResult> = {}): UseAuthResult
   }
 }
 
-function renderApp() {
+function renderApp(initialPath = '/') {
   return render(
-    <MemoryRouter>
+    <MemoryRouter initialEntries={[initialPath]}>
       <App />
     </MemoryRouter>
   )
@@ -39,7 +39,7 @@ describe('App', () => {
     vi.clearAllMocks()
   })
 
-  it('renders LoginPage when not authenticated', () => {
+  it('redirects unauthenticated visitors to the login page', () => {
     mockedUseAuth.mockReturnValue(buildUseAuthMock({ isAuthenticated: false }))
 
     renderApp()
@@ -47,110 +47,78 @@ describe('App', () => {
     expect(screen.getByTestId('login-page')).toBeInTheDocument()
   })
 
-  it('renders greeting when authenticated', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-      ok: true,
-      status: 200,
-      json: () => Promise.resolve({ message: 'Hello from Gym Ghost' }),
-    }))
+  it('redirects unknown paths to /', () => {
+    mockedUseAuth.mockReturnValue(buildUseAuthMock({ isAuthenticated: false }))
+
+    renderApp('/no-such-page')
+
+    expect(screen.getByTestId('login-page')).toBeInTheDocument()
+  })
+
+  it('renders the landing page inside the shell when authenticated', () => {
     mockedUseAuth.mockReturnValue(
       buildUseAuthMock({ isAuthenticated: true, token: 'test-token' })
     )
 
     renderApp()
 
-    expect(await screen.findByText('Hello from Gym Ghost')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Cerrar sesión' })).toBeInTheDocument()
+    expect(
+      screen.getByRole('heading', { name: 'Bienvenido a Gym Ghost' })
+    ).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Gym Ghost' })).toBeInTheDocument()
+    expect(screen.getByRole('combobox')).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: 'Cerrar sesión' })
+    ).toBeInTheDocument()
   })
 
-  it('uses a full-height shell that works with body safe-area padding', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-      ok: true,
-      status: 200,
-      json: () => Promise.resolve({ message: 'Hello from Gym Ghost' }),
-    }))
+  it('uses a full-height shell that works with body safe-area padding', () => {
     mockedUseAuth.mockReturnValue(
       buildUseAuthMock({ isAuthenticated: true, token: 'test-token' })
     )
 
     const { container } = renderApp()
 
-    await screen.findByText('Hello from Gym Ghost')
     expect(container.firstChild).toHaveClass('min-h-dvh')
   })
 
-  it('fetches greeting with Authorization header when authenticated', async () => {
-    const fetchMock = vi.fn().mockResolvedValue({
-      ok: true,
-      status: 200,
-      json: () => Promise.resolve({ message: 'Hello from Gym Ghost' }),
-    })
-    vi.stubGlobal('fetch', fetchMock)
+  it('navigates from the landing CTA to the schedule placeholder', () => {
     mockedUseAuth.mockReturnValue(
       buildUseAuthMock({ isAuthenticated: true, token: 'test-token' })
     )
 
     renderApp()
 
-    await screen.findByText('Hello from Gym Ghost')
-    expect(fetchMock).toHaveBeenCalledWith(
-      '/api/v1/hello',
-      expect.objectContaining({
-        headers: expect.objectContaining({ Authorization: 'Bearer test-token' }),
-      })
-    )
+    fireEvent.click(screen.getByText('Explorar el horario'))
+
+    expect(
+      screen.getByText('Próximamente: el horario de clases.')
+    ).toBeInTheDocument()
   })
 
-  it('calls logout when logout button is clicked', async () => {
+  it('calls logout and returns to /login from the shell button', () => {
     const logoutMock = vi.fn()
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-      ok: true,
-      status: 200,
-      json: () => Promise.resolve({ message: 'Hello' }),
-    }))
     mockedUseAuth.mockReturnValue(
       buildUseAuthMock({ isAuthenticated: true, token: 'test-token', logout: logoutMock })
     )
 
     renderApp()
 
-    await screen.findByText('Hello')
     fireEvent.click(screen.getByRole('button', { name: 'Cerrar sesión' }))
 
     expect(logoutMock).toHaveBeenCalled()
+    expect(screen.getByTestId('login-page')).toBeInTheDocument()
   })
 
-  it('applies a 44px minimum touch target to the logout button', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-      ok: true,
-      status: 200,
-      json: () => Promise.resolve({ message: 'Hello' }),
-    }))
+  it('applies a 44px minimum touch target to the logout button', () => {
     mockedUseAuth.mockReturnValue(
       buildUseAuthMock({ isAuthenticated: true, token: 'test-token' })
     )
 
     renderApp()
 
-    const logoutButton = await screen.findByRole('button', { name: 'Cerrar sesión' })
-
-    expect(logoutButton).toHaveClass('min-h-11')
-  })
-
-  it('calls logout on 401 response', async () => {
-    const logoutMock = vi.fn()
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-      ok: false,
-      status: 401,
-    }))
-    mockedUseAuth.mockReturnValue(
-      buildUseAuthMock({ isAuthenticated: true, token: 'expired-token', logout: logoutMock })
-    )
-
-    renderApp()
-
-    await waitFor(() => {
-      expect(logoutMock).toHaveBeenCalled()
-    })
+    expect(
+      screen.getByRole('button', { name: 'Cerrar sesión' })
+    ).toHaveClass('min-h-11')
   })
 })

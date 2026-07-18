@@ -4,6 +4,9 @@ import { Navigate, Route, Routes } from 'react-router'
 import { useAuth } from './hooks/useAuth'
 import LoginPage from './components/LoginPage'
 import RequireAuth from './components/RequireAuth'
+import AppShell from './components/AppShell'
+import LandingPage from './pages/LandingPage'
+import SchedulePlaceholderPage from './pages/SchedulePlaceholderPage'
 
 interface GreetingResponse {
   message: string
@@ -87,7 +90,10 @@ export default function App() {
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route element={<RequireAuth />}>
-        <Route path="/" element={<GreetingHomePage />} />
+        <Route element={<AppShell />}>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/schedule" element={<SchedulePlaceholderPage />} />
+        </Route>
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
