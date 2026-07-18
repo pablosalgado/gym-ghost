@@ -38,7 +38,7 @@ git worktree remove ../gym-ghost-<branch-name>
 ## Project shape
 
 - Gym Ghost is an API-only Rails application (`config.api_only = true`) with a separate React/Vite frontend in `frontend/`.
-- Rails serves the JSON API on port 3000. Routes are versioned under `/api/v1`; match the nested controller module and path (for example, `Api::V1::HelloController` in `app/controllers/api/v1/hello_controller.rb`) and render JSON responses.
+- Rails serves the JSON API on port 3000. Routes are versioned under `/api/v1`; match the nested controller module and path (for example, `Api::V1::ScheduleController` in `app/controllers/api/v1/schedule_controller.rb`) and render JSON responses.
 - The frontend runs independently through Vite on port 5173 during development. Its React entry point is `frontend/src/main.tsx`, and global styling starts in `frontend/src/index.css` with Tailwind CSS.
 - For a non-Docker static deployment, build in `frontend/`, then copy `frontend/dist/.` into `public/`. The production Docker image performs that handoff itself; `docker-compose.yml` runs it with a persistent SQLite volume and requires `APP_HOSTS` and `SECRET_KEY_BASE` in a local `.env` file. Production assumes a TLS-terminating proxy that forwards the original HTTPS scheme.
 - Local development and test data use SQLite databases under `storage/`. The test database schema is maintained automatically by `spec/rails_helper.rb`.
