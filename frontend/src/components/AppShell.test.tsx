@@ -67,4 +67,61 @@ describe('AppShell', () => {
     expect(logoutMock).toHaveBeenCalled()
     expect(screen.getByText('login probe')).toBeInTheDocument()
   })
+
+  it('renders hamburger menu button', () => {
+    mockedUseAuth.mockReturnValue(buildUseAuthMock())
+
+    renderShell()
+
+    expect(
+      screen.getByRole('button', { name: 'Abrir menú de navegación' })
+    ).toBeInTheDocument()
+  })
+
+  it('opens mobile menu when hamburger is clicked', () => {
+    mockedUseAuth.mockReturnValue(buildUseAuthMock())
+
+    renderShell()
+
+    const hamburgerButton = screen.getByRole('button', {
+      name: 'Abrir menú de navegación',
+    })
+    fireEvent.click(hamburgerButton)
+
+    expect(screen.getByRole('menu')).toBeInTheDocument()
+    expect(screen.getByRole('menuitem', { name: 'Cerrar sesión' })).toBeInTheDocument()
+  })
+
+  it('closes mobile menu when escape is pressed', () => {
+    mockedUseAuth.mockReturnValue(buildUseAuthMock())
+
+    renderShell()
+
+    const hamburgerButton = screen.getByRole('button', {
+      name: 'Abrir menú de navegación',
+    })
+    fireEvent.click(hamburgerButton)
+    expect(screen.getByRole('menu')).toBeInTheDocument()
+
+    fireEvent.keyDown(document, { key: 'Escape' })
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument()
+  })
+
+  it('logs out from mobile menu and navigates to /login', () => {
+    const logoutMock = vi.fn()
+    mockedUseAuth.mockReturnValue(buildUseAuthMock({ logout: logoutMock }))
+
+    renderShell()
+
+    const hamburgerButton = screen.getByRole('button', {
+      name: 'Abrir menú de navegación',
+    })
+    fireEvent.click(hamburgerButton)
+
+    const logoutButton = screen.getByRole('menuitem', { name: 'Cerrar sesión' })
+    fireEvent.click(logoutButton)
+
+    expect(logoutMock).toHaveBeenCalled()
+    expect(screen.getByText('login probe')).toBeInTheDocument()
+  })
 })

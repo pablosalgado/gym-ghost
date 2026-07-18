@@ -8,7 +8,7 @@ export default function LanguageSwitcher() {
 
   return (
     <label className="flex items-center gap-2 text-sm font-medium">
-      <span>{t('language.switcherLabel')}</span>
+      <span className="sr-only sm:not-sr-only">{t('language.switcherLabel')}</span>
       <select
         value={i18n.resolvedLanguage ?? DEFAULT_LANGUAGE}
         onChange={(event) =>
