@@ -10,7 +10,27 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_17_201642) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_18_000002) do
+  create_table "gym_members", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "email", null: false
+    t.string "password_digest", null: false
+    t.datetime "updated_at", null: false
+    t.index ["email"], name: "index_gym_members_on_email", unique: true
+  end
+
+  create_table "partner_tokens", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "encrypted_access_token", null: false
+    t.string "encrypted_access_token_iv", null: false
+    t.string "encrypted_refresh_token", null: false
+    t.string "encrypted_refresh_token_iv", null: false
+    t.integer "gym_member_id", null: false
+    t.datetime "token_expires_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["gym_member_id"], name: "index_partner_tokens_on_gym_member_id"
+  end
+
   create_table "tokens", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "digest", null: false
@@ -28,5 +48,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_17_201642) do
     t.index ["email"], name: "index_users_on_email", unique: true
   end
 
+  add_foreign_key "partner_tokens", "gym_members"
   add_foreign_key "tokens", "users"
 end

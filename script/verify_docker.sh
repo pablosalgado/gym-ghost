@@ -5,6 +5,7 @@ project_name="gym-ghost-smoke"
 export HOST_PORT="${HOST_PORT:-3001}"
 export APP_HOSTS="${APP_HOSTS:-smoke.gym-ghost.test}"
 export SECRET_KEY_BASE="${SECRET_KEY_BASE:-ci-smoke-test-secret}"
+export ATTR_ENCRYPTED_KEY="${ATTR_ENCRYPTED_KEY:-ci-smoke-test-encryption-key-32!}"
 
 cleanup() {
   status=$?
