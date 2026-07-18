@@ -1,4 +1,5 @@
 import { render, screen, fireEvent } from '@testing-library/react'
+import { MemoryRouter } from 'react-router'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import App from './App'
 import { useAuth, type UseAuthResult } from './hooks/useAuth'
@@ -25,28 +26,50 @@ function buildUseAuthMock(overrides: Partial<UseAuthResult> = {}): UseAuthResult
   }
 }
 
+function renderApp(initialPath = '/') {
+  return render(
+    <MemoryRouter initialEntries={[initialPath]}>
+      <App />
+    </MemoryRouter>
+  )
+}
+
 describe('App', () => {
   beforeEach(() => {
     vi.clearAllMocks()
   })
 
-  it('renders LoginPage when not authenticated', () => {
+  it('redirects unauthenticated visitors to the login page', () => {
     mockedUseAuth.mockReturnValue(buildUseAuthMock({ isAuthenticated: false }))
 
-    render(<App />)
+    renderApp()
 
     expect(screen.getByTestId('login-page')).toBeInTheDocument()
   })
 
-  it('renders app title and logout button when authenticated', () => {
+  it('redirects unknown paths to /', () => {
+    mockedUseAuth.mockReturnValue(buildUseAuthMock({ isAuthenticated: false }))
+
+    renderApp('/no-such-page')
+
+    expect(screen.getByTestId('login-page')).toBeInTheDocument()
+  })
+
+  it('renders the landing page inside the shell when authenticated', () => {
     mockedUseAuth.mockReturnValue(
       buildUseAuthMock({ isAuthenticated: true, token: 'test-token' })
     )
 
-    render(<App />)
+    renderApp()
 
-    expect(screen.getByRole('heading', { name: /gym ghost/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Cerrar sesión' })).toBeInTheDocument()
+    expect(
+      screen.getByRole('heading', { name: 'Bienvenido a Gym Ghost' })
+    ).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Gym Ghost' })).toBeInTheDocument()
+    expect(screen.getByRole('combobox')).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: 'Cerrar sesión' })
+    ).toBeInTheDocument()
   })
 
   it('uses a full-height shell that works with body safe-area padding', () => {
@@ -54,22 +77,37 @@ describe('App', () => {
       buildUseAuthMock({ isAuthenticated: true, token: 'test-token' })
     )
 
-    const { container } = render(<App />)
+    const { container } = renderApp()
 
     expect(container.firstChild).toHaveClass('min-h-dvh')
   })
 
-  it('calls logout when logout button is clicked', () => {
+  it('navigates from the landing CTA to the schedule placeholder', () => {
+    mockedUseAuth.mockReturnValue(
+      buildUseAuthMock({ isAuthenticated: true, token: 'test-token' })
+    )
+
+    renderApp()
+
+    fireEvent.click(screen.getByText('Explorar el horario'))
+
+    expect(
+      screen.getByText('Próximamente: el horario de clases.')
+    ).toBeInTheDocument()
+  })
+
+  it('calls logout and returns to /login from the shell button', () => {
     const logoutMock = vi.fn()
     mockedUseAuth.mockReturnValue(
       buildUseAuthMock({ isAuthenticated: true, token: 'test-token', logout: logoutMock })
     )
 
-    render(<App />)
+    renderApp()
 
     fireEvent.click(screen.getByRole('button', { name: 'Cerrar sesión' }))
 
     expect(logoutMock).toHaveBeenCalled()
+    expect(screen.getByTestId('login-page')).toBeInTheDocument()
   })
 
   it('applies a 44px minimum touch target to the logout button', () => {
@@ -77,10 +115,10 @@ describe('App', () => {
       buildUseAuthMock({ isAuthenticated: true, token: 'test-token' })
     )
 
-    render(<App />)
+    renderApp()
 
-    const logoutButton = screen.getByRole('button', { name: 'Cerrar sesión' })
-
-    expect(logoutButton).toHaveClass('min-h-11')
+    expect(
+      screen.getByRole('button', { name: 'Cerrar sesión' })
+    ).toHaveClass('min-h-11')
   })
 })

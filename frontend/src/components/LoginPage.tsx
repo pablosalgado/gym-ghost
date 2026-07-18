@@ -1,5 +1,6 @@
 import { FormEvent, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Navigate, useLocation, useNavigate } from 'react-router'
 import { useAuth, type UseAuthResult } from '../hooks/useAuth'
 
 interface LoginPageProps {
@@ -8,9 +9,24 @@ interface LoginPageProps {
   error?: UseAuthResult['error']
 }
 
+function redirectPathFrom(state: unknown): string {
+  if (typeof state === 'object' && state !== null && 'from' in state) {
+    const { from } = state as { from: unknown }
+    if (typeof from === 'object' && from !== null && 'pathname' in from) {
+      const { pathname } = from as { pathname: unknown }
+      if (typeof pathname === 'string') {
+        return pathname
+      }
+    }
+  }
+  return '/'
+}
+
 export default function LoginPage({ login: loginProp, isLoading: isLoadingProp, error: errorProp }: LoginPageProps = {}) {
   const auth = useAuth()
   const { t } = useTranslation()
+  const navigate = useNavigate()
+  const location = useLocation()
   const login = loginProp ?? auth.login
   const isLoading = isLoadingProp ?? auth.isLoading
   const error = errorProp !== undefined ? errorProp : auth.error
@@ -18,9 +34,16 @@ export default function LoginPage({ login: loginProp, isLoading: isLoadingProp, 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
 
+  if (auth.isAuthenticated) {
+    return <Navigate to="/" replace />
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    await login(email, password)
+    const succeeded = await login(email, password)
+    if (succeeded) {
+      navigate(redirectPathFrom(location.state), { replace: true })
+    }
   }
 
   return (

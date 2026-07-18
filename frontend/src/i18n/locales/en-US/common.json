@@ -18,6 +18,18 @@
     "es-CO": "Español (Colombia)",
     "en-US": "English (US)"
   },
+  "landing": {
+    "title": "Welcome to Gym Ghost",
+    "subtitle": "Your gym class booking companion.",
+    "ctaTitle": "Explore the schedule",
+    "ctaDescription": "Browse classes for the next two weeks and filter by city, facility, and class."
+  },
+  "schedule": {
+    "placeholder": {
+      "title": "Schedule",
+      "comingSoon": "Coming soon: the class schedule."
+    }
+  },
   "common": {
     "loading": "Loading..."
   }
