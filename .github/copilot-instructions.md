@@ -4,6 +4,8 @@
 
 Gym Ghost manages gym class schedules and member bookings. It is a solo project — keep the architecture simple and resist premature abstraction.
 
+**Design principle**: Gym Ghost is a mobile-first webapp. The primary experience targets phones (portrait, touch). Desktop layouts are a progressive enhancement, not the default. Treat `frontend/index.html`'s viewport meta and `frontend/src/index.css`'s safe-area/dvh usage as the baseline conventions to follow.
+
 ## Branch workflow (mandatory)
 
 The `main` branch is protected. **Never commit, push, or open a PR against `main`.**
