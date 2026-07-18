@@ -5,6 +5,7 @@ Rails.application.routes.draw do
     namespace :v1 do
       get "/hello", to: "hello#index"
       post "/auth", to: "auth#create"
+      get "/schedule", to: "schedule#index"
     end
   end
 
