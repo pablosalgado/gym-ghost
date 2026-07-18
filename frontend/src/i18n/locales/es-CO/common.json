@@ -1,4 +1,7 @@
 {
+  "app": {
+    "title": "Gym Ghost"
+  },
   "auth": {
     "loginTitle": "Iniciar sesión",
     "email": "Correo electrónico",

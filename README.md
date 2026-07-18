@@ -16,7 +16,7 @@ Quickstart (local)
 2. bin/setup           # rails-provided setup script (installs gems, sets up DB if necessary)
 3. In terminal A: cd frontend && npm ci && npm run dev   # starts Vite (http://localhost:5173)
 4. In terminal B: bundle exec rails server     # starts Rails API (http://localhost:3000)
-5. Verify endpoint protection: `curl -i http://localhost:3000/api/v1/hello` (returns `401 Unauthorized` without a valid bearer token)
+5. Verify endpoint protection: `curl -i http://localhost:3000/api/v1/schedule` (returns `401 Unauthorized` without a valid bearer token)
 
 Node & Vite notes
 - Node 24.18.0 is required. With nvm, run `nvm install` and `nvm use` from the repository root.
