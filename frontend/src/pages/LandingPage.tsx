@@ -12,7 +12,7 @@ export default function LandingPage() {
       </div>
       <Link
         to="/schedule"
-        className="block w-full max-w-sm rounded-lg border border-gray-300 p-6 hover:border-blue-600 hover:shadow-sm"
+        className="block w-full min-h-11 rounded-lg border border-gray-300 p-6 hover:border-blue-600 hover:shadow-sm sm:max-w-sm"
       >
         <h2 className="text-xl font-semibold">{t('landing.ctaTitle')}</h2>
         <p className="mt-1 text-sm text-gray-600">
