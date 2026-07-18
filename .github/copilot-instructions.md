@@ -4,6 +4,37 @@
 
 Gym Ghost manages gym class schedules and member bookings. It is a solo project — keep the architecture simple and resist premature abstraction.
 
+## Branch workflow (mandatory)
+
+The `main` branch is protected. **Never commit, push, or open a PR against `main`.**
+
+Before making any change:
+
+1. Check current branch: `git branch --show-current`
+2. If on `main`, create a feature branch: `git checkout -b <type>/<short-description>`
+3. Make changes, commit, push the branch
+4. Open a PR for review
+
+Branch naming:
+
+- `feature/<short-description>` — new functionality
+- `fix/<short-description>` — bug fixes
+- `chore/<short-description>` — dependencies, tooling, refactors
+
+Commit messages: imperative mood, max 72 characters. Reference the issue number when applicable.
+
+## Worktrees
+
+Always create a worktree for your work. Delete it after the PR merges.
+
+```bash
+# Create worktree and branch
+git worktree add ../gym-ghost-<branch-name> -b <branch-name>
+
+# After merge, clean up
+git worktree remove ../gym-ghost-<branch-name>
+```
+
 ## Project shape
 
 - Gym Ghost is an API-only Rails application (`config.api_only = true`) with a separate React/Vite frontend in `frontend/`.
@@ -12,16 +43,49 @@ Gym Ghost manages gym class schedules and member bookings. It is a solo project 
 - For a non-Docker static deployment, build in `frontend/`, then copy `frontend/dist/.` into `public/`. The production Docker image performs that handoff itself; `docker-compose.yml` runs it with a persistent SQLite volume and requires `APP_HOSTS` and `SECRET_KEY_BASE` in a local `.env` file. Production assumes a TLS-terminating proxy that forwards the original HTTPS scheme.
 - Local development and test data use SQLite databases under `storage/`. The test database schema is maintained automatically by `spec/rails_helper.rb`.
 - `config/initializers/cors.rb` is only a commented template, and `rack-cors` is not enabled. Configure both deliberately before browser code makes cross-origin calls from Vite to the Rails API.
+- Date and time handling rules live in `.github/instructions/date-time.instructions.md`; the app default zone is America/Bogota and the API contract stays UTC.
 
 ## File structure
 
 ```
-app/controllers/api/v1/   — API controllers
-app/models/               — ActiveRecord models
-config/routes.rb          — API routes
-frontend/src/             — React components, hooks, and utilities
-spec/requests/            — Request specs
+gym-ghost/
+├── app/
+│   ├── controllers/
+│   │   ├── api/v1/          # Versioned API controllers
+│   │   └── concerns/        # Authentication concern
+│   └── models/              # User, Token (bcrypt + SHA256 digest)
+├── config/
+│   ├── ci.rb                # CI pipeline definition (bin/ci runs this)
+│   ├── environments/        # Rails env configs
+│   └── initializers/        # App boot config
+├── db/migrate/              # ActiveRecord migrations
+├── frontend/src/
+│   ├── components/          # React components
+│   ├── hooks/               # Custom React hooks
+│   ├── App.tsx              # Root component
+│   └── main.tsx             # Entry point
+├── spec/
+│   ├── factories/           # FactoryBot factories (users, tokens)
+│   ├── models/              # Model specs
+│   └── requests/api/v1/     # Request specs (type: :request required)
+├── bin/                     # Executables (ci, setup, rubocop, etc.)
+├── script/verify_docker.sh  # Docker smoke test
+└── scripts/setup_dev.sh     # Devcontainer setup
 ```
+
+## Where to look
+
+| Task | Location | Notes |
+|------|----------|-------|
+| Add API endpoint | `app/controllers/api/v1/`, `config/routes.rb` | Namespace under `Api::V1`, route under `/api/v1` |
+| Add model | `app/models/`, `db/migrate/` | Add factory in `spec/factories/` |
+| Change auth | `app/controllers/concerns/authentication.rb` | Bearer token via `Token.digest` |
+| Change error format | `app/controllers/application_controller.rb` | `{ errors: [{ status:, title:, detail: }] }` |
+| Frontend component | `frontend/src/components/` | Tailwind CSS, strict TypeScript |
+| Frontend hook | `frontend/src/hooks/` | Custom hooks |
+| Add test | `spec/requests/api/v1/` or `spec/models/` | Declare `type: :request` or `type: :model` explicitly |
+| CI pipeline | `config/ci.rb` | `bin/ci` runs all steps sequentially |
+| Docker | `Dockerfile`, `docker-compose.yml` | Multi-stage build: frontend → Rails |
 
 ## Setup and development
 
@@ -57,9 +121,22 @@ spec/requests/            — Request specs
 - RSpec is configured with transactional fixtures and verifies partial doubles. `infer_spec_type_from_file_location!` is not enabled, so Rails specs should declare their type explicitly when Rails behavior is needed (for example, `type: :request`).
 - The frontend uses strict TypeScript and TSX. Tailwind scans `frontend/index.html` and `frontend/src/**/*.{ts,tsx}`; place class-bearing UI code under those paths.
 
-## Git conventions
+## Anti-patterns
 
-- Branch naming: `feature/<short-description>`, `fix/<short-description>`, `chore/<short-description>`. Use lowercase and hyphens, no slashes beyond the prefix.
-- Commit messages: imperative mood, max 72 characters for the subject line, reference the issue number when applicable (for example, `Add validation for email field (#12)`).
-- Keep PRs focused on a single concern. Do not bundle unrelated changes in the same pull request.
-- Rebase on `main` before opening a PR if the branch has fallen behind. Do not merge `main` into a feature branch.
+- Do not add HTML views or ERB templates — this is API-only.
+- Do not use `rescue StandardError` to hide failures.
+- Do not commit directly to `main`.
+- Do not skip the pre-push CI check.
+- Do not add `rack-cors` without explicit allowed origins.
+- Do not use wildcard CORS for authenticated endpoints.
+- Do not drop tables or remove columns without reversible steps.
+
+## Notes
+
+- **Pre-push hook**: Runs `bin/ci` automatically. Blocks failed pushes. Do not bypass.
+- **Pre-commit hook**: Runs RuboCop + TypeScript typecheck.
+- **Database**: SQLite for all environments (dev, test, prod). Schema in `db/schema.rb`.
+- **Auth flow**: `POST /api/v1/auth` with email+password → returns bearer token. All other endpoints require `Authorization: Bearer <token>`.
+- **Schedule**: `GET /api/v1/schedule` returns mock data (hardcoded gym classes in Bogota/Medellin). Partner API integration upcoming.
+- **Docker**: Multi-stage build. Frontend built in Node stage, copied to Rails `public/`. Production serves both from port 3000.
+- **CI sync**: `.github/workflows/ci.yml`, `config/ci.rb`, `.githooks/`, `scripts/setup_dev.sh`, `README.md`, and this file are one validation contract. Update all affected surfaces when changing build/test steps.
