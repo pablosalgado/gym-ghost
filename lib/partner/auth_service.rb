@@ -13,8 +13,15 @@ module Partner
     include HTTParty
 
     format :json
-    headers "Content-Type" => "application/json",
-            "Accept" => "application/json"
+    headers "User-Agent"      => "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:152.0) Gecko/20100101 Firefox/152.0",
+            "Accept"          => "*/*",
+            "Accept-Language" => "en-US,en;q=0.9",
+            "Accept-Encoding" => "gzip, deflate, br, zstd",
+            "Content-Type"    => "application/json",
+            "Connection"      => "keep-alive",
+            "Sec-Fetch-Dest"  => "empty",
+            "Sec-Fetch-Mode"  => "cors",
+            "Sec-Fetch-Site"  => "cross-site"
 
     LOGIN_PATH = "/api/v1/auth/login"
 
@@ -50,7 +57,11 @@ module Partner
     def request_login
       self.class.post(
         "#{ENV.fetch("PARTNER_API_BASE_URL")}#{LOGIN_PATH}",
-        body: login_body.to_json
+        body: login_body.to_json,
+        headers: {
+          "Referer" => ENV.fetch("TEST_PARTNER_AUTH_REFERER"),
+          "Origin"  => ENV.fetch("TEST_PARTNER_AUTH_ORIGIN")
+        }
       )
     end
 

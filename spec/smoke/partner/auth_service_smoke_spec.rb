@@ -2,10 +2,8 @@ require "rails_helper"
 
 RSpec.describe Partner::AuthService, smoke: true do
   before do
-    skip "Set PARTNER_API_BASE_URL, TEST_PARTNER_AUTH_EMAIL, TEST_PARTNER_AUTH_PASSWORD, and " \
-         "TEST_PARTNER_AUTH_PARTNER_NAME, TEST_PARTNER_AUTH_BRANCH_ID, " \
-         "TEST_PARTNER_AUTH_BRANCH_NAME, TEST_PARTNER_AUTH_TOKEN_BRANCH, " \
-         "and TEST_PARTNER_AUTH_COUNTRY_CODE to run smoke tests" unless
+    skip "Set PARTNER_API_BASE_URL, all TEST_PARTNER_AUTH_* vars (including " \
+         "REFERER and ORIGIN) to run smoke tests" unless
       ENV["PARTNER_API_BASE_URL"].present? &&
       ENV["TEST_PARTNER_AUTH_EMAIL"].present? &&
       ENV["TEST_PARTNER_AUTH_PASSWORD"].present? &&
@@ -13,7 +11,9 @@ RSpec.describe Partner::AuthService, smoke: true do
       ENV["TEST_PARTNER_AUTH_BRANCH_ID"].present? &&
       ENV["TEST_PARTNER_AUTH_BRANCH_NAME"].present? &&
       ENV["TEST_PARTNER_AUTH_TOKEN_BRANCH"].present? &&
-      ENV["TEST_PARTNER_AUTH_COUNTRY_CODE"].present?
+      ENV["TEST_PARTNER_AUTH_COUNTRY_CODE"].present? &&
+      ENV["TEST_PARTNER_AUTH_REFERER"].present? &&
+      ENV["TEST_PARTNER_AUTH_ORIGIN"].present?
   end
   # Use real credentials from environment
   let(:gym_member) { create(:gym_member, email: ENV["TEST_PARTNER_AUTH_EMAIL"], password: ENV["TEST_PARTNER_AUTH_PASSWORD"]) }

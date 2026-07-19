@@ -15,12 +15,16 @@ RSpec.describe Partner::AuthService do
     old_branch_name  = ENV.delete("TEST_PARTNER_AUTH_BRANCH_NAME")
     old_token_branch = ENV.delete("TEST_PARTNER_AUTH_TOKEN_BRANCH")
     old_country_code = ENV.delete("TEST_PARTNER_AUTH_COUNTRY_CODE")
+    old_referer      = ENV.delete("TEST_PARTNER_AUTH_REFERER")
+    old_origin       = ENV.delete("TEST_PARTNER_AUTH_ORIGIN")
     ENV["PARTNER_API_BASE_URL"]             = "http://partner.test"
     ENV["TEST_PARTNER_AUTH_PARTNER_NAME"]   = "TestPartner"
     ENV["TEST_PARTNER_AUTH_BRANCH_ID"]      = "6"
     ENV["TEST_PARTNER_AUTH_BRANCH_NAME"]    = "Test Branch"
     ENV["TEST_PARTNER_AUTH_TOKEN_BRANCH"]   = "TOKEN001"
     ENV["TEST_PARTNER_AUTH_COUNTRY_CODE"]   = "CO"
+    ENV["TEST_PARTNER_AUTH_REFERER"]        = "https://partner.test"
+    ENV["TEST_PARTNER_AUTH_ORIGIN"]         = "https://partner.test"
     example.run
   ensure
     ENV["PARTNER_API_BASE_URL"]           = old_url
@@ -29,6 +33,8 @@ RSpec.describe Partner::AuthService do
     ENV["TEST_PARTNER_AUTH_BRANCH_NAME"]  = old_branch_name
     ENV["TEST_PARTNER_AUTH_TOKEN_BRANCH"] = old_token_branch
     ENV["TEST_PARTNER_AUTH_COUNTRY_CODE"] = old_country_code
+    ENV["TEST_PARTNER_AUTH_REFERER"]      = old_referer
+    ENV["TEST_PARTNER_AUTH_ORIGIN"]       = old_origin
   end
 
   let(:gym_member) { create(:gym_member, email: "alice@example.com", password: "Password123!") }
