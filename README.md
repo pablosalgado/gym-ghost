@@ -53,6 +53,16 @@ Testing
 
 Git automatically runs `bin/ci` before each push after `scripts/setup_dev.sh` configures the repository hooks. A failed check blocks the push.
 
+### Manual smoke test (live partner API)
+
+To exercise the real partner API integration (requires valid credentials in `.env`):
+
+```
+bundle exec rake partner:smoke
+```
+
+This task is **manual opt-in only** — it never runs in CI. It validates that the partner client can authenticate and fetch data from the live upstream API, which is useful after credential rotation or upstream schema changes.
+
 Devcontainer
 - A .devcontainer/ is included. Open the folder in VS Code Remote Containers or Codespaces; postCreateCommand runs setup.
 
