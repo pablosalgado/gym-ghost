@@ -40,7 +40,7 @@ describe('AppShell', () => {
     vi.clearAllMocks()
   })
 
-  it('renders brand, language switcher, logout, and the routed page', () => {
+  it('renders brand, schedule link, language switcher, logout, and the routed page', () => {
     mockedUseAuth.mockReturnValue(buildUseAuthMock())
 
     renderShell()
@@ -48,6 +48,10 @@ describe('AppShell', () => {
     expect(screen.getByRole('link', { name: 'Gym Ghost' })).toHaveAttribute(
       'href',
       '/'
+    )
+    expect(screen.getByRole('link', { name: 'Horario' })).toHaveAttribute(
+      'href',
+      '/schedule'
     )
     expect(screen.getByRole('combobox')).toBeInTheDocument()
     expect(

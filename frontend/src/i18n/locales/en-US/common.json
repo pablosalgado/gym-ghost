@@ -25,10 +25,35 @@
     "ctaDescription": "Browse classes for the next two weeks and filter by city, facility, and class."
   },
   "schedule": {
-    "placeholder": {
-      "title": "Schedule",
-      "comingSoon": "Coming soon: the class schedule."
+    "title": "Schedule",
+    "filter": {
+      "all": "All",
+      "city": "City",
+      "facility": "Facility",
+      "classType": "Class"
+    },
+    "emptyState": "No classes for this selection.",
+    "cities": {
+      "bogota": "Bogotá",
+      "medellin": "Medellín"
+    },
+    "facilities": {
+      "chapinero": "Chapinero",
+      "zona-t": "Zona T",
+      "poblado": "El Poblado",
+      "laureles": "Laureles"
+    },
+    "classes": {
+      "spinning": "Spinning",
+      "yoga": "Yoga",
+      "crossfit": "CrossFit",
+      "pilates": "Pilates",
+      "boxing": "Boxing",
+      "functional": "Functional"
     }
+  },
+  "nav": {
+    "schedule": "Schedule"
   },
   "common": {
     "loading": "Loading..."

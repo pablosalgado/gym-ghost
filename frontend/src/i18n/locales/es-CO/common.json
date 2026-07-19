@@ -25,10 +25,35 @@
     "ctaDescription": "Navega las clases de las próximas dos semanas y filtra por ciudad, sede y clase."
   },
   "schedule": {
-    "placeholder": {
-      "title": "Horario",
-      "comingSoon": "Próximamente: el horario de clases."
+    "title": "Horario",
+    "filter": {
+      "all": "Todas",
+      "city": "Ciudad",
+      "facility": "Sede",
+      "classType": "Clase"
+    },
+    "emptyState": "No hay clases para esta selección.",
+    "cities": {
+      "bogota": "Bogotá",
+      "medellin": "Medellín"
+    },
+    "facilities": {
+      "chapinero": "Chapinero",
+      "zona-t": "Zona T",
+      "poblado": "El Poblado",
+      "laureles": "Laureles"
+    },
+    "classes": {
+      "spinning": "Spinning",
+      "yoga": "Yoga",
+      "crossfit": "CrossFit",
+      "pilates": "Pilates",
+      "boxing": "Boxeo",
+      "functional": "Funcional"
     }
+  },
+  "nav": {
+    "schedule": "Horario"
   },
   "common": {
     "loading": "Cargando..."
