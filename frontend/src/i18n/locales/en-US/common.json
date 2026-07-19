@@ -25,10 +25,6 @@
     "ctaDescription": "Browse classes for the next two weeks and filter by city, facility, and class."
   },
   "schedule": {
-    "placeholder": {
-      "title": "Schedule",
-      "comingSoon": "Coming soon: the class schedule."
-    },
     "title": "Schedule",
     "filter": {
       "all": "All",
@@ -55,6 +51,9 @@
       "boxing": "Boxing",
       "functional": "Functional"
     }
+  },
+  "nav": {
+    "schedule": "Schedule"
   },
   "common": {
     "loading": "Loading..."

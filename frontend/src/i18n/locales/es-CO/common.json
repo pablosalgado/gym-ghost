@@ -25,10 +25,6 @@
     "ctaDescription": "Navega las clases de las próximas dos semanas y filtra por ciudad, sede y clase."
   },
   "schedule": {
-    "placeholder": {
-      "title": "Horario",
-      "comingSoon": "Próximamente: el horario de clases."
-    },
     "title": "Horario",
     "filter": {
       "all": "Todas",
@@ -55,6 +51,9 @@
       "boxing": "Boxeo",
       "functional": "Funcional"
     }
+  },
+  "nav": {
+    "schedule": "Horario"
   },
   "common": {
     "loading": "Cargando..."

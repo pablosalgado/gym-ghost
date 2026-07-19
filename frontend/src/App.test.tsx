@@ -82,7 +82,7 @@ describe('App', () => {
     expect(container.firstChild).toHaveClass('min-h-dvh')
   })
 
-  it('navigates from the landing CTA to the schedule placeholder', () => {
+  it('navigates from the landing CTA to the schedule page', () => {
     mockedUseAuth.mockReturnValue(
       buildUseAuthMock({ isAuthenticated: true, token: 'test-token' })
     )
@@ -91,9 +91,7 @@ describe('App', () => {
 
     fireEvent.click(screen.getByText('Explorar el horario'))
 
-    expect(
-      screen.getByText('Próximamente: el horario de clases.')
-    ).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Horario' })).toBeInTheDocument()
   })
 
   it('calls logout and returns to /login from the shell button', () => {
