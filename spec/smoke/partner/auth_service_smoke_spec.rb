@@ -1,21 +1,12 @@
 require "rails_helper"
 
 RSpec.describe Partner::AuthService, smoke: true do
-  around do |example|
-    transaction_was = self.class.use_transactional_fixtures
-    self.class.use_transactional_fixtures = false
-    example.run
-  ensure
-    self.class.use_transactional_fixtures = transaction_was
+  before do
+    skip "Set PARTNER_API_BASE_URL, PARTNER_TEST_MEMBER_EMAIL, and PARTNER_TEST_MEMBER_PASSWORD to run smoke tests" unless
+      ENV["PARTNER_API_BASE_URL"].present? &&
+      ENV["PARTNER_TEST_MEMBER_EMAIL"].present? &&
+      ENV["PARTNER_TEST_MEMBER_PASSWORD"].present?
   end
-
-
-  # Skip gracefully when required environment variables are missing
-  skip "Set PARTNER_API_BASE_URL, PARTNER_TEST_MEMBER_EMAIL, and PARTNER_TEST_MEMBER_PASSWORD to run smoke tests" unless
-    ENV["PARTNER_API_BASE_URL"].present? &&
-    ENV["PARTNER_TEST_MEMBER_EMAIL"].present? &&
-    ENV["PARTNER_TEST_MEMBER_PASSWORD"].present?
-
   # Use real credentials from environment
   let(:gym_member) { create(:gym_member, email: ENV["PARTNER_TEST_MEMBER_EMAIL"], password: ENV["PARTNER_TEST_MEMBER_PASSWORD"]) }
   let(:password) { ENV["PARTNER_TEST_MEMBER_PASSWORD"] }
