@@ -76,9 +76,9 @@ PARTNER_TEST_MEMBER_PASSWORD=your-test-password
   bundle exec rspec --tag smoke
   ```
 
-- Run a specific smoke test:
+- Run a specific smoke test (override the exclusion with `--tag smoke`):
   ```
-  bundle exec rspec spec/smoke/partner/auth_service_smoke_spec.rb
+  bundle exec rspec spec/smoke/partner/auth_service_smoke_spec.rb --tag smoke
   ```
 
 #### Adding a new smoke test
@@ -87,7 +87,7 @@ Create a new test file following this convention:
 
 - Location: `spec/smoke/<area>/<name>_spec.rb`
 - Tag the top-level `describe` with `smoke: true`
-- Use `use_transactional_tests false`
+- Use a `before` block with `skip` when required ENV vars are missing
 - Skip gracefully when required ENV is missing
 
 Example structure:
