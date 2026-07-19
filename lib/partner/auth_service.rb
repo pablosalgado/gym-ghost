@@ -13,14 +13,21 @@ module Partner
     include HTTParty
 
     format :json
-    headers "Content-Type" => "application/json",
-            "Accept" => "application/json"
+    headers "User-Agent"      => "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:152.0) Gecko/20100101 Firefox/152.0",
+            "Accept"          => "*/*",
+            "Accept-Language" => "en-US,en;q=0.9",
+            "Accept-Encoding" => "gzip, deflate, br, zstd",
+            "Content-Type"    => "application/json",
+            "Connection"      => "keep-alive",
+            "Sec-Fetch-Dest"  => "empty",
+            "Sec-Fetch-Mode"  => "cors",
+            "Sec-Fetch-Site"  => "cross-site"
 
     LOGIN_PATH = "/api/v1/auth/login"
 
     def initialize(gym_member:, password:)
       @gym_member = gym_member
-      @password = password.to_s
+      @password = password
     end
 
     # Performs the partner login and stores the returned tokens.
@@ -28,11 +35,15 @@ module Partner
     # Raises Partner::AuthenticationError on any authentication failure.
     def login
       response = request_login
-      raise AuthenticationError, error_detail(response) unless response.success?
-
       payload = parse_payload(response)
-      access_token = payload["access_token"].to_s
-      refresh_token = payload["refresh_token"].to_s
+
+      unless response.success? && payload["status"] == "OK"
+        raise AuthenticationError, error_detail(response, payload)
+      end
+
+      token_data = payload["data"] || {}
+      access_token = token_data["access_token"].to_s
+      refresh_token = token_data["refresh_token"].to_s
 
       raise AuthenticationError, "Missing access token in partner response" if access_token.empty?
       raise AuthenticationError, "Missing refresh token in partner response" if refresh_token.empty?
@@ -51,16 +62,25 @@ module Partner
     def request_login
       self.class.post(
         "#{ENV.fetch("PARTNER_API_BASE_URL")}#{LOGIN_PATH}",
-        body: login_body.to_json
+        body: login_body.to_json,
+        headers: {
+          "Referer" => ENV.fetch("TEST_PARTNER_AUTH_REFERER"),
+          "Origin"  => ENV.fetch("TEST_PARTNER_AUTH_ORIGIN")
+        }
       )
     end
 
     def login_body
       {
         email: gym_member.email,
-        password:,
-        branch_id: ENV.fetch("PARTNER_BRANCH_ID"),
-        branch_code: ENV.fetch("PARTNER_BRANCH_CODE")
+        password: password,
+        partner_data: {
+          partner_name: ENV.fetch("TEST_PARTNER_AUTH_PARTNER_NAME"),
+          branch_id: ENV.fetch("TEST_PARTNER_AUTH_BRANCH_ID").to_i,
+          branch_name: ENV.fetch("TEST_PARTNER_AUTH_BRANCH_NAME"),
+          token_branch: ENV.fetch("TEST_PARTNER_AUTH_TOKEN_BRANCH"),
+          country_code: ENV.fetch("TEST_PARTNER_AUTH_COUNTRY_CODE")
+        }
       }
     end
 
@@ -73,16 +93,24 @@ module Partner
       raise AuthenticationError, "Malformed partner response: #{e.message}"
     end
 
-    def error_detail(response)
-      message =
-        begin
-          parsed = response.parsed_response
-          parsed.is_a?(Hash) ? (parsed["error"] || parsed["message"]) : nil
-        rescue StandardError
-          nil
+    def error_detail(response, payload = nil)
+      payload ||= begin
+        parsed = response.parsed_response
+        parsed.is_a?(Hash) ? parsed : nil
+      rescue StandardError
+        nil
+      end
+
+      if payload
+        if payload["errors"].is_a?(Array) && payload["errors"].any?
+          return payload["errors"].join(", ")
         end
 
-      message || "Partner authentication failed (HTTP #{response.code})"
+        return payload["error"] if payload["error"].present?
+        return payload["message"] if payload["message"].present?
+      end
+
+      "Partner authentication failed (HTTP #{response.code})"
     end
 
     # Decodes the `exp` claim from the access JWT without adding a JWT gem
