@@ -87,6 +87,7 @@ gym-ghost/
 | Frontend hook | `frontend/src/hooks/` | Custom hooks |
 | Add test | `spec/requests/api/v1/` or `spec/models/` | Declare `type: :request` or `type: :model` explicitly |
 | CI pipeline | `config/ci.rb` | `bin/ci` runs all steps sequentially |
+| Partner smoke test | `lib/tasks/partner_smoke.rake` | Manual opt-in; never run by CI |
 | Docker | `Dockerfile`, `docker-compose.yml` | Multi-stage build: frontend → Rails |
 
 ## Setup and development
