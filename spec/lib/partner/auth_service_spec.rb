@@ -1,0 +1,127 @@
+require "rails_helper"
+
+RSpec.describe Partner::AuthService do
+  def build_jwt(exp: 1.hour.from_now.to_i)
+    header  = Base64.urlsafe_encode64('{"alg":"HS256","typ":"JWT"}', padding: false)
+    payload = Base64.urlsafe_encode64({ exp: }.to_json, padding: false)
+    sig     = Base64.urlsafe_encode64("fake-sig", padding: false)
+    "#{header}.#{payload}.#{sig}"
+  end
+
+  around do |example|
+    old_url  = ENV.delete("PARTNER_API_BASE_URL")
+    old_id   = ENV.delete("PARTNER_BRANCH_ID")
+    old_code = ENV.delete("PARTNER_BRANCH_CODE")
+    ENV["PARTNER_API_BASE_URL"] = "http://partner.test"
+    ENV["PARTNER_BRANCH_ID"]   = "BOG001"
+    ENV["PARTNER_BRANCH_CODE"] = "BOG"
+    example.run
+  ensure
+    ENV["PARTNER_API_BASE_URL"] = old_url
+    ENV["PARTNER_BRANCH_ID"]   = old_id
+    ENV["PARTNER_BRANCH_CODE"] = old_code
+  end
+
+  let(:gym_member) { create(:gym_member, email: "alice@example.com", password: "Password123!") }
+  let(:password)   { "Password123!" }
+
+  subject(:service) { described_class.new(gym_member:, password:) }
+
+  describe "#login" do
+    context "when the partner API returns a successful response" do
+      let(:exp_epoch) { 2.hours.from_now.to_i }
+      let(:jwt)       { build_jwt(exp: exp_epoch) }
+
+      before do
+        success_response = instance_double(HTTParty::Response,
+                                           success?: true,
+                                           code: 200,
+                                           parsed_response: {
+                                             "access_token"  => jwt,
+                                             "refresh_token" => "refresh_abc123"
+                                           })
+        allow(described_class).to receive(:post).and_return(success_response)
+      end
+
+      it "creates a PartnerToken with decoded expiry" do
+        token = service.login
+
+        expect(token).to be_persisted
+        expect(token.access_token).to eq(jwt)
+        expect(token.refresh_token).to eq("refresh_abc123")
+        expect(token.token_expires_at).to eq(Time.at(exp_epoch).utc)
+        expect(token.gym_member).to eq(gym_member)
+      end
+
+      it "returns the persisted PartnerToken" do
+        expect(service.login).to be_a(PartnerToken)
+      end
+    end
+
+    context "when the partner API returns a non-success status" do
+      before do
+        fail_response = instance_double(HTTParty::Response,
+                                        success?: false,
+                                        code: 401,
+                                        parsed_response: { "error" => "Invalid credentials" })
+        allow(described_class).to receive(:post).and_return(fail_response)
+      end
+
+      it "raises Partner::AuthenticationError" do
+        expect { service.login }.to raise_error(Partner::AuthenticationError, /Invalid credentials/)
+      end
+    end
+
+    context "when the response is missing access_token" do
+      before do
+        incomplete_response = instance_double(HTTParty::Response,
+                                              success?: true,
+                                              code: 200,
+                                              parsed_response: { "refresh_token" => "refresh_only" })
+        allow(described_class).to receive(:post).and_return(incomplete_response)
+      end
+
+      it "raises Partner::AuthenticationError" do
+        expect { service.login }
+          .to raise_error(Partner::AuthenticationError, "Missing access token in partner response")
+      end
+    end
+
+    context "when the response is missing refresh_token" do
+      before do
+        incomplete_response = instance_double(HTTParty::Response,
+                                              success?: true,
+                                              code: 200,
+                                              parsed_response: { "access_token" => build_jwt })
+        allow(described_class).to receive(:post).and_return(incomplete_response)
+      end
+
+      it "raises Partner::AuthenticationError" do
+        expect { service.login }
+          .to raise_error(Partner::AuthenticationError, "Missing refresh token in partner response")
+      end
+    end
+
+    context "when the access_token JWT has no exp claim" do
+      before do
+        header       = Base64.urlsafe_encode64('{"alg":"HS256","typ":"JWT"}', padding: false)
+        payload      = Base64.urlsafe_encode64('{"iat":1234}', padding: false)
+        sig          = Base64.urlsafe_encode64("fake", padding: false)
+        jwt          = "#{header}.#{payload}.#{sig}"
+        bad_response = instance_double(HTTParty::Response,
+                                        success?: true,
+                                        code: 200,
+                                        parsed_response: {
+                                          "access_token"  => jwt,
+                                          "refresh_token" => "refresh_abc"
+                                        })
+        allow(described_class).to receive(:post).and_return(bad_response)
+      end
+
+      it "raises Partner::AuthenticationError" do
+        expect { service.login }
+          .to raise_error(Partner::AuthenticationError, "JWT missing exp claim")
+      end
+    end
+  end
+end
