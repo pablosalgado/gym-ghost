@@ -23,6 +23,22 @@ Node & Vite notes
 - You do NOT need a global `vite` install. `npm run dev` uses the local devDependency installed by `npm ci`.
 - If you prefer a global vite CLI: `npm install -g vite` (not required).
 
+### Accessing Vite from other devices on the LAN
+
+The Vite dev server binds to `0.0.0.0` by default, so devices on the same network (phones, tablets, other laptops) can reach it.
+
+1. Find your machine's LAN IP:
+   - macOS: `ipconfig getifaddr en0` (Wi-Fi) or `ipconfig getifaddr en1`
+   - Linux: `hostname -I`
+2. Open `http://<LAN_IP>:5173` on the other device.
+3. API calls are proxied through Vite to the Rails API on port 3000 — no extra CORS config needed.
+
+To override the bind address, set `VITE_DEV_HOST` in `frontend/.env`:
+```
+VITE_DEV_HOST=192.168.1.100   # bind to a specific IP
+```
+Set it to `localhost` to restrict to the local machine only.
+
 Notes
 - The devcontainer runs ./scripts/setup_dev.sh after creation to install deps automatically.
 
