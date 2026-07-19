@@ -53,15 +53,59 @@ Testing
 
 Git automatically runs `bin/ci` before each push after `scripts/setup_dev.sh` configures the repository hooks. A failed check blocks the push.
 
-### Manual smoke test (live partner API)
+### Smoke tests (live integration tests)
 
-To exercise the real partner API integration (requires valid credentials in `.env`):
+Smoke tests exercise real downstream APIs without mocking. They are tagged `smoke: true` and excluded from `bundle exec rspec` by default.
+
+#### Setup
+
+Copy `.env.example` to `.env` and set the following required environment variables:
 
 ```
-bundle exec rake partner:smoke
+PARTNER_API_BASE_URL=http://localhost:9000
+PARTNER_BRANCH_ID=BOG001
+PARTNER_BRANCH_CODE=BOG
+PARTNER_TEST_MEMBER_EMAIL=your-test-member@partner.com
+PARTNER_TEST_MEMBER_PASSWORD=your-test-password
 ```
 
-This task is **manual opt-in only** — it never runs in CI. It validates that the partner client can authenticate and fetch data from the live upstream API, which is useful after credential rotation or upstream schema changes.
+#### Running smoke tests
+
+- Run all smoke tests:
+  ```
+  bundle exec rspec --tag smoke
+  ```
+
+- Run a specific smoke test:
+  ```
+  bundle exec rspec spec/smoke/partner/auth_service_smoke_spec.rb
+  ```
+
+#### Adding a new smoke test
+
+Create a new test file following this convention:
+
+- Location: `spec/smoke/<area>/<name>_spec.rb`
+- Tag the top-level `describe` with `smoke: true`
+- Use `use_transactional_tests false`
+- Skip gracefully when required ENV is missing
+
+Example structure:
+
+```ruby
+RSpec.describe Partner::AuthService, smoke: true do
+  use_transactional_tests false
+
+  # Skip gracefully when required environment variables are missing
+  skip "Set PARTNER_API_BASE_URL, PARTNER_TEST_MEMBER_EMAIL, and PARTNER_TEST_MEMBER_PASSWORD to run smoke tests" unless (
+    ENV["PARTNER_API_BASE_URL"].present? &&
+    ENV["PARTNER_TEST_MEMBER_EMAIL"].present? &&
+    ENV["PARTNER_TEST_MEMBER_PASSWORD"].present?
+  )
+
+  # ... test implementation
+end
+```
 
 Devcontainer
 - A .devcontainer/ is included. Open the folder in VS Code Remote Containers or Codespaces; postCreateCommand runs setup.
