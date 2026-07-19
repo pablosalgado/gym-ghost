@@ -28,6 +28,32 @@
     "placeholder": {
       "title": "Schedule",
       "comingSoon": "Coming soon: the class schedule."
+    },
+    "title": "Schedule",
+    "filter": {
+      "all": "All",
+      "city": "City",
+      "facility": "Facility",
+      "classType": "Class"
+    },
+    "emptyState": "No classes for this selection.",
+    "cities": {
+      "bogota": "Bogotá",
+      "medellin": "Medellín"
+    },
+    "facilities": {
+      "chapinero": "Chapinero",
+      "zona-t": "Zona T",
+      "poblado": "El Poblado",
+      "laureles": "Laureles"
+    },
+    "classes": {
+      "spinning": "Spinning",
+      "yoga": "Yoga",
+      "crossfit": "CrossFit",
+      "pilates": "Pilates",
+      "boxing": "Boxing",
+      "functional": "Functional"
     }
   },
   "common": {
