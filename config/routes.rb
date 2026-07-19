@@ -5,7 +5,6 @@ Rails.application.routes.draw do
     namespace :v1 do
       post "/auth", to: "auth#create"
       get "/schedule", to: "schedule#index"
-      post "/partner/auth", to: "partner_auth#create"
     end
   end
 

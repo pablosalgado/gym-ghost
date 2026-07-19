@@ -3,7 +3,6 @@ class ApplicationController < ActionController::API
 
   rescue_from ActiveRecord::RecordNotFound, with: :not_found
   rescue_from ActiveRecord::RecordInvalid, with: :unprocessable_entity
-  rescue_from Partner::AuthenticationError, with: :partner_authentication_error
 
   private
 
@@ -17,11 +16,5 @@ class ApplicationController < ActionController::API
     render json: {
       errors: [ { status: 422, title: "Validation Failed", detail: exception.record.errors.full_messages.join(", ") } ]
     }, status: :unprocessable_entity
-  end
-
-  def partner_authentication_error(exception)
-    render json: {
-      errors: [ { status: 401, title: "Unauthorized", detail: exception.message } ]
-    }, status: :unauthorized
   end
 end

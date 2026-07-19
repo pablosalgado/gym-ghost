@@ -12,7 +12,6 @@ module Partner
   class AuthService
     include HTTParty
 
-    base_uri ENV.fetch("PARTNER_API_BASE_URL", "http://localhost:9000")
     format :json
     headers "Content-Type" => "application/json",
             "Accept" => "application/json"
@@ -51,7 +50,7 @@ module Partner
 
     def request_login
       self.class.post(
-        LOGIN_PATH,
+        "#{ENV.fetch("PARTNER_API_BASE_URL")}#{LOGIN_PATH}",
         body: login_body.to_json
       )
     end
@@ -60,8 +59,8 @@ module Partner
       {
         email: gym_member.email,
         password:,
-        branch_id: ENV.fetch("PARTNER_BRANCH_ID", "BOG001"),
-        branch_code: ENV.fetch("PARTNER_BRANCH_CODE", "BOG")
+        branch_id: ENV.fetch("PARTNER_BRANCH_ID"),
+        branch_code: ENV.fetch("PARTNER_BRANCH_CODE")
       }
     end
 
