@@ -25,8 +25,9 @@ module Partner
 
     LOGIN_PATH = "/api/v1/auth/login"
 
-    def initialize(gym_member:)
+    def initialize(gym_member:, password:)
       @gym_member = gym_member
+      @password = password
     end
 
     # Performs the partner login and stores the returned tokens.
@@ -56,7 +57,7 @@ module Partner
 
     private
 
-    attr_reader :gym_member
+    attr_reader :gym_member, :password
 
     def request_login
       self.class.post(
@@ -72,7 +73,7 @@ module Partner
     def login_body
       {
         email: gym_member.email,
-        password: gym_member.password,
+        password: password,
         partner_data: {
           partner_name: ENV.fetch("TEST_PARTNER_AUTH_PARTNER_NAME"),
           branch_id: ENV.fetch("TEST_PARTNER_AUTH_BRANCH_ID").to_i,

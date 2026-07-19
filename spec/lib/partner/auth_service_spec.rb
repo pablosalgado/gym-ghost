@@ -39,7 +39,7 @@ RSpec.describe Partner::AuthService do
 
   let(:gym_member) { create(:gym_member, email: "alice@example.com", password: "Password123!") }
 
-  subject(:service) { described_class.new(gym_member:) }
+  subject(:service) { described_class.new(gym_member:, password: gym_member.password) }
 
   describe "#login" do
     context "when the partner API returns a successful response" do
