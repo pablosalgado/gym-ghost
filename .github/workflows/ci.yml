@@ -27,6 +27,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       ATTR_ENCRYPTED_KEY: "0123456789abcdef0123456789abcdef"
+      PARTNER_BRANCH_ID: "BOG001"
+      PARTNER_BRANCH_CODE: "BOG"
     steps:
       - uses: actions/checkout@v7
       - uses: ruby/setup-ruby@v1
