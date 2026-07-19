@@ -34,11 +34,15 @@ module Partner
     # Raises Partner::AuthenticationError on any authentication failure.
     def login
       response = request_login
-      raise AuthenticationError, error_detail(response) unless response.success?
-
       payload = parse_payload(response)
-      access_token = payload["access_token"].to_s
-      refresh_token = payload["refresh_token"].to_s
+
+      unless response.success? && payload["status"] == "OK"
+        raise AuthenticationError, error_detail(response, payload)
+      end
+
+      token_data = payload["data"] || {}
+      access_token = token_data["access_token"].to_s
+      refresh_token = token_data["refresh_token"].to_s
 
       raise AuthenticationError, "Missing access token in partner response" if access_token.empty?
       raise AuthenticationError, "Missing refresh token in partner response" if refresh_token.empty?
@@ -88,16 +92,24 @@ module Partner
       raise AuthenticationError, "Malformed partner response: #{e.message}"
     end
 
-    def error_detail(response)
-      message =
-        begin
-          parsed = response.parsed_response
-          parsed.is_a?(Hash) ? (parsed["error"] || parsed["message"]) : nil
-        rescue StandardError
-          nil
+    def error_detail(response, payload = nil)
+      payload ||= begin
+        parsed = response.parsed_response
+        parsed.is_a?(Hash) ? parsed : nil
+      rescue StandardError
+        nil
+      end
+
+      if payload
+        if payload["errors"].is_a?(Array) && payload["errors"].any?
+          return payload["errors"].join(", ")
         end
 
-      message || "Partner authentication failed (HTTP #{response.code})"
+        return payload["error"] if payload["error"].present?
+        return payload["message"] if payload["message"].present?
+      end
+
+      "Partner authentication failed (HTTP #{response.code})"
     end
 
     # Decodes the `exp` claim from the access JWT without adding a JWT gem

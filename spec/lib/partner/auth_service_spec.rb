@@ -51,8 +51,12 @@ RSpec.describe Partner::AuthService do
                                            success?: true,
                                            code: 200,
                                            parsed_response: {
-                                             "access_token"  => jwt,
-                                             "refresh_token" => "refresh_abc123"
+                                             "status" => "OK",
+                                             "data" => {
+                                               "access_token"  => jwt,
+                                               "refresh_token" => "refresh_abc123"
+                                             },
+                                             "errors" => []
                                            })
         allow(described_class).to receive(:post).and_return(success_response)
       end
@@ -91,7 +95,11 @@ RSpec.describe Partner::AuthService do
         incomplete_response = instance_double(HTTParty::Response,
                                               success?: true,
                                               code: 200,
-                                              parsed_response: { "refresh_token" => "refresh_only" })
+                                              parsed_response: {
+                                                "status" => "OK",
+                                                "data" => { "refresh_token" => "refresh_only" },
+                                                "errors" => []
+                                              })
         allow(described_class).to receive(:post).and_return(incomplete_response)
       end
 
@@ -106,7 +114,11 @@ RSpec.describe Partner::AuthService do
         incomplete_response = instance_double(HTTParty::Response,
                                               success?: true,
                                               code: 200,
-                                              parsed_response: { "access_token" => build_jwt })
+                                              parsed_response: {
+                                                "status" => "OK",
+                                                "data" => { "access_token" => build_jwt },
+                                                "errors" => []
+                                              })
         allow(described_class).to receive(:post).and_return(incomplete_response)
       end
 
@@ -126,8 +138,12 @@ RSpec.describe Partner::AuthService do
                                         success?: true,
                                         code: 200,
                                         parsed_response: {
-                                          "access_token"  => jwt,
-                                          "refresh_token" => "refresh_abc"
+                                          "status" => "OK",
+                                          "data" => {
+                                            "access_token"  => jwt,
+                                            "refresh_token" => "refresh_abc"
+                                          },
+                                          "errors" => []
                                         })
         allow(described_class).to receive(:post).and_return(bad_response)
       end
