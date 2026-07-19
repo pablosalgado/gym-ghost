@@ -49,8 +49,8 @@ module Partner
       raise AuthenticationError, "Missing refresh token in partner response" if refresh_token.empty?
 
       gym_member.partner_tokens.create!(
-        access_token:,
-        refresh_token:,
+        access_token: access_token,
+        refresh_token: refresh_token,
         token_expires_at: decode_jwt_expiry(access_token)
       )
     end
