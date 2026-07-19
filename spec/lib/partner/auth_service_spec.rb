@@ -9,23 +9,31 @@ RSpec.describe Partner::AuthService do
   end
 
   around do |example|
-    old_url  = ENV.delete("PARTNER_API_BASE_URL")
-    old_id   = ENV.delete("PARTNER_BRANCH_ID")
-    old_code = ENV.delete("PARTNER_BRANCH_CODE")
-    ENV["PARTNER_API_BASE_URL"] = "http://partner.test"
-    ENV["PARTNER_BRANCH_ID"]   = "BOG001"
-    ENV["PARTNER_BRANCH_CODE"] = "BOG"
+    old_url          = ENV.delete("PARTNER_API_BASE_URL")
+    old_partner_name = ENV.delete("TEST_PARTNER_AUTH_PARTNER_NAME")
+    old_branch_id    = ENV.delete("TEST_PARTNER_AUTH_BRANCH_ID")
+    old_branch_name  = ENV.delete("TEST_PARTNER_AUTH_BRANCH_NAME")
+    old_token_branch = ENV.delete("TEST_PARTNER_AUTH_TOKEN_BRANCH")
+    old_country_code = ENV.delete("TEST_PARTNER_AUTH_COUNTRY_CODE")
+    ENV["PARTNER_API_BASE_URL"]             = "http://partner.test"
+    ENV["TEST_PARTNER_AUTH_PARTNER_NAME"]   = "TestPartner"
+    ENV["TEST_PARTNER_AUTH_BRANCH_ID"]      = "6"
+    ENV["TEST_PARTNER_AUTH_BRANCH_NAME"]    = "Test Branch"
+    ENV["TEST_PARTNER_AUTH_TOKEN_BRANCH"]   = "TOKEN001"
+    ENV["TEST_PARTNER_AUTH_COUNTRY_CODE"]   = "CO"
     example.run
   ensure
-    ENV["PARTNER_API_BASE_URL"] = old_url
-    ENV["PARTNER_BRANCH_ID"]   = old_id
-    ENV["PARTNER_BRANCH_CODE"] = old_code
+    ENV["PARTNER_API_BASE_URL"]           = old_url
+    ENV["TEST_PARTNER_AUTH_PARTNER_NAME"] = old_partner_name
+    ENV["TEST_PARTNER_AUTH_BRANCH_ID"]    = old_branch_id
+    ENV["TEST_PARTNER_AUTH_BRANCH_NAME"]  = old_branch_name
+    ENV["TEST_PARTNER_AUTH_TOKEN_BRANCH"] = old_token_branch
+    ENV["TEST_PARTNER_AUTH_COUNTRY_CODE"] = old_country_code
   end
 
   let(:gym_member) { create(:gym_member, email: "alice@example.com", password: "Password123!") }
-  let(:password)   { "Password123!" }
 
-  subject(:service) { described_class.new(gym_member:, password:) }
+  subject(:service) { described_class.new(gym_member:) }
 
   describe "#login" do
     context "when the partner API returns a successful response" do

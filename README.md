@@ -63,10 +63,13 @@ Copy `.env.example` to `.env` and set the following required environment variabl
 
 ```
 PARTNER_API_BASE_URL=http://localhost:9000
-PARTNER_BRANCH_ID=BOG001
-PARTNER_BRANCH_CODE=BOG
-PARTNER_TEST_MEMBER_EMAIL=your-test-member@partner.com
-PARTNER_TEST_MEMBER_PASSWORD=your-test-password
+TEST_PARTNER_AUTH_PARTNER_NAME=TestPartner
+TEST_PARTNER_AUTH_BRANCH_ID=6
+TEST_PARTNER_AUTH_BRANCH_NAME=Test Branch
+TEST_PARTNER_AUTH_TOKEN_BRANCH=TOKEN001
+TEST_PARTNER_AUTH_COUNTRY_CODE=CO
+TEST_PARTNER_AUTH_EMAIL=your-test-member@partner.com
+TEST_PARTNER_AUTH_PASSWORD=your-test-password
 ```
 
 #### Running smoke tests
@@ -97,10 +100,15 @@ RSpec.describe Partner::AuthService, smoke: true do
   use_transactional_tests false
 
   # Skip gracefully when required environment variables are missing
-  skip "Set PARTNER_API_BASE_URL, PARTNER_TEST_MEMBER_EMAIL, and PARTNER_TEST_MEMBER_PASSWORD to run smoke tests" unless (
+  skip "Set PARTNER_API_BASE_URL and TEST_PARTNER_AUTH_* vars to run smoke tests" unless (
     ENV["PARTNER_API_BASE_URL"].present? &&
-    ENV["PARTNER_TEST_MEMBER_EMAIL"].present? &&
-    ENV["PARTNER_TEST_MEMBER_PASSWORD"].present?
+    ENV["TEST_PARTNER_AUTH_EMAIL"].present? &&
+    ENV["TEST_PARTNER_AUTH_PASSWORD"].present? &&
+    ENV["TEST_PARTNER_AUTH_PARTNER_NAME"].present? &&
+    ENV["TEST_PARTNER_AUTH_BRANCH_ID"].present? &&
+    ENV["TEST_PARTNER_AUTH_BRANCH_NAME"].present? &&
+    ENV["TEST_PARTNER_AUTH_TOKEN_BRANCH"].present? &&
+    ENV["TEST_PARTNER_AUTH_COUNTRY_CODE"].present?
   )
 
   # ... test implementation
