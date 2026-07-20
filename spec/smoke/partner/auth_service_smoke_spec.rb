@@ -3,10 +3,10 @@ require "rails_helper"
 RSpec.describe Partner::AuthService, smoke: true do
   before do
     skip "Set PARTNER_API_BASE_URL, all TEST_PARTNER_AUTH_* vars (including " \
-         "REFERER and ORIGIN) and pre-seed a GymMember with " \
-         "TEST_PARTNER_AUTH_EMAIL to run smoke tests" unless
+         "REFERER and ORIGIN) to run smoke tests" unless
       ENV["PARTNER_API_BASE_URL"].present? &&
       ENV["TEST_PARTNER_AUTH_EMAIL"].present? &&
+      ENV["TEST_PARTNER_AUTH_PASSWORD"].present? &&
       ENV["TEST_PARTNER_AUTH_PARTNER_NAME"].present? &&
       ENV["TEST_PARTNER_AUTH_BRANCH_ID"].present? &&
       ENV["TEST_PARTNER_AUTH_BRANCH_NAME"].present? &&
@@ -15,8 +15,8 @@ RSpec.describe Partner::AuthService, smoke: true do
       ENV["TEST_PARTNER_AUTH_REFERER"].present? &&
       ENV["TEST_PARTNER_AUTH_ORIGIN"].present?
   end
-
-  let(:gym_member) { GymMember.find_by!(email: ENV["TEST_PARTNER_AUTH_EMAIL"]) }
+  # Use real credentials from environment
+  let(:gym_member) { create(:gym_member, email: ENV["TEST_PARTNER_AUTH_EMAIL"], password: ENV["TEST_PARTNER_AUTH_PASSWORD"]) }
 
   subject(:service) { described_class.new(gym_member:) }
 
