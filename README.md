@@ -68,8 +68,8 @@ TEST_PARTNER_AUTH_BRANCH_ID=6
 TEST_PARTNER_AUTH_BRANCH_NAME=Test Branch
 TEST_PARTNER_AUTH_TOKEN_BRANCH=TOKEN001
 TEST_PARTNER_AUTH_COUNTRY_CODE=CO
-TEST_PARTNER_AUTH_REFERER=https://partner-site.com
-TEST_PARTNER_AUTH_ORIGIN=https://partner-site.com
+PARTNER_AUTH_REFERER=https://partner-site.com
+PARTNER_AUTH_ORIGIN=https://partner-site.com
 TEST_PARTNER_AUTH_EMAIL=your-test-member@partner.com
 TEST_PARTNER_AUTH_PASSWORD=your-test-password
 ```
@@ -111,8 +111,8 @@ RSpec.describe Partner::AuthService, smoke: true do
       ENV["TEST_PARTNER_AUTH_BRANCH_NAME"].present? &&
       ENV["TEST_PARTNER_AUTH_TOKEN_BRANCH"].present? &&
       ENV["TEST_PARTNER_AUTH_COUNTRY_CODE"].present? &&
-      ENV["TEST_PARTNER_AUTH_REFERER"].present? &&
-      ENV["TEST_PARTNER_AUTH_ORIGIN"].present?
+      ENV["PARTNER_AUTH_REFERER"].present? &&
+      ENV["PARTNER_AUTH_ORIGIN"].present?
   )
 
   # ... test implementation

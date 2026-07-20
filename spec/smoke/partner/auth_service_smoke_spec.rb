@@ -12,8 +12,8 @@ RSpec.describe Partner::AuthService, smoke: true do
       ENV["TEST_PARTNER_AUTH_BRANCH_NAME"].present? &&
       ENV["TEST_PARTNER_AUTH_TOKEN_BRANCH"].present? &&
       ENV["TEST_PARTNER_AUTH_COUNTRY_CODE"].present? &&
-      ENV["TEST_PARTNER_AUTH_REFERER"].present? &&
-      ENV["TEST_PARTNER_AUTH_ORIGIN"].present?
+      ENV["PARTNER_AUTH_REFERER"].present? &&
+      ENV["PARTNER_AUTH_ORIGIN"].present?
   end
   # Use real credentials from environment
   let(:gym_member) { create(:gym_member, email: ENV["TEST_PARTNER_AUTH_EMAIL"], password: ENV["TEST_PARTNER_AUTH_PASSWORD"]) }
