@@ -10,7 +10,26 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_19_000002) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_20_000002) do
+  create_table "cities", force: :cascade do |t|
+    t.string "city_name", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["city_name"], name: "index_cities_on_city_name", unique: true
+  end
+
+  create_table "facilities", force: :cascade do |t|
+    t.integer "city_id", null: false
+    t.datetime "created_at", null: false
+    t.string "display_name"
+    t.string "evo_token"
+    t.integer "external_id", null: false
+    t.string "name"
+    t.datetime "updated_at", null: false
+    t.index ["city_id"], name: "index_facilities_on_city_id"
+    t.index ["external_id"], name: "index_facilities_on_external_id", unique: true
+  end
+
   create_table "gym_members", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "email", null: false
@@ -49,6 +68,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_19_000002) do
     t.index ["email"], name: "index_users_on_email", unique: true
   end
 
+  add_foreign_key "facilities", "cities"
   add_foreign_key "partner_tokens", "gym_members"
   add_foreign_key "tokens", "users"
 end
