@@ -10,7 +10,14 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_20_000002) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_20_000004) do
+  create_table "activities", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.datetime "updated_at", null: false
+    t.index ["name"], name: "index_activities_on_name", unique: true
+  end
+
   create_table "cities", force: :cascade do |t|
     t.string "city_name", null: false
     t.datetime "created_at", null: false
@@ -51,6 +58,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_20_000002) do
     t.index ["gym_member_id"], name: "index_partner_tokens_on_gym_member_id"
   end
 
+  create_table "schedule_entries", force: :cascade do |t|
+    t.integer "activity_id", null: false
+    t.datetime "created_at", null: false
+    t.date "date", null: false
+    t.integer "facility_id", null: false
+    t.datetime "start_time", null: false
+    t.datetime "updated_at", null: false
+    t.index ["activity_id"], name: "index_schedule_entries_on_activity_id"
+    t.index ["facility_id", "activity_id"], name: "index_schedule_entries_on_facility_id_and_activity_id"
+    t.index ["facility_id"], name: "index_schedule_entries_on_facility_id"
+  end
+
   create_table "tokens", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "digest", null: false
@@ -70,5 +89,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_20_000002) do
 
   add_foreign_key "facilities", "cities"
   add_foreign_key "partner_tokens", "gym_members"
+  add_foreign_key "schedule_entries", "activities"
+  add_foreign_key "schedule_entries", "facilities"
   add_foreign_key "tokens", "users"
 end
