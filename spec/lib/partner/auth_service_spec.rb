@@ -39,7 +39,7 @@ RSpec.describe Partner::AuthService do
 
   let(:gym_member) { create(:gym_member, email: "alice@example.com", password: "Password123!") }
 
-  subject(:service) { described_class.new(gym_member:, password: gym_member.password) }
+  subject(:service) { described_class.new(gym_member:) }
 
   describe "#login" do
     context "when the partner API returns a successful response" do
@@ -151,6 +151,48 @@ RSpec.describe Partner::AuthService do
       it "raises Partner::AuthenticationError" do
         expect { service.login }
           .to raise_error(Partner::AuthenticationError, "JWT missing exp claim")
+      end
+    end
+
+    context "when the gym member has a stored partner password" do
+      let(:exp_epoch) { 2.hours.from_now.to_i }
+      let(:jwt)       { build_jwt(exp: exp_epoch) }
+
+      before do
+        success_response = instance_double(HTTParty::Response,
+                                            success?: true,
+                                            code: 200,
+                                            parsed_response: {
+                                              "status" => "OK",
+                                              "data" => {
+                                                "access_token"  => jwt,
+                                                "refresh_token" => "refresh_abc123"
+                                              },
+                                              "errors" => []
+                                            })
+        allow(described_class).to receive(:post).and_return(success_response)
+      end
+
+      it "sends the decrypted stored password in the login body" do
+        service.login
+
+        expect(described_class).to have_received(:post).with(
+          anything,
+          hash_including(body: /"password":"Password123!"/)
+        )
+      end
+    end
+
+    context "when the gym member has a blank stored password" do
+      let(:gym_member) { create(:gym_member, email: "alice@example.com", password: "Password123!") }
+
+      before { allow(gym_member).to receive(:password).and_return("") }
+
+      it "raises Partner::AuthenticationError before calling the partner API" do
+        expect(described_class).not_to receive(:post)
+
+        expect { service.login }
+          .to raise_error(Partner::AuthenticationError, "Missing partner password")
       end
     end
   end

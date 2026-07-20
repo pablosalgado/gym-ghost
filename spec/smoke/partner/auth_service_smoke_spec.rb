@@ -18,7 +18,7 @@ RSpec.describe Partner::AuthService, smoke: true do
   # Use real credentials from environment
   let(:gym_member) { create(:gym_member, email: ENV["TEST_PARTNER_AUTH_EMAIL"], password: ENV["TEST_PARTNER_AUTH_PASSWORD"]) }
 
-  subject(:service) { described_class.new(gym_member:, password: ENV["TEST_PARTNER_AUTH_PASSWORD"]) }
+  subject(:service) { described_class.new(gym_member:) }
 
   describe "#login with real partner API" do
     it "creates a PartnerToken with real API response" do
@@ -38,9 +38,8 @@ RSpec.describe Partner::AuthService, smoke: true do
     end
 
     it "raises Partner::AuthenticationError on invalid credentials" do
-      # Create a gym member with wrong password
       wrong_password_member = create(:gym_member, email: "wrong@example.com", password: "WrongPassword123!")
-      wrong_service = described_class.new(gym_member: wrong_password_member, password: "WrongPassword123!")
+      wrong_service = described_class.new(gym_member: wrong_password_member)
 
       # This should raise AuthenticationError, not be rescued and skipped
       expect { wrong_service.login }.to raise_error(Partner::AuthenticationError)

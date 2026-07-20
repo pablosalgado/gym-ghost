@@ -10,11 +10,12 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_18_000002) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_19_000002) do
   create_table "gym_members", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "email", null: false
-    t.string "password_digest", null: false
+    t.string "encrypted_password", null: false
+    t.string "encrypted_password_iv", null: false
     t.datetime "updated_at", null: false
     t.index ["email"], name: "index_gym_members_on_email", unique: true
   end
