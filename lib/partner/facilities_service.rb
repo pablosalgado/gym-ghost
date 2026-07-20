@@ -56,11 +56,6 @@ module Partner
     def request_branches
       self.class.get(
         "#{ENV.fetch("PARTNER_BRANCHES_API_BASE_URL")}#{BRANCHES_PATH}",
-        headers: {
-          "Referer"       => ENV.fetch("TEST_PARTNER_AUTH_REFERER"),
-          "Origin"        => ENV.fetch("TEST_PARTNER_AUTH_ORIGIN"),
-          "Authorization" => "Token #{ENV.fetch("PARTNER_AUTH_TOKEN")}"
-        },
         query: query_params
       )
     end
@@ -69,6 +64,7 @@ module Partner
       {
         country_code: "CO",
         is_deleted: 0,
+        brand: ENV.fetch("PARTNER_BRANCHES_BRAND"),
         show_modalities: false
       }
     end

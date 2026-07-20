@@ -28,8 +28,8 @@ jobs:
     env:
       ATTR_ENCRYPTED_KEY: "0123456789abcdef0123456789abcdef"
       PARTNER_API_BASE_URL: "http://partner.test"
-      PARTNER_BRANCH_ID: "BOG001"
-      PARTNER_BRANCH_CODE: "BOG"
+      PARTNER_BRANCHES_API_BASE_URL: "http://partner.test"
+      PARTNER_BRANCHES_BRAND: "TestBrand"
     steps:
       - uses: actions/checkout@v7
       - uses: ruby/setup-ruby@v1
