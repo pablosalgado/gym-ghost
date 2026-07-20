@@ -27,6 +27,8 @@ RSpec.describe Activity, type: :model do
     expect(activity.errors[:name]).to include('has already been taken')
   end
 
+
+
   it 'has many schedule_entries' do
     expect(Activity.reflect_on_association(:schedule_entries).macro).to eq(:has_many)
   end
