@@ -25,15 +25,16 @@ module Partner
 
     LOGIN_PATH = "/api/v1/auth/login"
 
-    def initialize(gym_member:, password:)
+    def initialize(gym_member:)
       @gym_member = gym_member
-      @password = password
     end
 
     # Performs the partner login and stores the returned tokens.
     # Returns the persisted PartnerToken on success.
     # Raises Partner::AuthenticationError on any authentication failure.
     def login
+      raise AuthenticationError, "Missing partner password" if gym_member.password.blank?
+
       response = request_login
       payload = parse_payload(response)
 
@@ -57,7 +58,7 @@ module Partner
 
     private
 
-    attr_reader :gym_member, :password
+    attr_reader :gym_member
 
     def request_login
       self.class.post(
@@ -73,7 +74,7 @@ module Partner
     def login_body
       {
         email: gym_member.email,
-        password: password,
+        password: gym_member.password,
         partner_data: {
           partner_name: ENV.fetch("TEST_PARTNER_AUTH_PARTNER_NAME"),
           branch_id: ENV.fetch("TEST_PARTNER_AUTH_BRANCH_ID").to_i,

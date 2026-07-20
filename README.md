@@ -71,7 +71,13 @@ TEST_PARTNER_AUTH_COUNTRY_CODE=CO
 TEST_PARTNER_AUTH_REFERER=https://partner-site.com
 TEST_PARTNER_AUTH_ORIGIN=https://partner-site.com
 TEST_PARTNER_AUTH_EMAIL=your-test-member@partner.com
-TEST_PARTNER_AUTH_PASSWORD=your-test-password
+```
+
+Pre-seed the smoke-test `GymMember` once (its partner password is stored reversibly
+encrypted; `AuthService` reads it back from there instead of taking it as a parameter):
+
+```
+bin/rails runner "GymMember.create!(email: ENV['TEST_PARTNER_AUTH_EMAIL'], password: '<your-real-partner-password>')"
 ```
 
 #### Running smoke tests
@@ -105,7 +111,6 @@ RSpec.describe Partner::AuthService, smoke: true do
   skip "Set PARTNER_API_BASE_URL and all TEST_PARTNER_AUTH_* vars to run smoke tests" unless (
     ENV["PARTNER_API_BASE_URL"].present? &&
     ENV["TEST_PARTNER_AUTH_EMAIL"].present? &&
-    ENV["TEST_PARTNER_AUTH_PASSWORD"].present? &&
     ENV["TEST_PARTNER_AUTH_PARTNER_NAME"].present? &&
     ENV["TEST_PARTNER_AUTH_BRANCH_ID"].present? &&
     ENV["TEST_PARTNER_AUTH_BRANCH_NAME"].present? &&
