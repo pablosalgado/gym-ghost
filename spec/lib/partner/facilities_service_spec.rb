@@ -3,13 +3,12 @@ require "rails_helper"
 RSpec.describe Partner::FacilitiesService do
   around do |example|
     old_url = ENV.delete("PARTNER_BRANCHES_API_BASE_URL")
-    old_brand = ENV.delete("PARTNER_BRANCHES_BRAND")
     ENV["PARTNER_BRANCHES_API_BASE_URL"] = "http://partner.test"
     ENV["PARTNER_BRANCHES_BRAND"] = "TestBrand"
+    ENV["PARTNER_AUTH_TOKEN"] = "test_token"
     example.run
   ensure
     ENV["PARTNER_BRANCHES_API_BASE_URL"] = old_url
-    ENV["PARTNER_BRANCHES_BRAND"] = old_brand
   end
 
   subject(:service) { described_class.new }
