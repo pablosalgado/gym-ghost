@@ -65,8 +65,8 @@ module Partner
         "#{ENV.fetch("PARTNER_API_BASE_URL")}#{LOGIN_PATH}",
         body: login_body.to_json,
         headers: {
-          "Referer" => ENV.fetch("TEST_PARTNER_AUTH_REFERER"),
-          "Origin"  => ENV.fetch("TEST_PARTNER_AUTH_ORIGIN")
+          "Referer" => ENV.fetch("PARTNER_AUTH_REFERER"),
+          "Origin"  => ENV.fetch("PARTNER_AUTH_ORIGIN")
         }
       )
     end
