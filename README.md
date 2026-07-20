@@ -28,8 +28,8 @@ Node & Vite notes
 The Vite dev server binds to `0.0.0.0` by default, so devices on the same network (phones, tablets, other laptops) can reach it.
 
 1. Find your machine's LAN IP:
-   - macOS: `ipconfig getifaddr en0` (Wi-Fi) or `ipconfig getifaddr en1`
-   - Linux: `hostname -I`
+    - macOS: `ipconfig getifaddr en0` (Wi-Fi) or `ipconfig getifaddr en1`
+    - Linux: `hostname -I`
 2. Open `http://<LAN_IP>:5173` on the other device.
 3. API calls are proxied through Vite to the Rails API on port 3000 — no extra CORS config needed.
 
@@ -71,13 +71,7 @@ TEST_PARTNER_AUTH_COUNTRY_CODE=CO
 TEST_PARTNER_AUTH_REFERER=https://partner-site.com
 TEST_PARTNER_AUTH_ORIGIN=https://partner-site.com
 TEST_PARTNER_AUTH_EMAIL=your-test-member@partner.com
-```
-
-Pre-seed the smoke-test `GymMember` once (its partner password is stored reversibly
-encrypted; `AuthService` reads it back from there instead of taking it as a parameter):
-
-```
-bin/rails runner "GymMember.create!(email: ENV['TEST_PARTNER_AUTH_EMAIL'], password: '<your-real-partner-password>')"
+TEST_PARTNER_AUTH_PASSWORD=your-test-password
 ```
 
 #### Running smoke tests
@@ -110,14 +104,15 @@ RSpec.describe Partner::AuthService, smoke: true do
   # Skip gracefully when required environment variables are missing
   skip "Set PARTNER_API_BASE_URL and all TEST_PARTNER_AUTH_* vars to run smoke tests" unless (
     ENV["PARTNER_API_BASE_URL"].present? &&
-    ENV["TEST_PARTNER_AUTH_EMAIL"].present? &&
-    ENV["TEST_PARTNER_AUTH_PARTNER_NAME"].present? &&
-    ENV["TEST_PARTNER_AUTH_BRANCH_ID"].present? &&
-    ENV["TEST_PARTNER_AUTH_BRANCH_NAME"].present? &&
-    ENV["TEST_PARTNER_AUTH_TOKEN_BRANCH"].present? &&
-    ENV["TEST_PARTNER_AUTH_COUNTRY_CODE"].present? &&
-    ENV["TEST_PARTNER_AUTH_REFERER"].present? &&
-    ENV["TEST_PARTNER_AUTH_ORIGIN"].present?
+      ENV["TEST_PARTNER_AUTH_EMAIL"].present? &&
+      ENV["TEST_PARTNER_AUTH_PASSWORD"].present? &&
+      ENV["TEST_PARTNER_AUTH_PARTNER_NAME"].present? &&
+      ENV["TEST_PARTNER_AUTH_BRANCH_ID"].present? &&
+      ENV["TEST_PARTNER_AUTH_BRANCH_NAME"].present? &&
+      ENV["TEST_PARTNER_AUTH_TOKEN_BRANCH"].present? &&
+      ENV["TEST_PARTNER_AUTH_COUNTRY_CODE"].present? &&
+      ENV["TEST_PARTNER_AUTH_REFERER"].present? &&
+      ENV["TEST_PARTNER_AUTH_ORIGIN"].present?
   )
 
   # ... test implementation
