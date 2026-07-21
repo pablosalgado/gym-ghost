@@ -78,7 +78,7 @@ export default function SchedulePage() {
             <option value="">{t('schedule.filter.all')}</option>
             {cities.map((city) => (
               <option key={city.id} value={city.id}>
-                {city.name}
+                {city.city_name}
               </option>
             ))}
           </select>
@@ -97,7 +97,7 @@ export default function SchedulePage() {
             <option value="">{t('schedule.filter.all')}</option>
             {facilitiesForCity.map((facility) => (
               <option key={facility.id} value={facility.id}>
-                {facility.name}
+                {facility.display_name}
               </option>
             ))}
           </select>

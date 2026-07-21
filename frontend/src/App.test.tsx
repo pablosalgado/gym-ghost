@@ -6,6 +6,15 @@ import { useAuth, type UseAuthResult } from './hooks/useAuth'
 
 vi.mock('./hooks/useAuth', () => ({
   useAuth: vi.fn(),
+  AUTH_TOKEN_STORAGE_KEY: 'gym-ghost-auth-token',
+}))
+
+vi.mock('./hooks/useCities', () => ({
+  useCities: vi.fn().mockReturnValue({ cities: [], isLoading: false, error: null }),
+}))
+
+vi.mock('./hooks/useFacilities', () => ({
+  useFacilities: vi.fn().mockReturnValue({ facilities: [], isLoading: false, error: null }),
 }))
 
 vi.mock('./components/LoginPage', () => ({
