@@ -31,16 +31,16 @@ RSpec.describe Partner::ActivitiesService do
       "status" => "OK",
       "data" => [
         {
-          "name"       => "Spinning",
-          "branch_id"  => 1,
-          "start_time" => "2026-07-21T07:00:00Z",
-          "date"       => "2026-07-21"
+          "activity_name" => "Spinning",
+          "branch_id"     => 1,
+          "start_time"    => "2026-07-21T07:00:00Z",
+          "date"          => "2026-07-21"
         },
         {
-          "name"       => "Yoga",
-          "branch_id"  => 99,
-          "start_time" => "2026-07-21T08:00:00Z",
-          "date"       => "2026-07-21"
+          "activity_name" => "Yoga",
+          "branch_id"     => 99,
+          "start_time"    => "2026-07-21T08:00:00Z",
+          "date"          => "2026-07-21"
         }
       ]
     }
