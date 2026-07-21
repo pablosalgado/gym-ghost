@@ -2,13 +2,23 @@ require "rails_helper"
 
 RSpec.describe Partner::FacilitiesService do
   around do |example|
-    old_url = ENV.delete("PARTNER_BRANCHES_API_BASE_URL")
+    old_url     = ENV.delete("PARTNER_BRANCHES_API_BASE_URL")
+    old_origin  = ENV.delete("PARTNER_AUTH_ORIGIN")
+    old_referer = ENV.delete("PARTNER_AUTH_REFERER")
+    old_token   = ENV.delete("PARTNER_AUTH_TOKEN")
+
     ENV["PARTNER_BRANCHES_API_BASE_URL"] = "http://partner.test"
-    ENV["PARTNER_BRANCHES_BRAND"] = "TestBrand"
-    ENV["PARTNER_AUTH_TOKEN"] = "test_token"
+    ENV["PARTNER_BRANCHES_BRAND"]       = "TestBrand"
+    ENV["PARTNER_AUTH_TOKEN"]           = "test_token"
+    ENV["PARTNER_AUTH_ORIGIN"]          = "https://origin.test"
+    ENV["PARTNER_AUTH_REFERER"]         = "https://referer.test"
+
     example.run
   ensure
     ENV["PARTNER_BRANCHES_API_BASE_URL"] = old_url
+    ENV["PARTNER_AUTH_ORIGIN"]           = old_origin
+    ENV["PARTNER_AUTH_REFERER"]          = old_referer
+    ENV["PARTNER_AUTH_TOKEN"]            = old_token
   end
 
   subject(:service) { described_class.new }
