@@ -23,7 +23,7 @@ RSpec.describe "Auth", type: :request do
       post "/api/v1/auth", params: { email: "missing@example.com", password: "Password123!" }, as: :json
 
       expect(response).to have_http_status(:unauthorized)
-      expect(response.parsed_body).to eq("error" => "Invalid email or password")
+      expect(response.parsed_body).to eq("errors" => [ { "status" => 401, "title" => "Unauthorized", "detail" => "Invalid email or password" } ])
     end
 
     it "returns unauthorized for an invalid password" do
@@ -32,7 +32,7 @@ RSpec.describe "Auth", type: :request do
       post "/api/v1/auth", params: { email: user.email, password: "WrongPassword123!" }, as: :json
 
       expect(response).to have_http_status(:unauthorized)
-      expect(response.parsed_body).to eq("error" => "Invalid email or password")
+      expect(response.parsed_body).to eq("errors" => [ { "status" => 401, "title" => "Unauthorized", "detail" => "Invalid email or password" } ])
     end
 
     it "returns unauthorized when params are missing" do
@@ -41,7 +41,7 @@ RSpec.describe "Auth", type: :request do
       post "/api/v1/auth", params: { email: "member@example.com" }, as: :json
 
       expect(response).to have_http_status(:unauthorized)
-      expect(response.parsed_body).to eq("error" => "Invalid email or password")
+      expect(response.parsed_body).to eq("errors" => [ { "status" => 401, "title" => "Unauthorized", "detail" => "Invalid email or password" } ])
     end
   end
 end
