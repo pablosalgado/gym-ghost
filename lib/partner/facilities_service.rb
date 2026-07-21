@@ -56,7 +56,12 @@ module Partner
     def request_branches
       self.class.get(
         "#{ENV.fetch("PARTNER_BRANCHES_API_BASE_URL")}#{BRANCHES_PATH}",
-        query: query_params
+        query: query_params,
+        headers: {
+          "Authorization" => "Token #{ENV.fetch("PARTNER_AUTH_TOKEN")}",
+          "Origin"        => ENV.fetch("PARTNER_AUTH_ORIGIN"),
+          "Referer"       => ENV.fetch("PARTNER_AUTH_REFERER")
+        }
       )
     end
 
