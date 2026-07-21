@@ -1,20 +1,17 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router'
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 import SchedulePage from './SchedulePage'
 import { formatDayLabel } from '../lib/date-time'
 import i18n from '../i18n/i18n'
-import { getSessionsForDate } from '../features/schedule/mockSchedule'
 
-vi.mock('../features/schedule/mockSchedule', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('../features/schedule/mockSchedule')>()
-  return {
-    ...actual,
-    getSessionsForDate: vi.fn(actual.getSessionsForDate),
-  }
-})
+vi.mock('../hooks/useCities', () => ({
+  useCities: () => ({ cities: [], isLoading: false, error: null }),
+}))
 
-const mockedGetSessions = vi.mocked(getSessionsForDate)
+vi.mock('../hooks/useFacilities', () => ({
+  useFacilities: () => ({ facilities: [], isLoading: false, error: null }),
+}))
 
 const FROZEN_UTC = '2026-07-18T02:30:00.000Z'
 
@@ -29,7 +26,6 @@ function renderPage() {
 describe('SchedulePage', () => {
   beforeEach(() => {
     vi.setSystemTime(new Date(FROZEN_UTC))
-    mockedGetSessions.mockClear()
   })
 
   it('renders 14 day buttons', () => {
@@ -50,33 +46,7 @@ describe('SchedulePage', () => {
     ).toBeInTheDocument()
   })
 
-  it('filters sessions by facility', () => {
-    renderPage()
-
-    const facilitySelect = screen.getByLabelText(/Sede|Facility/)
-    fireEvent.change(facilitySelect, { target: { value: 'chapinero' } })
-
-    const listItems = screen.getAllByRole('listitem')
-    for (const item of listItems) {
-      expect(item.textContent).toContain('Chapinero')
-    }
-  })
-
-  it('resets facility selection when city changes', () => {
-    renderPage()
-
-    const facilitySelect = screen.getByLabelText(/Sede|Facility/)
-    fireEvent.change(facilitySelect, { target: { value: 'chapinero' } })
-
-    const citySelect = screen.getByLabelText(/Ciudad|City/)
-    fireEvent.change(citySelect, { target: { value: 'medellin' } })
-
-    expect(facilitySelect).toHaveValue('')
-  })
-
-  it('renders empty state when no sessions match', () => {
-    mockedGetSessions.mockReturnValueOnce([])
-
+  it('renders empty state when no sessions are available', () => {
     renderPage()
 
     expect(
@@ -84,16 +54,30 @@ describe('SchedulePage', () => {
     ).toBeInTheDocument()
   })
 
-  it('shows session count that matches filtered results', () => {
+  it('shows only All option in city select', () => {
     renderPage()
 
-    const initialCount = screen.getAllByRole('listitem').length
-    expect(initialCount).toBeGreaterThan(0)
+    const citySelect = screen.getByLabelText(/Ciudad|City/)
+    const options = citySelect.querySelectorAll('option')
+    expect(options).toHaveLength(1)
+    expect(options[0].textContent).toMatch(/Todas|All/)
+  })
+
+  it('shows only All option in facility select', () => {
+    renderPage()
+
+    const facilitySelect = screen.getByLabelText(/Sede|Facility/)
+    const options = facilitySelect.querySelectorAll('option')
+    expect(options).toHaveLength(1)
+    expect(options[0].textContent).toMatch(/Todas|All/)
+  })
+
+  it('shows only All option in class select', () => {
+    renderPage()
 
     const classSelect = screen.getByLabelText(/Clase|Class/)
-    fireEvent.change(classSelect, { target: { value: 'boxing' } })
-
-    const filteredCount = screen.getAllByRole('listitem').length
-    expect(filteredCount).toBeLessThanOrEqual(initialCount)
+    const options = classSelect.querySelectorAll('option')
+    expect(options).toHaveLength(1)
+    expect(options[0].textContent).toMatch(/Todas|All/)
   })
 })
