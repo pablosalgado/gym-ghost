@@ -1,8 +1,8 @@
 ## Summary
 
-(What does this change do and why?)
+[Summary of changes and motivation]
 
-Closes #
+Closes #[issue_number]
 
 ## Verification
 
