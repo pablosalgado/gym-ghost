@@ -1,32 +1,19 @@
 import { useCallback, useEffect, useState } from 'react'
 import { AUTH_TOKEN_STORAGE_KEY } from './useAuth'
-
-export interface ApiCity {
-  id: number
-  city_name: string
-}
+import {
+  isCitiesResponse,
+  type City,
+  type CitiesResponse,
+} from '../lib/api-types'
 
 interface UseCitiesResult {
-  cities: readonly ApiCity[]
+  cities: readonly City[]
   isLoading: boolean
   error: string | null
 }
 
-interface CitiesResponse {
-  cities: ApiCity[]
-}
-
-function isCitiesResponse(payload: unknown): payload is CitiesResponse {
-  return (
-    typeof payload === 'object' &&
-    payload !== null &&
-    'cities' in payload &&
-    Array.isArray((payload as Record<string, unknown>).cities)
-  )
-}
-
 export function useCities(): UseCitiesResult {
-  const [cities, setCities] = useState<readonly ApiCity[]>([])
+  const [cities, setCities] = useState<readonly City[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -62,7 +49,8 @@ export function useCities(): UseCitiesResult {
         return
       }
 
-      setCities(payload.cities)
+      const data: CitiesResponse = payload
+      setCities(data.cities)
     } catch {
       setCities([])
       setError('Network error')

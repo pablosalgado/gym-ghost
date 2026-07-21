@@ -1,0 +1,301 @@
+openapi: "3.0.3"
+
+info:
+  title: Gym Ghost API
+  description: |
+    Gym Ghost manages gym class schedules and member bookings.
+
+    All authenticated endpoints require a Bearer token obtained from `POST /api/v1/auth`.
+    Dates and times are transmitted as UTC ISO 8601 strings.
+  version: "1.0.0"
+
+servers:
+  - url: http://localhost:3000
+    description: Local development
+  - url: /api/v1
+    description: Relative path (proxied by Vite or same-origin in production)
+
+paths:
+  /api/v1/auth:
+    post:
+      summary: Authenticate a member
+      description: Returns a bearer token for valid email/password credentials.
+      tags:
+        - Authentication
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Authentication successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/v1/schedule:
+    get:
+      summary: Get class schedule
+      description: Returns the current gym class schedule.
+      tags:
+        - Schedule
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Schedule retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScheduleResponse"
+        "401":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/v1/cities:
+    get:
+      summary: List cities
+      description: Returns all available cities.
+      tags:
+        - Cities
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Cities retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CitiesResponse"
+        "401":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/v1/facilities:
+    get:
+      summary: List facilities
+      description: Returns all facilities, optionally filtered by city.
+      tags:
+        - Facilities
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: city_id
+          in: query
+          description: Filter facilities by city ID
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Facilities retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FacilitiesResponse"
+        "401":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/v1/openapi.json:
+    get:
+      summary: OpenAPI specification
+      description: Returns the OpenAPI specification as JSON. This endpoint does not require authentication.
+      tags:
+        - Developer
+      security: []
+      responses:
+        "200":
+          description: OpenAPI specification
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /api/v1/docs:
+    get:
+      summary: Swagger UI
+      description: Interactive API documentation via Swagger UI. This endpoint does not require authentication.
+      tags:
+        - Developer
+      security: []
+      responses:
+        "200":
+          description: Swagger UI HTML page
+          content:
+            text/html:
+              schema:
+                type: string
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: Obtain a token from POST /api/v1/auth and include it in the Authorization header.
+
+  schemas:
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: member@example.com
+        password:
+          type: string
+          format: password
+          example: Password123!
+      additionalProperties: false
+
+    LoginResponse:
+      type: object
+      required:
+        - token
+      properties:
+        token:
+          type: string
+          description: Bearer token for subsequent authenticated requests.
+          example: a1b2c3d4e5f6...
+      additionalProperties: false
+
+    ErrorItem:
+      type: object
+      required:
+        - status
+        - title
+        - detail
+      properties:
+        status:
+          type: integer
+          description: HTTP status code
+          example: 401
+        title:
+          type: string
+          description: Short title of the error
+          example: Unauthorized
+        detail:
+          type: string
+          description: Human-readable error detail
+          example: Invalid email or password
+      additionalProperties: false
+
+    ErrorResponse:
+      type: object
+      required:
+        - errors
+      properties:
+        errors:
+          type: array
+          items:
+            $ref: "#/components/schemas/ErrorItem"
+      additionalProperties: false
+
+    City:
+      type: object
+      required:
+        - id
+        - city_name
+      properties:
+        id:
+          type: integer
+          description: City ID
+        city_name:
+          type: string
+          description: City display name
+          example: "BOGOTÁ, D.C."
+      additionalProperties: false
+
+    CitiesResponse:
+      type: object
+      required:
+        - cities
+      properties:
+        cities:
+          type: array
+          items:
+            $ref: "#/components/schemas/City"
+      additionalProperties: false
+
+    Facility:
+      type: object
+      required:
+        - id
+        - display_name
+        - city_id
+      properties:
+        id:
+          type: integer
+          description: Facility ID
+        display_name:
+          type: string
+          description: Facility display name
+          example: Chapinero
+        city_id:
+          type: integer
+          description: ID of the city this facility belongs to
+      additionalProperties: false
+
+    FacilitiesResponse:
+      type: object
+      required:
+        - facilities
+      properties:
+        facilities:
+          type: array
+          items:
+            $ref: "#/components/schemas/Facility"
+      additionalProperties: false
+
+    ScheduleItem:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Schedule entry ID
+        name:
+          type: string
+          description: Class name
+        facility_id:
+          type: integer
+          description: ID of the facility hosting the class
+        city_id:
+          type: integer
+          description: ID of the city
+      additionalProperties: false
+
+    ScheduleResponse:
+      type: object
+      required:
+        - schedule
+      properties:
+        schedule:
+          type: array
+          items:
+            $ref: "#/components/schemas/ScheduleItem"
+      additionalProperties: false
+
+security:
+  - BearerAuth: []

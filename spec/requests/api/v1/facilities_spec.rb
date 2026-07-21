@@ -1,6 +1,7 @@
 require "rails_helper"
 
 RSpec.describe "Facilities", type: :request do
+  include_context "with OpenAPI contract"
   describe "GET /api/v1/facilities" do
     it "returns unauthorized when header is missing" do
       get "/api/v1/facilities"

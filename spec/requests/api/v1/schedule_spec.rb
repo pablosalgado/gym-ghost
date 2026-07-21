@@ -1,6 +1,7 @@
 require "rails_helper"
 
 RSpec.describe "Schedule", type: :request do
+  include_context "with OpenAPI contract"
   describe "GET /api/v1/schedule" do
     it "returns unauthorized when header is missing" do
       get "/api/v1/schedule"
