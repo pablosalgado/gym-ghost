@@ -5,6 +5,8 @@ import SchedulePage from './SchedulePage'
 import { formatDayLabel } from '../lib/date-time'
 import i18n from '../i18n/i18n'
 import { getSessionsForDate } from '../features/schedule/mockSchedule'
+import { useCities } from '../hooks/useCities'
+import { useFacilities } from '../hooks/useFacilities'
 
 vi.mock('../features/schedule/mockSchedule', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../features/schedule/mockSchedule')>()
@@ -14,7 +16,12 @@ vi.mock('../features/schedule/mockSchedule', async (importOriginal) => {
   }
 })
 
+vi.mock('../hooks/useCities')
+vi.mock('../hooks/useFacilities')
+
 const mockedGetSessions = vi.mocked(getSessionsForDate)
+const mockedUseCities = vi.mocked(useCities)
+const mockedUseFacilities = vi.mocked(useFacilities)
 
 const FROZEN_UTC = '2026-07-18T02:30:00.000Z'
 
@@ -30,6 +37,8 @@ describe('SchedulePage', () => {
   beforeEach(() => {
     vi.setSystemTime(new Date(FROZEN_UTC))
     mockedGetSessions.mockClear()
+    mockedUseCities.mockReturnValue({ cities: [], isLoading: false, error: null })
+    mockedUseFacilities.mockReturnValue({ facilities: [], isLoading: false, error: null })
   })
 
   it('renders 14 day buttons', () => {
@@ -50,28 +59,44 @@ describe('SchedulePage', () => {
     ).toBeInTheDocument()
   })
 
-  it('filters sessions by facility', () => {
+  it('city select shows cities from API', () => {
+    mockedUseCities.mockReturnValue({
+      cities: [
+        { id: 1, city_name: 'BOGOTÁ, D.C.' },
+        { id: 2, city_name: 'MEDELLÍN' },
+      ],
+      isLoading: false,
+      error: null,
+    })
+
     renderPage()
-
-    const facilitySelect = screen.getByLabelText(/Sede|Facility/)
-    fireEvent.change(facilitySelect, { target: { value: 'chapinero' } })
-
-    const listItems = screen.getAllByRole('listitem')
-    for (const item of listItems) {
-      expect(item.textContent).toContain('Chapinero')
-    }
-  })
-
-  it('resets facility selection when city changes', () => {
-    renderPage()
-
-    const facilitySelect = screen.getByLabelText(/Sede|Facility/)
-    fireEvent.change(facilitySelect, { target: { value: 'chapinero' } })
 
     const citySelect = screen.getByLabelText(/Ciudad|City/)
-    fireEvent.change(citySelect, { target: { value: 'medellin' } })
+    const options = citySelect.querySelectorAll('option')
+    expect(options).toHaveLength(3)
+    expect(options[0].textContent).toMatch(/All|Todas/)
+    expect(options[1].textContent).toBe('BOGOTÁ, D.C.')
+    expect(options[2].textContent).toBe('MEDELLÍN')
+  })
 
-    expect(facilitySelect).toHaveValue('')
+  it('facility select shows facilities from API', () => {
+    mockedUseFacilities.mockReturnValue({
+      facilities: [
+        { id: 1, display_name: 'Chapinero', city_id: 1 },
+        { id: 2, display_name: 'Zona T', city_id: 1 },
+      ],
+      isLoading: false,
+      error: null,
+    })
+
+    renderPage()
+
+    const facilitySelect = screen.getByLabelText(/Sede|Facility/)
+    const options = facilitySelect.querySelectorAll('option')
+    expect(options).toHaveLength(3)
+    expect(options[0].textContent).toMatch(/All|Todas/)
+    expect(options[1].textContent).toBe('Chapinero')
+    expect(options[2].textContent).toBe('Zona T')
   })
 
   it('renders empty state when no sessions match', () => {

@@ -1,12 +1,8 @@
 import { wallTimeInZoneToUtc } from '../../lib/date-time'
 import {
-  CITIES,
   CLASS_TYPES,
   FACILITIES,
-  type City,
   type ClassType,
-  type CityId,
-  type Facility,
   type Session,
 } from './types'
 
@@ -72,16 +68,6 @@ export function getSessionsForDate(dateKey: string): Session[] {
       }
     })
   })
-}
-
-export function getCities(): readonly City[] {
-  return CITIES
-}
-
-export function getFacilities(cityId?: CityId): readonly Facility[] {
-  return cityId
-    ? FACILITIES.filter((facility) => facility.cityId === cityId)
-    : FACILITIES
 }
 
 export function getClassTypes(): readonly ClassType[] {

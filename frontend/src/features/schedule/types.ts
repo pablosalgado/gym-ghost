@@ -1,32 +1,35 @@
 /**
  * Schedule domain types for the mock schedule module.
  * Display names are translation keys derived from ids
- * (`schedule.cities.<id>`, `schedule.facilities.<id>`, `schedule.classes.<id>`).
+ * (`schedule.facilities.<id>`, `schedule.classes.<id>`).
  */
-
-export const CITIES = [{ id: 'bogota' }, { id: 'medellin' }] as const
-
-export type CityId = (typeof CITIES)[number]['id']
-
-export interface City {
-  id: CityId
-}
 
 export const FACILITIES = [
   // timeZone is reserved for future multi-timezone support;
   // all current facilities use America/Bogota.
-  { id: 'chapinero', cityId: 'bogota', timeZone: 'America/Bogota' },
-  { id: 'zona-t', cityId: 'bogota', timeZone: 'America/Bogota' },
-  { id: 'poblado', cityId: 'medellin', timeZone: 'America/Bogota' },
-  { id: 'laureles', cityId: 'medellin', timeZone: 'America/Bogota' },
+  { id: 'chapinero', cityId: 1, timeZone: 'America/Bogota' },
+  { id: 'zona-t', cityId: 1, timeZone: 'America/Bogota' },
+  { id: 'poblado', cityId: 2, timeZone: 'America/Bogota' },
+  { id: 'laureles', cityId: 2, timeZone: 'America/Bogota' },
 ] as const
 
 export type FacilityId = (typeof FACILITIES)[number]['id']
 
 export interface Facility {
   id: FacilityId
-  cityId: CityId
+  cityId: number
   timeZone: string
+}
+
+export interface ApiCity {
+  id: number
+  city_name: string
+}
+
+export interface ApiFacility {
+  id: number
+  display_name: string
+  city_id: number
 }
 
 export const CLASS_TYPES = [

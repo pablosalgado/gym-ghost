@@ -33,10 +33,6 @@
       "classType": "Clase"
     },
     "emptyState": "No hay clases para esta selección.",
-    "cities": {
-      "bogota": "Bogotá",
-      "medellin": "Medellín"
-    },
     "facilities": {
       "chapinero": "Chapinero",
       "zona-t": "Zona T",

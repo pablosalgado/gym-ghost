@@ -1,8 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
-  getCities,
   getClassTypes,
-  getFacilities,
   getSessionsForDate,
 } from './mockSchedule'
 import { FACILITIES } from './types'
@@ -76,24 +74,4 @@ describe('getSessionsForDate', () => {
   })
 })
 
-describe('catalogs', () => {
-  it('returns two cities', () => {
-    expect(getCities().map((city) => city.id)).toEqual(['bogota', 'medellin'])
-  })
 
-  it('cascades facilities by city', () => {
-    expect(getFacilities('bogota').map((facility) => facility.id)).toEqual([
-      'chapinero',
-      'zona-t',
-    ])
-    expect(getFacilities('medellin').map((facility) => facility.id)).toEqual([
-      'poblado',
-      'laureles',
-    ])
-    expect(getFacilities()).toHaveLength(4)
-  })
-
-  it('returns six class types', () => {
-    expect(getClassTypes()).toHaveLength(6)
-  })
-})

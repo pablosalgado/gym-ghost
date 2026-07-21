@@ -1,8 +1,8 @@
-import { type CityId, type ClassTypeId, type FacilityId, type Facility, type Session } from './types'
+import { type ClassTypeId, type Facility, type Session } from './types'
 
 export interface ScheduleFilters {
-  cityId?: CityId
-  facilityId?: FacilityId
+  cityId?: number
+  facilityId?: number
   classTypeId?: ClassTypeId
 }
 
@@ -16,13 +16,13 @@ export function filterSessions(
     if (filters.cityId) {
       const cityFacilityIds = new Set(
         facilities
-          .filter((facility) => facility.cityId === filters.cityId)
-          .map((facility) => facility.id)
+          .filter((f) => String(f.cityId) === String(filters.cityId))
+          .map((f) => String(f.id))
       )
-      if (!cityFacilityIds.has(session.facilityId)) return false
+      if (!cityFacilityIds.has(String(session.facilityId))) return false
     }
 
-    if (filters.facilityId && session.facilityId !== filters.facilityId) {
+    if (filters.facilityId && String(session.facilityId) !== String(filters.facilityId)) {
       return false
     }
 

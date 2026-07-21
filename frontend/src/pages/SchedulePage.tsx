@@ -7,14 +7,14 @@ import {
   formatTimeOfDay,
   windowFromToday,
 } from '../lib/date-time'
-import { FACILITIES, type CityId, type ClassTypeId, type FacilityId } from '../features/schedule/types'
+import { FACILITIES, type ClassTypeId } from '../features/schedule/types'
 import {
   getClassTypes,
-  getCities,
-  getFacilities,
   getSessionsForDate,
 } from '../features/schedule/mockSchedule'
 import { filterSessions } from '../features/schedule/filterSessions'
+import { useCities } from '../hooks/useCities'
+import { useFacilities } from '../hooks/useFacilities'
 
 export default function SchedulePage() {
   const { t } = useTranslation()
@@ -22,12 +22,13 @@ export default function SchedulePage() {
   const days = useMemo(() => windowFromToday(14, DEFAULT_TIME_ZONE), [])
 
   const [selectedDate, setSelectedDate] = useState(() => days[0])
-  const [cityId, setCityId] = useState<CityId | undefined>()
-  const [facilityId, setFacilityId] = useState<FacilityId | undefined>()
+  const [cityId, setCityId] = useState<number | undefined>()
+  const [facilityId, setFacilityId] = useState<number | undefined>()
   const [classTypeId, setClassTypeId] = useState<ClassTypeId | undefined>()
 
-  const cities = getCities()
-  const facilitiesForCity = useMemo(() => getFacilities(cityId), [cityId])
+  const { cities, isLoading: citiesLoading } = useCities()
+  const { facilities, isLoading: facilitiesLoading } = useFacilities(cityId)
+
   const classTypes = getClassTypes()
 
   const sessions = useMemo(() => {
@@ -36,8 +37,8 @@ export default function SchedulePage() {
   }, [selectedDate, cityId, facilityId, classTypeId])
 
   function handleCityChange(newCityId: string) {
-    const value = (newCityId || undefined) as CityId | undefined
-    setCityId(value)
+    const num = newCityId ? Number(newCityId) : undefined
+    setCityId(Number.isNaN(num) ? undefined : num)
     setFacilityId(undefined)
   }
 
@@ -78,12 +79,13 @@ export default function SchedulePage() {
             id="city-filter"
             value={cityId ?? ''}
             onChange={(event) => handleCityChange(event.target.value)}
+            disabled={citiesLoading}
             className="min-h-11 rounded border border-gray-300 px-3 py-2"
           >
             <option value="">{t('schedule.filter.all')}</option>
             {cities.map((city) => (
               <option key={city.id} value={city.id}>
-                {t(`schedule.cities.${city.id}` as const)}
+                {city.city_name}
               </option>
             ))}
           </select>
@@ -96,13 +98,17 @@ export default function SchedulePage() {
           <select
             id="facility-filter"
             value={facilityId ?? ''}
-            onChange={(event) => setFacilityId((event.target.value || undefined) as FacilityId | undefined)}
+            onChange={(event) => {
+              const val = event.target.value ? Number(event.target.value) : undefined
+              setFacilityId(Number.isNaN(val) ? undefined : val)
+            }}
+            disabled={facilitiesLoading}
             className="min-h-11 rounded border border-gray-300 px-3 py-2"
           >
             <option value="">{t('schedule.filter.all')}</option>
-            {facilitiesForCity.map((facility) => (
-              <option key={facility.id} value={facility.id}>
-                {t(`schedule.facilities.${facility.id}` as const)}
+            {facilities.map((f) => (
+              <option key={f.id} value={f.id}>
+                {f.display_name}
               </option>
             ))}
           </select>
@@ -146,7 +152,7 @@ export default function SchedulePage() {
                   </p>
                   <p className="text-sm text-gray-600">
                     {facility
-                      ? `${t(`schedule.facilities.${facility.id}` as const)} · ${t(`schedule.cities.${facility.cityId}` as const)}`
+                      ? `${t(`schedule.facilities.${facility.id}` as const)}`
                       : session.facilityId}
                   </p>
                 </div>

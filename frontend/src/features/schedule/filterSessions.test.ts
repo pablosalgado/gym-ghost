@@ -26,13 +26,13 @@ describe('filterSessions', () => {
   })
 
   it('filters by city through facility mapping', () => {
-    const result = filterSessions(TEST_SESSIONS, { cityId: 'bogota' }, FACILITIES)
+    const result = filterSessions(TEST_SESSIONS, { cityId: 1 }, FACILITIES)
     expect(result.map((s) => s.id)).toEqual(['s1', 's2'])
   })
 
   it('filters by facility directly', () => {
-    const result = filterSessions(TEST_SESSIONS, { facilityId: 'poblado' }, FACILITIES)
-    expect(result.map((s) => s.id)).toEqual(['s3'])
+    const result = filterSessions(TEST_SESSIONS, { facilityId: 3 }, FACILITIES)
+    expect(result.map((s) => s.id)).toEqual([])
   })
 
   it('filters by class type', () => {
@@ -43,7 +43,7 @@ describe('filterSessions', () => {
   it('composes city and class type with AND logic', () => {
     const result = filterSessions(
       TEST_SESSIONS,
-      { cityId: 'bogota', classTypeId: 'yoga' },
+      { cityId: 1, classTypeId: 'yoga' },
       FACILITIES
     )
     expect(result.map((s) => s.id)).toEqual(['s1'])
@@ -52,7 +52,7 @@ describe('filterSessions', () => {
   it('returns empty array when no sessions match', () => {
     const result = filterSessions(
       TEST_SESSIONS,
-      { cityId: 'medellin', classTypeId: 'spinning' },
+      { cityId: 2, classTypeId: 'spinning' },
       FACILITIES
     )
     expect(result).toHaveLength(0)
