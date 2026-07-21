@@ -32,25 +32,7 @@
       "facility": "Sede",
       "classType": "Clase"
     },
-    "emptyState": "No hay clases para esta selección.",
-    "cities": {
-      "bogota": "Bogotá",
-      "medellin": "Medellín"
-    },
-    "facilities": {
-      "chapinero": "Chapinero",
-      "zona-t": "Zona T",
-      "poblado": "El Poblado",
-      "laureles": "Laureles"
-    },
-    "classes": {
-      "spinning": "Spinning",
-      "yoga": "Yoga",
-      "crossfit": "CrossFit",
-      "pilates": "Pilates",
-      "boxing": "Boxeo",
-      "functional": "Funcional"
-    }
+    "emptyState": "No hay clases para esta selección."
   },
   "nav": {
     "schedule": "Horario"

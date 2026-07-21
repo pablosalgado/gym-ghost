@@ -1,32 +1,22 @@
-import { type CityId, type ClassTypeId, type FacilityId, type Facility, type Session } from './types'
+import type { Session } from './types'
 
 export interface ScheduleFilters {
-  cityId?: CityId
-  facilityId?: FacilityId
-  classTypeId?: ClassTypeId
+  cityId?: number
+  facilityId?: number
+  classTypeId?: string
 }
 
 /** Filter sessions by optional city, facility, and class type constraints. */
 export function filterSessions(
   sessions: readonly Session[],
   filters: ScheduleFilters,
-  facilities: readonly Facility[]
 ): Session[] {
   return sessions.filter((session) => {
-    if (filters.cityId) {
-      const cityFacilityIds = new Set(
-        facilities
-          .filter((facility) => facility.cityId === filters.cityId)
-          .map((facility) => facility.id)
-      )
-      if (!cityFacilityIds.has(session.facilityId)) return false
-    }
-
-    if (filters.facilityId && session.facilityId !== filters.facilityId) {
+    if (filters.facilityId !== undefined && session.facilityId !== filters.facilityId) {
       return false
     }
 
-    if (filters.classTypeId && session.classTypeId !== filters.classTypeId) {
+    if (filters.classTypeId !== undefined && session.classTypeId !== filters.classTypeId) {
       return false
     }
 
