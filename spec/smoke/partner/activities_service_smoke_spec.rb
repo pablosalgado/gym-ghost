@@ -1,8 +1,6 @@
 require "rails_helper"
 
 RSpec.describe Partner::ActivitiesService, smoke: true do
-  self.use_transactional_tests = false
-
   before do
     skip "Set PARTNER_API_BASE_URL, PARTNER_ACTIVITIES_TOKEN, " \
          "PARTNER_AUTH_REFERER, PARTNER_AUTH_ORIGIN, " \
