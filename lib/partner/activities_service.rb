@@ -42,9 +42,9 @@ module Partner
       raise ActivitiesError, "Missing data array in partner response" unless data.is_a?(Array)
 
       data.each_with_object([]) do |item, entries|
-        next if item["name"].blank?
+        next if item["activity_name"].blank?
 
-        activity = Activity.find_or_create_by!(name: item["name"])
+        activity = Activity.find_or_create_by!(name: item["activity_name"])
 
         facility_record = Facility.find_by(external_id: item["branch_id"])
         next if facility_record.nil?

@@ -1,16 +1,16 @@
 require "rails_helper"
 
 RSpec.describe Partner::ActivitiesService, smoke: true do
-  self.use_transactional_tests = false
-
   before do
     skip "Set PARTNER_API_BASE_URL, PARTNER_ACTIVITIES_TOKEN, " \
-         "PARTNER_AUTH_REFERER, and PARTNER_AUTH_ORIGIN to run " \
+         "PARTNER_AUTH_REFERER, PARTNER_AUTH_ORIGIN, " \
+         "and TEST_BRANCH_TOKEN to run " \
          "smoke tests for ActivitiesService" unless
       ENV["PARTNER_API_BASE_URL"].present? &&
       ENV["PARTNER_ACTIVITIES_TOKEN"].present? &&
       ENV["PARTNER_AUTH_REFERER"].present? &&
-      ENV["PARTNER_AUTH_ORIGIN"].present?
+      ENV["PARTNER_AUTH_ORIGIN"].present? &&
+      ENV["TEST_BRANCH_TOKEN"].present?
   end
 
   describe "#fetch with real partner activities API" do
@@ -20,7 +20,7 @@ RSpec.describe Partner::ActivitiesService, smoke: true do
       facility = Facility.create!(
         external_id: 84,
         name: "Smoke Test Facility",
-        evo_token: "evo-token-abc",
+        evo_token: "#{ENV.fetch("TEST_BRANCH_TOKEN")}",
         display_name: "Smoke Test Display",
         city: city
       )
