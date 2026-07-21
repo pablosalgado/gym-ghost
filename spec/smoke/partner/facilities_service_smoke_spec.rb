@@ -2,9 +2,15 @@ require "rails_helper"
 
 RSpec.describe Partner::FacilitiesService, smoke: true do
   before do
-    skip "Set PARTNER_BRANCHES_API_BASE_URL  to run " \
+    skip "Set PARTNER_BRANCHES_API_BASE_URL, PARTNER_BRANCHES_BRAND, " \
+         "PARTNER_AUTH_TOKEN, PARTNER_AUTH_ORIGIN, " \
+         "and PARTNER_AUTH_REFERER to run " \
          "smoke tests for FacilitiesService" unless
-      ENV["PARTNER_BRANCHES_API_BASE_URL"].present?
+      ENV["PARTNER_BRANCHES_API_BASE_URL"].present? &&
+      ENV["PARTNER_BRANCHES_BRAND"].present? &&
+      ENV["PARTNER_AUTH_TOKEN"].present? &&
+      ENV["PARTNER_AUTH_ORIGIN"].present? &&
+      ENV["PARTNER_AUTH_REFERER"].present?
   end
 
   describe "#sync with real partner branches API" do
