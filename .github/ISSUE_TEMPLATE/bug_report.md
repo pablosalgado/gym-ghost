@@ -4,7 +4,7 @@ about: Report something that isn't working as expected
 ---
 
 **What's wrong**
-A clear description of the bug.
+[Describe the bug in detail]
 
 **How to reproduce**
 - Endpoint: `GET /api/v1/...`
@@ -13,4 +13,4 @@ A clear description of the bug.
 - Response expected:
 
 **Expected behavior**
-What should have happened instead.
+[What should have happened instead]
