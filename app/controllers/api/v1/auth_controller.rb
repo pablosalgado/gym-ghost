@@ -29,7 +29,9 @@ module Api
       end
 
       def invalid_credentials
-        render json: { error: "Invalid email or password" }, status: :unauthorized
+        render json: {
+          errors: [ { status: 401, title: "Unauthorized", detail: "Invalid email or password" } ]
+        }, status: :unauthorized
       end
     end
   end
