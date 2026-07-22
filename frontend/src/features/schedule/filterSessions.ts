@@ -16,7 +16,7 @@ export function filterSessions(
       return false
     }
 
-    if (filters.classTypeId !== undefined && session.classTypeId !== filters.classTypeId) {
+    if (filters.classTypeId !== undefined && session.activityName !== filters.classTypeId) {
       return false
     }
 

@@ -46,11 +46,25 @@ paths:
   /api/v1/schedule:
     get:
       summary: Get class schedule
-      description: Returns the current gym class schedule.
+      description: Returns the gym class schedule, optionally filtered by date and facility.
       tags:
         - Schedule
       security:
         - BearerAuth: []
+      parameters:
+        - name: date
+          in: query
+          description: Filter schedule entries by date (yyyy-mm-dd)
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: facility_id
+          in: query
+          description: Filter schedule entries by facility ID
+          required: false
+          schema:
+            type: integer
       responses:
         "200":
           description: Schedule retrieved successfully
@@ -271,19 +285,35 @@ components:
 
     ScheduleItem:
       type: object
+      required:
+        - id
+        - name
+        - facility_id
+        - city_id
+        - starts_at
+        - duration_minutes
       properties:
         id:
           type: integer
           description: Schedule entry ID
         name:
           type: string
-          description: Class name
+          description: Class activity name
         facility_id:
           type: integer
           description: ID of the facility hosting the class
         city_id:
           type: integer
           description: ID of the city
+        starts_at:
+          type: string
+          format: date-time
+          description: UTC ISO 8601 instant when the class starts
+          example: "2026-07-21T07:00:00.000Z"
+        duration_minutes:
+          type: integer
+          description: Class duration in minutes
+          example: 60
       additionalProperties: false
 
     ScheduleResponse:

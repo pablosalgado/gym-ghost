@@ -6,7 +6,7 @@ function makeSession(overrides: Partial<Session> = {}): Session {
   return {
     id: 'test-1',
     facilityId: 1,
-    classTypeId: 'yoga',
+    activityName: 'yoga',
     startsAt: '2026-07-20T12:00:00.000Z',
     durationMinutes: 60,
     ...overrides,
@@ -14,10 +14,10 @@ function makeSession(overrides: Partial<Session> = {}): Session {
 }
 
 const TEST_SESSIONS: readonly Session[] = [
-  makeSession({ id: 's1', facilityId: 1, classTypeId: 'yoga' }),
-  makeSession({ id: 's2', facilityId: 2, classTypeId: 'spinning' }),
-  makeSession({ id: 's3', facilityId: 3, classTypeId: 'yoga' }),
-  makeSession({ id: 's4', facilityId: 4, classTypeId: 'boxing' }),
+  makeSession({ id: 's1', facilityId: 1, activityName: 'yoga' }),
+  makeSession({ id: 's2', facilityId: 2, activityName: 'spinning' }),
+  makeSession({ id: 's3', facilityId: 3, activityName: 'yoga' }),
+  makeSession({ id: 's4', facilityId: 4, activityName: 'boxing' }),
 ]
 
 describe('filterSessions', () => {

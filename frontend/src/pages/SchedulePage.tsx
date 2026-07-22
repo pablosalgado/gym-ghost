@@ -10,6 +10,7 @@ import {
 import { filterSessions } from '../features/schedule/filterSessions'
 import { useCities } from '../hooks/useCities'
 import { useFacilities } from '../hooks/useFacilities'
+import { useSchedule } from '../hooks/useSchedule'
 import type { Session } from '../features/schedule/types'
 
 export default function SchedulePage() {
@@ -24,11 +25,16 @@ export default function SchedulePage() {
 
   const { cities } = useCities()
   const { facilities: facilitiesForCity } = useFacilities(cityId)
-  const classTypes: readonly { id: string }[] = []
+  const { sessions: allSessions, isLoading, error } = useSchedule(selectedDate, facilityId)
+
+  const classTypes = useMemo(() => {
+    const names = new Set(allSessions.map((s) => s.activityName))
+    return Array.from(names).map((name) => ({ id: name }))
+  }, [allSessions])
 
   const sessions: readonly Session[] = useMemo(() => {
-    return filterSessions([], { cityId, facilityId, classTypeId })
-  }, [selectedDate, cityId, facilityId, classTypeId])
+    return filterSessions(allSessions, { cityId, facilityId, classTypeId })
+  }, [allSessions, cityId, facilityId, classTypeId])
 
   function handleCityChange(newCityId: string) {
     const value = newCityId ? Number(newCityId) : undefined
@@ -123,10 +129,22 @@ export default function SchedulePage() {
         </div>
       </div>
 
+      {/* Loading state */}
+      {isLoading && (
+        <p className="py-12 text-center text-gray-500">{t('schedule.loading')}</p>
+      )}
+
+      {/* Error state */}
+      {!isLoading && error && (
+        <p className="py-12 text-center text-red-500">{error}</p>
+      )}
+
       {/* Session list */}
-      {sessions.length === 0 ? (
+      {!isLoading && !error && sessions.length === 0 && (
         <p className="py-12 text-center text-gray-500">{t('schedule.emptyState')}</p>
-      ) : (
+      )}
+
+      {!isLoading && !error && sessions.length > 0 && (
         <ul className="divide-y divide-gray-200 rounded-lg border border-gray-200">
           {sessions.map((session) => (
             <li key={session.id} className="flex items-center gap-4 px-4 py-3">
@@ -134,11 +152,9 @@ export default function SchedulePage() {
                 {formatTimeOfDay(session.startsAt, locale, DEFAULT_TIME_ZONE)}
               </span>
               <div className="flex-1">
-                <p className="font-medium">
-                  {session.classTypeId}
-                </p>
+                <p className="font-medium">{session.activityName}</p>
                 <p className="text-sm text-gray-600">
-                  {session.facilityId}
+                  {session.durationMinutes} min
                 </p>
               </div>
             </li>

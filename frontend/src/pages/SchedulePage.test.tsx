@@ -13,6 +13,10 @@ vi.mock('../hooks/useFacilities', () => ({
   useFacilities: () => ({ facilities: [], isLoading: false, error: null }),
 }))
 
+vi.mock('../hooks/useSchedule', () => ({
+  useSchedule: () => ({ sessions: [], isLoading: false, error: null }),
+}))
+
 const FROZEN_UTC = '2026-07-18T02:30:00.000Z'
 
 function renderPage() {

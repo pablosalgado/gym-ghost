@@ -53,6 +53,8 @@ export interface ScheduleItem {
   name: string
   facility_id: number
   city_id: number
+  starts_at: string
+  duration_minutes: number
 }
 
 /** GET /api/v1/schedule — 200 response */
@@ -97,5 +99,24 @@ export function isFacilitiesResponse(payload: unknown): payload is FacilitiesRes
     payload !== null &&
     'facilities' in payload &&
     Array.isArray((payload as Record<string, unknown>).facilities)
+  )
+}
+
+/** Type guard: checks if a payload is a valid ScheduleResponse */
+export function isScheduleResponse(payload: unknown): payload is ScheduleResponse {
+  if (typeof payload !== 'object' || payload === null) return false
+  if (!('schedule' in payload)) return false
+  const items = (payload as Record<string, unknown>).schedule
+  if (!Array.isArray(items)) return false
+  return items.every(
+    (item) =>
+      typeof item === 'object' &&
+      item !== null &&
+      'id' in item &&
+      'name' in item &&
+      'facility_id' in item &&
+      'city_id' in item &&
+      'starts_at' in item &&
+      'duration_minutes' in item
   )
 }
