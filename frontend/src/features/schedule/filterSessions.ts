@@ -3,10 +3,10 @@ import type { Session } from './types'
 export interface ScheduleFilters {
   cityId?: number
   facilityId?: number
-  classTypeId?: string
+  activityId?: number
 }
 
-/** Filter sessions by optional city, facility, and class type constraints. */
+/** Filter sessions by optional city, facility, and activity constraints. */
 export function filterSessions(
   sessions: readonly Session[],
   filters: ScheduleFilters,
@@ -16,7 +16,7 @@ export function filterSessions(
       return false
     }
 
-    if (filters.classTypeId !== undefined && session.classTypeId !== filters.classTypeId) {
+    if (filters.activityId !== undefined && session.activityId !== filters.activityId) {
       return false
     }
 

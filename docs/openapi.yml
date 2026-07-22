@@ -271,19 +271,29 @@ components:
 
     ScheduleItem:
       type: object
+      required:
+        - id
+        - activity_name
+        - activity_id
+        - facility_id
+        - starts_at
       properties:
         id:
           type: integer
           description: Schedule entry ID
-        name:
+        activity_name:
           type: string
-          description: Class name
+          description: Name of the activity
+        activity_id:
+          type: integer
+          description: ID of the activity type
         facility_id:
           type: integer
           description: ID of the facility hosting the class
-        city_id:
-          type: integer
-          description: ID of the city
+        starts_at:
+          type: string
+          format: date-time
+          description: UTC ISO 8601 instant when the session starts
       additionalProperties: false
 
     ScheduleResponse:
