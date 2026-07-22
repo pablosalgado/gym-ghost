@@ -50,9 +50,10 @@ export interface FacilitiesResponse {
 /** GET /api/v1/schedule — single schedule entry */
 export interface ScheduleItem {
   id: number
-  name: string
+  activity_name: string
+  activity_id: number
   facility_id: number
-  city_id: number
+  starts_at: string
 }
 
 /** GET /api/v1/schedule — 200 response */
@@ -109,6 +110,16 @@ export interface ClassType {
 /** GET /api/v1/activities — 200 response */
 export interface ClassTypesResponse {
   activities: ClassType[]
+}
+
+/** Type guard: checks if a payload is a valid ScheduleResponse */
+export function isScheduleResponse(payload: unknown): payload is ScheduleResponse {
+  return (
+    typeof payload === 'object' &&
+    payload !== null &&
+    'schedule' in payload &&
+    Array.isArray((payload as Record<string, unknown>).schedule)
+  )
 }
 
 /** Type guard: checks if a payload is a valid ClassTypesResponse */

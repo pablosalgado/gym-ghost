@@ -6,18 +6,18 @@ function makeSession(overrides: Partial<Session> = {}): Session {
   return {
     id: 'test-1',
     facilityId: 1,
-    classTypeId: 'yoga',
+    activityName: 'yoga',
+    activityId: 1,
     startsAt: '2026-07-20T12:00:00.000Z',
-    durationMinutes: 60,
     ...overrides,
   }
 }
 
 const TEST_SESSIONS: readonly Session[] = [
-  makeSession({ id: 's1', facilityId: 1, classTypeId: 'yoga' }),
-  makeSession({ id: 's2', facilityId: 2, classTypeId: 'spinning' }),
-  makeSession({ id: 's3', facilityId: 3, classTypeId: 'yoga' }),
-  makeSession({ id: 's4', facilityId: 4, classTypeId: 'boxing' }),
+  makeSession({ id: 's1', facilityId: 1, activityName: 'yoga', activityId: 1 }),
+  makeSession({ id: 's2', facilityId: 2, activityName: 'spinning', activityId: 2 }),
+  makeSession({ id: 's3', facilityId: 3, activityName: 'yoga', activityId: 1 }),
+  makeSession({ id: 's4', facilityId: 4, activityName: 'boxing', activityId: 4 }),
 ]
 
 describe('filterSessions', () => {
@@ -31,14 +31,14 @@ describe('filterSessions', () => {
   })
 
   it('filters by class type', () => {
-    const result = filterSessions(TEST_SESSIONS, { classTypeId: 'yoga' })
+    const result = filterSessions(TEST_SESSIONS, { activityId: 1 })
     expect(result.map((s) => s.id)).toEqual(['s1', 's3'])
   })
 
   it('composes facility and class type with AND logic', () => {
     const result = filterSessions(
       TEST_SESSIONS,
-      { facilityId: 1, classTypeId: 'yoga' },
+      { facilityId: 1, activityId: 1 },
     )
     expect(result.map((s) => s.id)).toEqual(['s1'])
   })
@@ -46,7 +46,7 @@ describe('filterSessions', () => {
   it('returns empty array when no sessions match', () => {
     const result = filterSessions(
       TEST_SESSIONS,
-      { facilityId: 99, classTypeId: 'spinning' },
+      { facilityId: 99, activityId: 2 },
     )
     expect(result).toHaveLength(0)
   })
