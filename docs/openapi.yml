@@ -51,6 +51,20 @@ paths:
         - Schedule
       security:
         - BearerAuth: []
+      parameters:
+        - name: date
+          in: query
+          description: Filter by date (YYYY-MM-DD). Defaults to today in America/Bogota.
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: facility_id
+          in: query
+          description: Filter by facility ID
+          required: false
+          schema:
+            type: integer
       responses:
         "200":
           description: Schedule retrieved successfully
@@ -326,19 +340,31 @@ components:
 
     ScheduleItem:
       type: object
+      required:
+        - id
+        - activity_name
+        - activity_id
+        - facility_id
+        - starts_at
       properties:
         id:
           type: integer
           description: Schedule entry ID
-        name:
+        activity_name:
           type: string
-          description: Class name
+          description: Name of the activity/class
+          example: Yoga
+        activity_id:
+          type: integer
+          description: ID of the activity
         facility_id:
           type: integer
           description: ID of the facility hosting the class
-        city_id:
-          type: integer
-          description: ID of the city
+        starts_at:
+          type: string
+          format: date-time
+          description: Start time in UTC ISO 8601
+          example: "2026-07-22T14:00:00.000Z"
       additionalProperties: false
 
     ScheduleResponse:
