@@ -55,22 +55,38 @@ gym-ghost/
 │   ├── controllers/
 │   │   ├── api/v1/          # Versioned API controllers
 │   │   └── concerns/        # Authentication concern
-│   └── models/              # User, Token (bcrypt + SHA256 digest)
+│   ├── jobs/                # Background jobs (SyncFacilitiesJob)
+│   └── models/              # Active Record models (User, Token, City, Facility, etc.)
 ├── config/
 │   ├── ci.rb                # CI pipeline definition (bin/ci runs this)
 │   ├── environments/        # Rails env configs
-│   └── initializers/        # App boot config
-├── db/migrate/              # ActiveRecord migrations
+│   ├── initializers/        # App boot config
+│   └── locales/             # I18n locale files
+├── db/
+│   ├── migrate/             # ActiveRecord migrations
+│   ├── schema.rb            # Database schema
+│   └── seeds.rb             # Seed data
+├── docs/                    # Documentation (OpenAPI spec)
 ├── frontend/src/
-│   ├── components/          # React components
+│   ├── components/          # Shared UI components
+│   ├── features/            # Feature modules (schedule)
 │   ├── hooks/               # Custom React hooks
+│   ├── i18n/                # Internationalization
+│   ├── lib/                 # Shared utilities (api-types, date-time)
+│   ├── pages/               # Page-level components (LandingPage, SchedulePage)
 │   ├── App.tsx              # Root component
 │   └── main.tsx             # Entry point
+├── lib/
+│   ├── partner/             # Partner API service integrations
+│   └── tasks/               # Rake tasks
 ├── spec/
-│   ├── factories/           # FactoryBot factories (users, tokens)
+│   ├── factories/           # FactoryBot factories
+│   ├── jobs/                # Job specs
+│   ├── lib/partner/         # Partner service specs
 │   ├── models/              # Model specs
-│   └── requests/api/v1/     # Request specs (type: :request required)
-│   └── smoke/               # Smoke/integration tests
+│   ├── requests/api/v1/     # Request specs (type: :request required)
+│   ├── smoke/               # Smoke/integration tests
+│   └── support/             # Test support modules
 ├── bin/                     # Executables (ci, setup, rubocop, etc.)
 ├── script/verify_docker.sh  # Docker smoke test
 └── scripts/setup_dev.sh     # Devcontainer setup
@@ -82,10 +98,14 @@ gym-ghost/
 |------|----------|-------|
 | Add API endpoint | `app/controllers/api/v1/`, `config/routes.rb` | Namespace under `Api::V1`, route under `/api/v1` |
 | Add model | `app/models/`, `db/migrate/` | Add factory in `spec/factories/` |
+| Add background job | `app/jobs/` | Inherit from `ApplicationJob` |
 | Change auth | `app/controllers/concerns/authentication.rb` | Bearer token via `Token.digest` |
 | Change error format | `app/controllers/application_controller.rb` | `{ errors: [{ status:, title:, detail: }] }` |
 | Frontend component | `frontend/src/components/` | Tailwind CSS, strict TypeScript |
 | Frontend hook | `frontend/src/hooks/` | Custom hooks |
+| Frontend page | `frontend/src/pages/` | Route-level page components |
+| Frontend i18n | `frontend/src/i18n/` | Locale files in `frontend/src/i18n/locales/` |
+| Partner API integration | `lib/partner/` | Service classes for partner API calls |
 | Add test | `spec/requests/api/v1/` or `spec/models/` | Declare `type: :request` or `type: :model` explicitly |
 | CI pipeline | `config/ci.rb` | `bin/ci` runs all steps sequentially |
 | Partner smoke test (RSpec) | `spec/smoke/partner/auth_service_smoke_spec.rb` | Excluded from `bundle exec rspec`; run via `bundle exec rspec --tag smoke` |
