@@ -9,6 +9,7 @@ import {
 } from '../lib/date-time'
 import { filterSessions } from '../features/schedule/filterSessions'
 import { useCities } from '../hooks/useCities'
+import { useClassTypes } from '../hooks/useClassTypes'
 import { useFacilities } from '../hooks/useFacilities'
 import type { Session } from '../features/schedule/types'
 
@@ -24,7 +25,7 @@ export default function SchedulePage() {
 
   const { cities } = useCities()
   const { facilities: facilitiesForCity } = useFacilities(cityId)
-  const classTypes: readonly { id: string }[] = []
+  const { classTypes } = useClassTypes(facilityId)
 
   const sessions: readonly Session[] = useMemo(() => {
     return filterSessions([], { cityId, facilityId, classTypeId })
@@ -116,7 +117,7 @@ export default function SchedulePage() {
             <option value="">{t('schedule.filter.all')}</option>
             {classTypes.map((ct) => (
               <option key={ct.id} value={ct.id}>
-                {ct.id}
+                {ct.name}
               </option>
             ))}
           </select>
