@@ -1,33 +1,19 @@
 import { useCallback, useEffect, useState } from 'react'
 import { AUTH_TOKEN_STORAGE_KEY } from './useAuth'
-
-export interface ApiFacility {
-  id: number
-  display_name: string
-  city_id: number
-}
+import {
+  isFacilitiesResponse,
+  type Facility,
+  type FacilitiesResponse,
+} from '../lib/api-types'
 
 interface UseFacilitiesResult {
-  facilities: readonly ApiFacility[]
+  facilities: readonly Facility[]
   isLoading: boolean
   error: string | null
 }
 
-interface FacilitiesResponse {
-  facilities: ApiFacility[]
-}
-
-function isFacilitiesResponse(payload: unknown): payload is FacilitiesResponse {
-  return (
-    typeof payload === 'object' &&
-    payload !== null &&
-    'facilities' in payload &&
-    Array.isArray((payload as Record<string, unknown>).facilities)
-  )
-}
-
 export function useFacilities(cityId?: number): UseFacilitiesResult {
-  const [facilities, setFacilities] = useState<readonly ApiFacility[]>([])
+  const [facilities, setFacilities] = useState<readonly Facility[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -64,7 +50,8 @@ export function useFacilities(cityId?: number): UseFacilitiesResult {
         return
       }
 
-      setFacilities(payload.facilities)
+      const data: FacilitiesResponse = payload
+      setFacilities(data.facilities)
     } catch {
       setFacilities([])
       setError('Network error')

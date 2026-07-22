@@ -1,36 +1,11 @@
 import { useCallback, useMemo, useState } from 'react'
+import {
+  isLoginResponse,
+  isErrorResponse,
+  type ErrorResponse,
+} from '../lib/api-types'
 
 export const AUTH_TOKEN_STORAGE_KEY = 'gym-ghost-auth-token'
-
-interface AuthSuccessResponse {
-  token: string
-}
-
-interface ApiErrorItem {
-  detail: string
-}
-
-interface ApiErrorResponse {
-  errors: ApiErrorItem[]
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null
-}
-
-function isAuthSuccessResponse(payload: unknown): payload is AuthSuccessResponse {
-  return isRecord(payload) && typeof payload.token === 'string'
-}
-
-function isApiErrorResponse(payload: unknown): payload is ApiErrorResponse {
-  return (
-    isRecord(payload) &&
-    Array.isArray(payload.errors) &&
-    payload.errors.every(
-      (item) => isRecord(item) && typeof item.detail === 'string'
-    )
-  )
-}
 
 export type AuthErrorKey =
   | 'auth.invalidCredentials'
@@ -42,7 +17,7 @@ export type AuthError =
   | { kind: 'key'; key: AuthErrorKey }
 
 function getAuthError(payload: unknown): AuthError {
-  if (isApiErrorResponse(payload) && payload.errors.length > 0) {
+  if (isErrorResponse(payload) && payload.errors.length > 0) {
     return { kind: 'server', detail: payload.errors[0].detail }
   }
 
@@ -85,7 +60,7 @@ export function useAuth(): UseAuthResult {
         return false
       }
 
-      if (!isAuthSuccessResponse(payload)) {
+      if (!isLoginResponse(payload)) {
         setError({ kind: 'key', key: 'auth.invalidAuthResponse' })
         return false
       }
