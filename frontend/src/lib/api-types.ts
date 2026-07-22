@@ -99,3 +99,24 @@ export function isFacilitiesResponse(payload: unknown): payload is FacilitiesRes
     Array.isArray((payload as Record<string, unknown>).facilities)
   )
 }
+
+/** GET /api/v1/activities — single class type / activity */
+export interface ClassType {
+  id: number
+  name: string
+}
+
+/** GET /api/v1/activities — 200 response */
+export interface ClassTypesResponse {
+  activities: ClassType[]
+}
+
+/** Type guard: checks if a payload is a valid ClassTypesResponse */
+export function isClassTypesResponse(payload: unknown): payload is ClassTypesResponse {
+  return (
+    typeof payload === 'object' &&
+    payload !== null &&
+    'activities' in payload &&
+    Array.isArray((payload as Record<string, unknown>).activities)
+  )
+}
