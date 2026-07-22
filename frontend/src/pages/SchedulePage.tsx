@@ -9,6 +9,7 @@ import {
 } from '../lib/date-time'
 import { filterSessions } from '../features/schedule/filterSessions'
 import { useCities } from '../hooks/useCities'
+import { useClassTypes } from '../hooks/useClassTypes'
 import { useFacilities } from '../hooks/useFacilities'
 import type { Session } from '../features/schedule/types'
 
@@ -20,15 +21,15 @@ export default function SchedulePage() {
   const [selectedDate, setSelectedDate] = useState(() => days[0])
   const [cityId, setCityId] = useState<number | undefined>(1)
   const [facilityId, setFacilityId] = useState<number | undefined>(9)
-  const [classTypeId, setClassTypeId] = useState<string | undefined>()
+  const [activityId, setActivityId] = useState<string | undefined>()
 
   const { cities } = useCities()
   const { facilities: facilitiesForCity } = useFacilities(cityId)
-  const classTypes: readonly { id: string }[] = []
+  const { classTypes } = useClassTypes(facilityId)
 
   const sessions: readonly Session[] = useMemo(() => {
-    return filterSessions([], { cityId, facilityId, classTypeId })
-  }, [selectedDate, cityId, facilityId, classTypeId])
+    return filterSessions([], { cityId, facilityId, activityId: activityId ? Number(activityId) : undefined })
+  }, [selectedDate, cityId, facilityId, activityId])
 
   function handleCityChange(newCityId: string) {
     const value = newCityId ? Number(newCityId) : undefined
@@ -109,14 +110,14 @@ export default function SchedulePage() {
           </label>
           <select
             id="class-filter"
-            value={classTypeId ?? ''}
-            onChange={(event) => setClassTypeId(event.target.value || undefined)}
+            value={activityId ?? ''}
+            onChange={(event) => setActivityId(event.target.value || undefined)}
             className="min-h-11 rounded border border-gray-300 px-3 py-2"
           >
             <option value="">{t('schedule.filter.all')}</option>
             {classTypes.map((ct) => (
               <option key={ct.id} value={ct.id}>
-                {ct.id}
+                {ct.name}
               </option>
             ))}
           </select>
@@ -135,7 +136,7 @@ export default function SchedulePage() {
               </span>
               <div className="flex-1">
                 <p className="font-medium">
-                  {session.classTypeId}
+                  {session.activityName}
                 </p>
                 <p className="text-sm text-gray-600">
                   {session.facilityId}
