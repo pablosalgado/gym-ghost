@@ -18,13 +18,14 @@ RSpec.describe "OpenAPI", type: :request do
       expect(response).to have_http_status(:ok)
     end
 
-    it "includes all four API endpoints in paths" do
+    it "includes all API endpoints in paths" do
       get "/api/v1/openapi.json"
       paths = response.parsed_body["paths"]
       expect(paths).to have_key("/api/v1/auth")
       expect(paths).to have_key("/api/v1/schedule")
       expect(paths).to have_key("/api/v1/cities")
       expect(paths).to have_key("/api/v1/facilities")
+      expect(paths).to have_key("/api/v1/activities")
     end
   end
 

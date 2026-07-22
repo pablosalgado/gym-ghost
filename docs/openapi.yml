@@ -116,6 +116,35 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /api/v1/activities:
+    get:
+      summary: List activities
+      description: Returns all activities, optionally filtered by facility.
+      tags:
+        - Activities
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: facility_id
+          in: query
+          description: Filter activities by facility ID
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Activities retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActivitiesResponse"
+        "401":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /api/v1/openapi.json:
     get:
       summary: OpenAPI specification
@@ -267,6 +296,32 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/Facility"
+      additionalProperties: false
+
+    Activity:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: integer
+          description: Activity ID
+        name:
+          type: string
+          description: Activity name
+          example: Yoga
+      additionalProperties: false
+
+    ActivitiesResponse:
+      type: object
+      required:
+        - activities
+      properties:
+        activities:
+          type: array
+          items:
+            $ref: "#/components/schemas/Activity"
       additionalProperties: false
 
     ScheduleItem:
