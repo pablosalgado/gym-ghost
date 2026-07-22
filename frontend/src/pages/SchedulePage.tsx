@@ -18,8 +18,8 @@ export default function SchedulePage() {
   const days = useMemo(() => windowFromToday(14, DEFAULT_TIME_ZONE), [])
 
   const [selectedDate, setSelectedDate] = useState(() => days[0])
-  const [cityId, setCityId] = useState<number | undefined>()
-  const [facilityId, setFacilityId] = useState<number | undefined>()
+  const [cityId, setCityId] = useState<number | undefined>(1)
+  const [facilityId, setFacilityId] = useState<number | undefined>(9)
   const [classTypeId, setClassTypeId] = useState<string | undefined>()
 
   const { cities } = useCities()
