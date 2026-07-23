@@ -25,7 +25,6 @@ RSpec.describe "OpenAPI", type: :request do
       expect(paths).to have_key("/api/v1/schedule")
       expect(paths).to have_key("/api/v1/cities")
       expect(paths).to have_key("/api/v1/facilities")
-      expect(paths).to have_key("/api/v1/activities")
     end
   end
 

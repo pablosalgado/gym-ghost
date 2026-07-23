@@ -116,35 +116,6 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
-  /api/v1/activities:
-    get:
-      summary: List class types
-      description: Returns all class types, optionally filtered by facility.
-      tags:
-        - ClassTypes
-      security:
-        - BearerAuth: []
-      parameters:
-        - name: facility_id
-          in: query
-          description: Filter class types by facility ID
-          required: false
-          schema:
-            type: integer
-      responses:
-        "200":
-          description: Class types retrieved successfully
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ClassTypesResponse"
-        "401":
-          description: Authentication required
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-
   /api/v1/openapi.json:
     get:
       summary: OpenAPI specification
@@ -296,32 +267,6 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/Facility"
-      additionalProperties: false
-
-    ClassType:
-      type: object
-      required:
-        - id
-        - name
-      properties:
-        id:
-          type: integer
-          description: Class type ID
-        name:
-          type: string
-          description: Class type name
-          example: Yoga
-      additionalProperties: false
-
-    ClassTypesResponse:
-      type: object
-      required:
-        - activities
-      properties:
-        activities:
-          type: array
-          items:
-            $ref: "#/components/schemas/ClassType"
       additionalProperties: false
 
     ScheduleItem:
