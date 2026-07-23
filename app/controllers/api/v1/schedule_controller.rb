@@ -7,7 +7,11 @@ module Api
         date = schedule_params[:date] || today_in_zone
         entries = ScheduleEntry.includes(:class_type, :facility).where(date: date)
         entries = entries.where(facility_id: schedule_params[:facility_id]) if schedule_params[:facility_id].present?
-        entries = entries.order(:start_time)
+        entries = entries.order(:start_time).to_a
+
+        if entries.empty? && schedule_params[:facility_id].present?
+          FetchScheduleEntriesJob.perform_later(schedule_params[:facility_id], date)
+        end
 
         class_types = entries.map(&:class_type).uniq(&:id).map { |ct| { id: ct.id, name: ct.name } }
 

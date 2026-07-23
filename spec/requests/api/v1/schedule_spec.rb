@@ -99,14 +99,49 @@ RSpec.describe "Schedule", type: :request do
       raw_token = SecureRandom.hex(32)
       create(:token, user:, digest: Token.digest(raw_token))
 
-      get "/api/v1/schedule",
-          params: { date: "2026-07-21", facility_id: facility_a.id },
-          headers: { "Authorization" => "Bearer #{raw_token}" }
+      expect {
+        get "/api/v1/schedule",
+            params: { date: "2026-07-21", facility_id: facility_a.id },
+            headers: { "Authorization" => "Bearer #{raw_token}" }
+      }.not_to have_enqueued_job(FetchScheduleEntriesJob)
 
       expect(response).to have_http_status(:ok)
       body = response.parsed_body
       expect(body["schedule"].length).to eq(1)
       expect(body["schedule"].first["facility_id"]).to eq(facility_a.id)
+    end
+
+    it "enqueues FetchScheduleEntriesJob on cache miss with facility_id and returns empty results" do
+      facility = create(:facility)
+
+      user = create(:user)
+      raw_token = SecureRandom.hex(32)
+      create(:token, user:, digest: Token.digest(raw_token))
+
+      expect {
+        get "/api/v1/schedule",
+            params: { date: "2026-07-22", facility_id: facility.id },
+            headers: { "Authorization" => "Bearer #{raw_token}" }
+      }.to have_enqueued_job(FetchScheduleEntriesJob)
+        .with(facility.id.to_s, "2026-07-22")
+
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body).to eq("schedule" => [], "class_types" => [])
+    end
+
+    it "does not enqueue job when facility_id is missing on cache miss" do
+      user = create(:user)
+      raw_token = SecureRandom.hex(32)
+      create(:token, user:, digest: Token.digest(raw_token))
+
+      expect {
+        get "/api/v1/schedule",
+            params: { date: "2026-07-22" },
+            headers: { "Authorization" => "Bearer #{raw_token}" }
+      }.not_to have_enqueued_job(FetchScheduleEntriesJob)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body).to eq("schedule" => [], "class_types" => [])
     end
 
     it "returns class_types with unique entries from the schedule results" do
