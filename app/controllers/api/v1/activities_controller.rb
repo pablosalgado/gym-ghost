@@ -2,12 +2,12 @@ module Api
   module V1
     class ActivitiesController < ApplicationController
       def index
-        activities = Activity.order(:name)
-        activities = activities.joins(:schedule_entries)
-                               .where(schedule_entries: { facility_id: filter_params[:facility_id] })
-                               .distinct if filter_params[:facility_id].present?
+        class_types = ClassType.order(:name)
+        class_types = class_types.joins(:schedule_entries)
+                                 .where(schedule_entries: { facility_id: filter_params[:facility_id] })
+                                 .distinct if filter_params[:facility_id].present?
 
-        render json: { activities: activities.as_json(only: [ :id, :name ]) }
+        render json: { activities: class_types.as_json(only: [ :id, :name ]) }
       end
 
       private

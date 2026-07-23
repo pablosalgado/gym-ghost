@@ -31,8 +31,8 @@ RSpec.describe ScheduleEntry, type: :model do
     expect(ScheduleEntry.reflect_on_association(:facility).macro).to eq(:belongs_to)
   end
 
-  it 'belongs to an activity' do
-    expect(ScheduleEntry.reflect_on_association(:activity).macro).to eq(:belongs_to)
+  it 'belongs to a class_type' do
+    expect(ScheduleEntry.reflect_on_association(:class_type).macro).to eq(:belongs_to)
   end
 
   it 'requires a facility' do
@@ -42,10 +42,10 @@ RSpec.describe ScheduleEntry, type: :model do
     expect(schedule_entry.errors[:facility]).to include("must exist")
   end
 
-  it 'requires an activity' do
-    schedule_entry = build(:schedule_entry, activity: nil)
+  it 'requires a class_type' do
+    schedule_entry = build(:schedule_entry, class_type: nil)
 
     expect(schedule_entry).not_to be_valid
-    expect(schedule_entry.errors[:activity]).to include("must exist")
+    expect(schedule_entry.errors[:class_type]).to include("must exist")
   end
 end

@@ -58,17 +58,17 @@ RSpec.describe Partner::ActivitiesService do
         allow(described_class).to receive(:get).and_return(response)
       end
 
-      it "creates Activity and ScheduleEntry records" do
+      it "creates ClassType and ScheduleEntry records" do
         entries = service.fetch(facility:, date:)
 
-        expect(Activity.count).to eq(2)
-        activity = Activity.find_by(name: "Spinning")
-        expect(activity).to be_present
+        expect(ClassType.count).to eq(2)
+        class_type = ClassType.find_by(name: "Spinning")
+        expect(class_type).to be_present
 
         expect(ScheduleEntry.count).to eq(1)
         entry = ScheduleEntry.first
         expect(entry.facility).to eq(facility)
-        expect(entry.activity).to eq(activity)
+        expect(entry.class_type).to eq(class_type)
         expect(entry.start_time).to eq("2026-07-21T07:00:00Z")
         expect(entry.date).to eq(Date.new(2026, 7, 21))
 
@@ -80,8 +80,8 @@ RSpec.describe Partner::ActivitiesService do
       it "skips ScheduleEntry creation for unmatched branch_id" do
         entries = service.fetch(facility:, date:)
 
-        expect(Activity.count).to eq(2)
-        expect(Activity.find_by(name: "Yoga")).to be_present
+        expect(ClassType.count).to eq(2)
+        expect(ClassType.find_by(name: "Yoga")).to be_present
         expect(ScheduleEntry.count).to eq(1)
         expect(entries.length).to eq(1)
       end
@@ -100,7 +100,7 @@ RSpec.describe Partner::ActivitiesService do
         first_entries  = service.fetch(facility:, date:)
         second_entries = service.fetch(facility:, date:)
 
-        expect(Activity.count).to eq(2)
+        expect(ClassType.count).to eq(2)
         expect(ScheduleEntry.count).to eq(1)
         expect(first_entries.length).to eq(1)
         expect(second_entries.length).to eq(1)

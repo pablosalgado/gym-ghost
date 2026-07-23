@@ -1,5 +1,5 @@
 FactoryBot.define do
-  factory :activity do
+  factory :class_type do
     sequence(:name) { |n| "Spinning Class #{n}" }
   end
 end

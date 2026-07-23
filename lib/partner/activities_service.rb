@@ -5,7 +5,7 @@ require "json"
 
 module Partner
   # Fetches gym activity schedules from the downstream partner API
-  # and upserts Activity and ScheduleEntry records.
+  # and upserts ClassType and ScheduleEntry records.
   class ActivitiesService
     include HTTParty
 
@@ -44,7 +44,7 @@ module Partner
       data.each_with_object([]) do |item, entries|
         next if item["activity_name"].blank?
 
-        activity = Activity.find_or_create_by!(name: item["activity_name"])
+        class_type = ClassType.find_or_create_by!(name: item["activity_name"])
 
         facility_record = Facility.find_by(external_id: item["branch_id"])
         next if facility_record.nil?
@@ -55,7 +55,7 @@ module Partner
 
         entry = ScheduleEntry.find_or_create_by!(
           facility: facility_record,
-          activity: activity,
+          class_type: class_type,
           start_time: start_time
         ) do |e|
           e.date = entry_date
