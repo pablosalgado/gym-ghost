@@ -9,7 +9,6 @@ import {
 } from '../lib/date-time'
 import { filterSessions } from '../features/schedule/filterSessions'
 import { useCities } from '../hooks/useCities'
-import { useClassTypes } from '../hooks/useClassTypes'
 import { useFacilities } from '../hooks/useFacilities'
 import type { Session } from '../features/schedule/types'
 
@@ -25,7 +24,6 @@ export default function SchedulePage() {
 
   const { cities } = useCities()
   const { facilities: facilitiesForCity } = useFacilities(cityId)
-  const { classTypes } = useClassTypes(facilityId)
 
   const sessions: readonly Session[] = useMemo(() => {
     return filterSessions([], { cityId, facilityId, activityId: activityId ? Number(activityId) : undefined })
@@ -104,24 +102,6 @@ export default function SchedulePage() {
           </select>
         </div>
 
-        <div className="flex flex-col gap-1">
-          <label htmlFor="class-filter" className="text-sm font-medium text-gray-700">
-            {t('schedule.filter.classType')}
-          </label>
-          <select
-            id="class-filter"
-            value={activityId ?? ''}
-            onChange={(event) => setActivityId(event.target.value || undefined)}
-            className="min-h-11 rounded border border-gray-300 px-3 py-2"
-          >
-            <option value="">{t('schedule.filter.all')}</option>
-            {classTypes.map((ct) => (
-              <option key={ct.id} value={ct.id}>
-                {ct.name}
-              </option>
-            ))}
-          </select>
-        </div>
       </div>
 
       {/* Session list */}

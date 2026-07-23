@@ -72,12 +72,4 @@ describe('SchedulePage', () => {
     expect(options[0].textContent).toMatch(/Todas|All/)
   })
 
-  it('shows only All option in class select', () => {
-    renderPage()
-
-    const classSelect = screen.getByLabelText(/Clase|Class/)
-    const options = classSelect.querySelectorAll('option')
-    expect(options).toHaveLength(1)
-    expect(options[0].textContent).toMatch(/Todas|All/)
-  })
 })
