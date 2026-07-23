@@ -10,6 +10,7 @@ import {
 import { filterSessions } from '../features/schedule/filterSessions'
 import { useCities } from '../hooks/useCities'
 import { useFacilities } from '../hooks/useFacilities'
+import { useSchedule } from '../hooks/useSchedule'
 import type { Session } from '../features/schedule/types'
 
 export default function SchedulePage() {
@@ -24,10 +25,29 @@ export default function SchedulePage() {
 
   const { cities } = useCities()
   const { facilities: facilitiesForCity } = useFacilities(cityId)
+  const {
+    sessions: scheduleSessions,
+    isLoading: scheduleLoading,
+    error: scheduleError,
+  } = useSchedule(selectedDate, facilityId)
+
+  const classTypes = useMemo(() => {
+    const seen = new Map<string, number>()
+    for (const session of scheduleSessions) {
+      if (!seen.has(session.activityName)) {
+        seen.set(session.activityName, session.activityId)
+      }
+    }
+    return Array.from(seen.entries()).map(([name, id]) => ({ name, id }))
+  }, [scheduleSessions])
 
   const sessions: readonly Session[] = useMemo(() => {
-    return filterSessions([], { cityId, facilityId, activityId: activityId ? Number(activityId) : undefined })
-  }, [selectedDate, cityId, facilityId, activityId])
+    return filterSessions(scheduleSessions, {
+      cityId,
+      facilityId,
+      activityId: activityId ? Number(activityId) : undefined,
+    })
+  }, [scheduleSessions, cityId, facilityId, activityId])
 
   function handleCityChange(newCityId: string) {
     const value = newCityId ? Number(newCityId) : undefined
@@ -102,10 +122,32 @@ export default function SchedulePage() {
           </select>
         </div>
 
+        <div className="flex flex-col gap-1">
+          <label htmlFor="activity-filter" className="text-sm font-medium text-gray-700">
+            {t('schedule.filter.classType')}
+          </label>
+          <select
+            id="activity-filter"
+            value={activityId ?? ''}
+            onChange={(event) => setActivityId(event.target.value || undefined)}
+            className="min-h-11 rounded border border-gray-300 px-3 py-2"
+          >
+            <option value="">{t('schedule.filter.all')}</option>
+            {classTypes.map((ct) => (
+              <option key={ct.id} value={ct.id}>
+                {ct.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
       </div>
 
-      {/* Session list */}
-      {sessions.length === 0 ? (
+      {scheduleError !== null ? (
+        <p className="py-12 text-center text-red-600">{scheduleError}</p>
+      ) : scheduleLoading ? (
+        <p className="py-12 text-center text-gray-500">{t('common.loading')}</p>
+      ) : sessions.length === 0 ? (
         <p className="py-12 text-center text-gray-500">{t('schedule.emptyState')}</p>
       ) : (
         <ul className="divide-y divide-gray-200 rounded-lg border border-gray-200">
