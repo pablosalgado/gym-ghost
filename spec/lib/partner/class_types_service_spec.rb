@@ -2,7 +2,7 @@
 
 require "rails_helper"
 
-RSpec.describe Partner::ActivitiesService do
+RSpec.describe Partner::ClassTypesService do
   around do |example|
     old_url     = ENV.delete("PARTNER_API_BASE_URL")
     old_referer = ENV.delete("PARTNER_AUTH_REFERER")
@@ -58,17 +58,17 @@ RSpec.describe Partner::ActivitiesService do
         allow(described_class).to receive(:get).and_return(response)
       end
 
-      it "creates Activity and ScheduleEntry records" do
+      it "creates ClassType and ScheduleEntry records" do
         entries = service.fetch(facility:, date:)
 
-        expect(Activity.count).to eq(2)
-        activity = Activity.find_by(name: "Spinning")
-        expect(activity).to be_present
+        expect(ClassType.count).to eq(2)
+        class_type = ClassType.find_by(name: "Spinning")
+        expect(class_type).to be_present
 
         expect(ScheduleEntry.count).to eq(1)
         entry = ScheduleEntry.first
         expect(entry.facility).to eq(facility)
-        expect(entry.activity).to eq(activity)
+        expect(entry.class_type).to eq(class_type)
         expect(entry.start_time).to eq("2026-07-21T07:00:00Z")
         expect(entry.date).to eq(Date.new(2026, 7, 21))
 
@@ -80,8 +80,8 @@ RSpec.describe Partner::ActivitiesService do
       it "skips ScheduleEntry creation for unmatched branch_id" do
         entries = service.fetch(facility:, date:)
 
-        expect(Activity.count).to eq(2)
-        expect(Activity.find_by(name: "Yoga")).to be_present
+        expect(ClassType.count).to eq(2)
+        expect(ClassType.find_by(name: "Yoga")).to be_present
         expect(ScheduleEntry.count).to eq(1)
         expect(entries.length).to eq(1)
       end
@@ -100,7 +100,7 @@ RSpec.describe Partner::ActivitiesService do
         first_entries  = service.fetch(facility:, date:)
         second_entries = service.fetch(facility:, date:)
 
-        expect(Activity.count).to eq(2)
+        expect(ClassType.count).to eq(2)
         expect(ScheduleEntry.count).to eq(1)
         expect(first_entries.length).to eq(1)
         expect(second_entries.length).to eq(1)
@@ -120,9 +120,9 @@ RSpec.describe Partner::ActivitiesService do
         allow(described_class).to receive(:get).and_return(response)
       end
 
-      it "raises Partner::ActivitiesError" do
+      it "raises Partner::ClassTypesError" do
         expect { service.fetch(facility:, date:) }
-          .to raise_error(Partner::ActivitiesError, /Invalid parameters/)
+          .to raise_error(Partner::ClassTypesError, /Invalid parameters/)
       end
     end
 
@@ -135,9 +135,9 @@ RSpec.describe Partner::ActivitiesService do
         allow(described_class).to receive(:get).and_return(response)
       end
 
-      it "raises Partner::ActivitiesError" do
+      it "raises Partner::ClassTypesError" do
         expect { service.fetch(facility:, date:) }
-          .to raise_error(Partner::ActivitiesError, /Unauthorized/)
+          .to raise_error(Partner::ClassTypesError, /Unauthorized/)
       end
     end
 
@@ -150,9 +150,9 @@ RSpec.describe Partner::ActivitiesService do
         allow(described_class).to receive(:get).and_return(response)
       end
 
-      it "raises Partner::ActivitiesError" do
+      it "raises Partner::ClassTypesError" do
         expect { service.fetch(facility:, date:) }
-          .to raise_error(Partner::ActivitiesError, "Malformed partner response")
+          .to raise_error(Partner::ClassTypesError, "Malformed partner response")
       end
     end
 
@@ -165,9 +165,9 @@ RSpec.describe Partner::ActivitiesService do
         allow(described_class).to receive(:get).and_return(response)
       end
 
-      it "raises Partner::ActivitiesError" do
+      it "raises Partner::ClassTypesError" do
         expect { service.fetch(facility:, date:) }
-          .to raise_error(Partner::ActivitiesError, "Missing data array in partner response")
+          .to raise_error(Partner::ClassTypesError, "Missing data array in partner response")
       end
     end
   end

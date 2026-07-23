@@ -7,7 +7,7 @@ Rails.application.routes.draw do
       get "/schedule", to: "schedule#index"
       get "/cities", to: "cities#index"
       get "/facilities", to: "facilities#index"
-      get "/activities", to: "activities#index"
+      get "/activities", to: "class_types#index"
       get "/openapi.json", to: "openapi#show"
       get "/docs", to: "docs#show"
     end

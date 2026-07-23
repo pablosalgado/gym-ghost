@@ -1,6 +1,6 @@
 require "rails_helper"
 
-RSpec.describe "Activities", type: :request do
+RSpec.describe "ClassTypes", type: :request do
   include_context "with OpenAPI contract"
 
   describe "GET /api/v1/activities" do
@@ -43,9 +43,9 @@ RSpec.describe "Activities", type: :request do
         create(:token, user: user, digest: Token.digest(raw_token))
       end
 
-      it "returns all activities when no facility_id param" do
-        yoga = create(:activity, name: "Yoga")
-        pilates = create(:activity, name: "Pilates")
+      it "returns all class types when no facility_id param" do
+        yoga = create(:class_type, name: "Yoga")
+        pilates = create(:class_type, name: "Pilates")
 
         get "/api/v1/activities", headers: headers
 
@@ -58,15 +58,15 @@ RSpec.describe "Activities", type: :request do
         )
       end
 
-      it "returns activities filtered by facility_id" do
-        yoga = create(:activity, name: "Yoga")
-        pilates = create(:activity, name: "Pilates")
-        spinning = create(:activity, name: "Spinning")
+      it "returns class types filtered by facility_id" do
+        yoga = create(:class_type, name: "Yoga")
+        pilates = create(:class_type, name: "Pilates")
+        spinning = create(:class_type, name: "Spinning")
 
         facility = create(:facility)
 
-        create(:schedule_entry, activity: yoga, facility: facility)
-        create(:schedule_entry, activity: pilates, facility: facility)
+        create(:schedule_entry, class_type: yoga, facility: facility)
+        create(:schedule_entry, class_type: pilates, facility: facility)
 
         get "/api/v1/activities", headers: headers, params: { facility_id: facility.id }
 
@@ -80,7 +80,7 @@ RSpec.describe "Activities", type: :request do
       end
 
       it "returns empty array when facility has no schedule entries" do
-        create(:activity, name: "Yoga")
+        create(:class_type, name: "Yoga")
         facility = create(:facility)
 
         get "/api/v1/activities", headers: headers, params: { facility_id: facility.id }
@@ -91,7 +91,7 @@ RSpec.describe "Activities", type: :request do
 
       context "with OpenAPI contract" do
         it "conforms to the OpenAPI schema for a successful response" do
-          create(:activity, name: "Yoga")
+          create(:class_type, name: "Yoga")
 
           get "/api/v1/activities", headers: headers
 
@@ -99,9 +99,9 @@ RSpec.describe "Activities", type: :request do
         end
 
         it "conforms to the OpenAPI schema for a filtered response" do
-          yoga = create(:activity, name: "Yoga")
+          yoga = create(:class_type, name: "Yoga")
           facility = create(:facility)
-          create(:schedule_entry, activity: yoga, facility: facility)
+          create(:schedule_entry, class_type: yoga, facility: facility)
 
           get "/api/v1/activities", headers: headers, params: { facility_id: facility.id }
 

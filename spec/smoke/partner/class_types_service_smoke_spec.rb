@@ -1,11 +1,11 @@
 require "rails_helper"
 
-RSpec.describe Partner::ActivitiesService, smoke: true do
+RSpec.describe Partner::ClassTypesService, smoke: true do
   before do
     skip "Set PARTNER_API_BASE_URL, PARTNER_ACTIVITIES_TOKEN, " \
          "PARTNER_AUTH_REFERER, PARTNER_AUTH_ORIGIN, " \
          "and TEST_BRANCH_TOKEN to run " \
-         "smoke tests for ActivitiesService" unless
+         "smoke tests for ClassTypesService" unless
       ENV["PARTNER_API_BASE_URL"].present? &&
       ENV["PARTNER_ACTIVITIES_TOKEN"].present? &&
       ENV["PARTNER_AUTH_REFERER"].present? &&
@@ -14,7 +14,7 @@ RSpec.describe Partner::ActivitiesService, smoke: true do
   end
 
   describe "#fetch with real partner activities API" do
-    it "persists Activity and ScheduleEntry records" do
+    it "persists ClassType and ScheduleEntry records" do
       city = City.create!(city_name: "Test City")
 
       facility = Facility.create!(
@@ -32,8 +32,8 @@ RSpec.describe Partner::ActivitiesService, smoke: true do
       expect(entries.length).to be > 0
       expect(entries.first).to be_a(ScheduleEntry)
 
-      # Assert at least one Activity and one ScheduleEntry were persisted
-      expect(Activity.count).to be > 0
+      # Assert at least one ClassType and one ScheduleEntry were persisted
+      expect(ClassType.count).to be > 0
       expect(ScheduleEntry.count).to be > 0
     end
   end

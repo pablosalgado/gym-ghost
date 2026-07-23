@@ -4,9 +4,9 @@ require "httparty"
 require "json"
 
 module Partner
-  # Fetches gym activity schedules from the downstream partner API
-  # and upserts Activity and ScheduleEntry records.
-  class ActivitiesService
+  # Fetches gym class-type schedules from the downstream partner API
+  # and upserts ClassType and ScheduleEntry records.
+  class ClassTypesService
     include HTTParty
 
     format :json
@@ -24,27 +24,27 @@ module Partner
 
     def initialize; end
 
-    # Fetches activities for the given facility and date.
+    # Fetches class types for the given facility and date.
     #
     # facility - a Facility record whose evo_token is sent as token_branch
     # date     - a Date object or a String in YYYY-MM-DD format
     #
     # Returns an array of ScheduleEntry records.
-    # Raises Partner::ActivitiesError on any failure.
+    # Raises Partner::ClassTypesError on any failure.
     def fetch(facility:, date:)
       response = request_activities(facility, date)
       payload = parse_payload(response)
 
-      raise ActivitiesError, error_detail(response, payload) unless response.success?
-      raise ActivitiesError, error_detail(response, payload) if payload["status"] == "ERROR"
+      raise ClassTypesError, error_detail(response, payload) unless response.success?
+      raise ClassTypesError, error_detail(response, payload) if payload["status"] == "ERROR"
 
       data = payload["data"]
-      raise ActivitiesError, "Missing data array in partner response" unless data.is_a?(Array)
+      raise ClassTypesError, "Missing data array in partner response" unless data.is_a?(Array)
 
       data.each_with_object([]) do |item, entries|
         next if item["activity_name"].blank?
 
-        activity = Activity.find_or_create_by!(name: item["activity_name"])
+        class_type = ClassType.find_or_create_by!(name: item["activity_name"])
 
         facility_record = Facility.find_by(external_id: item["branch_id"])
         next if facility_record.nil?
@@ -55,7 +55,7 @@ module Partner
 
         entry = ScheduleEntry.find_or_create_by!(
           facility: facility_record,
-          activity: activity,
+          class_type: class_type,
           start_time: start_time
         ) do |e|
           e.date = entry_date
@@ -89,7 +89,7 @@ module Partner
 
     def parse_payload(response)
       parsed = response.parsed_response
-      raise ActivitiesError, "Malformed partner response" unless parsed.is_a?(Hash)
+      raise ClassTypesError, "Malformed partner response" unless parsed.is_a?(Hash)
 
       parsed
     end
@@ -111,7 +111,7 @@ module Partner
         return payload["message"] if payload["message"].present?
       end
 
-      "Partner activities fetch failed (HTTP #{response.code})"
+      "Partner class types fetch failed (HTTP #{response.code})"
     end
   end
 end
