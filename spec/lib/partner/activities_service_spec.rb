@@ -2,7 +2,7 @@
 
 require "rails_helper"
 
-RSpec.describe Partner::ClassTypesService do
+RSpec.describe Partner::ActivitiesService do
   around do |example|
     old_url     = ENV.delete("PARTNER_API_BASE_URL")
     old_referer = ENV.delete("PARTNER_AUTH_REFERER")
@@ -120,9 +120,9 @@ RSpec.describe Partner::ClassTypesService do
         allow(described_class).to receive(:get).and_return(response)
       end
 
-      it "raises Partner::ClassTypesError" do
+      it "raises Partner::ActivitiesError" do
         expect { service.fetch(facility:, date:) }
-          .to raise_error(Partner::ClassTypesError, /Invalid parameters/)
+          .to raise_error(Partner::ActivitiesError, /Invalid parameters/)
       end
     end
 
@@ -135,9 +135,9 @@ RSpec.describe Partner::ClassTypesService do
         allow(described_class).to receive(:get).and_return(response)
       end
 
-      it "raises Partner::ClassTypesError" do
+      it "raises Partner::ActivitiesError" do
         expect { service.fetch(facility:, date:) }
-          .to raise_error(Partner::ClassTypesError, /Unauthorized/)
+          .to raise_error(Partner::ActivitiesError, /Unauthorized/)
       end
     end
 
@@ -150,9 +150,9 @@ RSpec.describe Partner::ClassTypesService do
         allow(described_class).to receive(:get).and_return(response)
       end
 
-      it "raises Partner::ClassTypesError" do
+      it "raises Partner::ActivitiesError" do
         expect { service.fetch(facility:, date:) }
-          .to raise_error(Partner::ClassTypesError, "Malformed partner response")
+          .to raise_error(Partner::ActivitiesError, "Malformed partner response")
       end
     end
 
@@ -165,9 +165,9 @@ RSpec.describe Partner::ClassTypesService do
         allow(described_class).to receive(:get).and_return(response)
       end
 
-      it "raises Partner::ClassTypesError" do
+      it "raises Partner::ActivitiesError" do
         expect { service.fetch(facility:, date:) }
-          .to raise_error(Partner::ClassTypesError, "Missing data array in partner response")
+          .to raise_error(Partner::ActivitiesError, "Missing data array in partner response")
       end
     end
   end

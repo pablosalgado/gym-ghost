@@ -1,11 +1,11 @@
 require "rails_helper"
 
-RSpec.describe Partner::ClassTypesService, smoke: true do
+RSpec.describe Partner::ActivitiesService, smoke: true do
   before do
     skip "Set PARTNER_API_BASE_URL, PARTNER_ACTIVITIES_TOKEN, " \
          "PARTNER_AUTH_REFERER, PARTNER_AUTH_ORIGIN, " \
          "and TEST_BRANCH_TOKEN to run " \
-         "smoke tests for ClassTypesService" unless
+         "smoke tests for ActivitiesService" unless
       ENV["PARTNER_API_BASE_URL"].present? &&
       ENV["PARTNER_ACTIVITIES_TOKEN"].present? &&
       ENV["PARTNER_AUTH_REFERER"].present? &&

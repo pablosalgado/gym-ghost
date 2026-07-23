@@ -4,9 +4,9 @@ require "httparty"
 require "json"
 
 module Partner
-  # Fetches gym class-type schedules from the downstream partner API
+  # Fetches gym activity schedules from the downstream partner API
   # and upserts ClassType and ScheduleEntry records.
-  class ClassTypesService
+  class ActivitiesService
     include HTTParty
 
     format :json
@@ -24,22 +24,22 @@ module Partner
 
     def initialize; end
 
-    # Fetches class types for the given facility and date.
+    # Fetches activities for the given facility and date.
     #
     # facility - a Facility record whose evo_token is sent as token_branch
     # date     - a Date object or a String in YYYY-MM-DD format
     #
     # Returns an array of ScheduleEntry records.
-    # Raises Partner::ClassTypesError on any failure.
+    # Raises Partner::ActivitiesError on any failure.
     def fetch(facility:, date:)
       response = request_activities(facility, date)
       payload = parse_payload(response)
 
-      raise ClassTypesError, error_detail(response, payload) unless response.success?
-      raise ClassTypesError, error_detail(response, payload) if payload["status"] == "ERROR"
+      raise ActivitiesError, error_detail(response, payload) unless response.success?
+      raise ActivitiesError, error_detail(response, payload) if payload["status"] == "ERROR"
 
       data = payload["data"]
-      raise ClassTypesError, "Missing data array in partner response" unless data.is_a?(Array)
+      raise ActivitiesError, "Missing data array in partner response" unless data.is_a?(Array)
 
       data.each_with_object([]) do |item, entries|
         next if item["activity_name"].blank?
@@ -89,7 +89,7 @@ module Partner
 
     def parse_payload(response)
       parsed = response.parsed_response
-      raise ClassTypesError, "Malformed partner response" unless parsed.is_a?(Hash)
+      raise ActivitiesError, "Malformed partner response" unless parsed.is_a?(Hash)
 
       parsed
     end
@@ -111,7 +111,7 @@ module Partner
         return payload["message"] if payload["message"].present?
       end
 
-      "Partner class types fetch failed (HTTP #{response.code})"
+      "Partner activities fetch failed (HTTP #{response.code})"
     end
   end
 end
