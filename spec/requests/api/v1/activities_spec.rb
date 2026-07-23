@@ -1,6 +1,6 @@
 require "rails_helper"
 
-RSpec.describe "ClassTypes", type: :request do
+RSpec.describe "Activities", type: :request do
   include_context "with OpenAPI contract"
 
   describe "GET /api/v1/activities" do

@@ -1,6 +1,6 @@
 module Api
   module V1
-    class ClassTypesController < ApplicationController
+    class ActivitiesController < ApplicationController
       def index
         class_types = ClassType.order(:name)
         class_types = class_types.joins(:schedule_entries)
