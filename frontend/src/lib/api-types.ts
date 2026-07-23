@@ -47,6 +47,12 @@ export interface FacilitiesResponse {
   facilities: Facility[]
 }
 
+/** GET /api/v1/schedule — single class type */
+export interface ClassType {
+  id: number
+  name: string
+}
+
 /** GET /api/v1/schedule — single schedule entry */
 export interface ScheduleItem {
   id: number
@@ -59,6 +65,7 @@ export interface ScheduleItem {
 /** GET /api/v1/schedule — 200 response */
 export interface ScheduleResponse {
   schedule: ScheduleItem[]
+  class_types: ClassType[]
 }
 
 /** Type guard: checks if a payload is a valid ErrorResponse */
@@ -107,6 +114,8 @@ export function isScheduleResponse(payload: unknown): payload is ScheduleRespons
     typeof payload === 'object' &&
     payload !== null &&
     'schedule' in payload &&
-    Array.isArray((payload as Record<string, unknown>).schedule)
+    Array.isArray((payload as Record<string, unknown>).schedule) &&
+    'class_types' in payload &&
+    Array.isArray((payload as Record<string, unknown>).class_types)
   )
 }
