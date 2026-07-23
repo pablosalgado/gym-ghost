@@ -22,7 +22,11 @@ const DEFAULT_SCHEDULE_RESULT = {
   sessions: [] as readonly Session[],
   classTypes: [] as readonly ClassType[],
   isLoading: false,
+  isBackgroundLoading: false,
   error: null as string | null,
+  retryCount: 0,
+  maxRetries: 3,
+  manualRetry: vi.fn(),
 }
 
 let scheduleReturn = { ...DEFAULT_SCHEDULE_RESULT }
@@ -168,5 +172,4 @@ describe('SchedulePage', () => {
       expect(within(sessionList).queryByText('Spinning')).not.toBeInTheDocument()
     })
   })
-
 })

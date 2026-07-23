@@ -32,7 +32,8 @@
       "facility": "Sede",
       "classType": "Clase"
     },
-    "emptyState": "No hay clases para esta selección."
+    "emptyState": "No hay clases para esta selección.",
+    "retry": "Reintentar"
   },
   "nav": {
     "schedule": "Horario"

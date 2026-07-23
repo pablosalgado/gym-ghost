@@ -11,7 +11,6 @@ import { filterSessions } from '../features/schedule/filterSessions'
 import { useCities } from '../hooks/useCities'
 import { useFacilities } from '../hooks/useFacilities'
 import { useSchedule } from '../hooks/useSchedule'
-import type { Session } from '../features/schedule/types'
 
 export default function SchedulePage() {
   const { t } = useTranslation()
@@ -30,6 +29,10 @@ export default function SchedulePage() {
     classTypes,
     isLoading: scheduleLoading,
     error: scheduleError,
+    isBackgroundLoading,
+    retryCount,
+    maxRetries,
+    manualRetry,
   } = useSchedule(selectedDate, facilityId)
 
   // Reset activity filter when facility or date changes —
@@ -38,7 +41,7 @@ export default function SchedulePage() {
     setActivityId(undefined)
   }, [facilityId, selectedDate])
 
-  const sessions: readonly Session[] = useMemo(() => {
+  const sessions = useMemo(() => {
     return filterSessions(scheduleSessions, { cityId, facilityId, activityId })
   }, [scheduleSessions, cityId, facilityId, activityId])
 
@@ -47,6 +50,8 @@ export default function SchedulePage() {
     setCityId(value)
     setFacilityId(undefined)
   }
+
+  const isExhausted = retryCount >= maxRetries && scheduleSessions.length === 0
 
   return (
     <div className="mx-auto max-w-4xl px-3 py-6 sm:px-4">
@@ -137,12 +142,30 @@ export default function SchedulePage() {
 
       </div>
 
+      {/* Session list / states */}
       {scheduleError !== null ? (
         <p className="py-12 text-center text-red-600">{scheduleError}</p>
       ) : scheduleLoading ? (
         <p className="py-12 text-center text-gray-500">{t('common.loading')}</p>
       ) : sessions.length === 0 ? (
-        <p className="py-12 text-center text-gray-500">{t('schedule.emptyState')}</p>
+        <div className="py-12 text-center">
+          {isBackgroundLoading ? (
+            <p className="text-gray-400">{t('common.loading')}</p>
+          ) : isExhausted ? (
+            <div>
+              <p className="text-gray-500 mb-4">{t('schedule.emptyState')}</p>
+              <button
+                type="button"
+                onClick={manualRetry}
+                className="min-h-11 rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+              >
+                {t('schedule.retry')}
+              </button>
+            </div>
+          ) : (
+            <p className="text-gray-500">{t('schedule.emptyState')}</p>
+          )}
+        </div>
       ) : (
         <ul className="divide-y divide-gray-200 rounded-lg border border-gray-200">
           {sessions.map((session) => (
