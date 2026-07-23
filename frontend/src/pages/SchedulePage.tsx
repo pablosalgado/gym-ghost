@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import i18n from '../i18n/i18n'
 import {
@@ -21,32 +21,25 @@ export default function SchedulePage() {
   const [selectedDate, setSelectedDate] = useState(() => days[0])
   const [cityId, setCityId] = useState<number | undefined>(1)
   const [facilityId, setFacilityId] = useState<number | undefined>(9)
-  const [activityId, setActivityId] = useState<string | undefined>()
+  const [activityId, setActivityId] = useState<number | undefined>()
 
   const { cities } = useCities()
   const { facilities: facilitiesForCity } = useFacilities(cityId)
   const {
     sessions: scheduleSessions,
+    classTypes,
     isLoading: scheduleLoading,
     error: scheduleError,
   } = useSchedule(selectedDate, facilityId)
 
-  const classTypes = useMemo(() => {
-    const seen = new Map<string, number>()
-    for (const session of scheduleSessions) {
-      if (!seen.has(session.activityName)) {
-        seen.set(session.activityName, session.activityId)
-      }
-    }
-    return Array.from(seen.entries()).map(([name, id]) => ({ name, id }))
-  }, [scheduleSessions])
+  // Reset activity filter when facility or date changes —
+  // the previously selected class type may not exist in the new response.
+  useEffect(() => {
+    setActivityId(undefined)
+  }, [facilityId, selectedDate])
 
   const sessions: readonly Session[] = useMemo(() => {
-    return filterSessions(scheduleSessions, {
-      cityId,
-      facilityId,
-      activityId: activityId ? Number(activityId) : undefined,
-    })
+    return filterSessions(scheduleSessions, { cityId, facilityId, activityId })
   }, [scheduleSessions, cityId, facilityId, activityId])
 
   function handleCityChange(newCityId: string) {
@@ -123,14 +116,15 @@ export default function SchedulePage() {
         </div>
 
         <div className="flex flex-col gap-1">
-          <label htmlFor="activity-filter" className="text-sm font-medium text-gray-700">
+          <label htmlFor="class-type-filter" className="text-sm font-medium text-gray-700">
             {t('schedule.filter.classType')}
           </label>
           <select
-            id="activity-filter"
+            id="class-type-filter"
             value={activityId ?? ''}
-            onChange={(event) => setActivityId(event.target.value || undefined)}
-            className="min-h-11 rounded border border-gray-300 px-3 py-2"
+            onChange={(event) => setActivityId(event.target.value ? Number(event.target.value) : undefined)}
+            disabled={classTypes.length === 0}
+            className="min-h-11 rounded border border-gray-300 px-3 py-2 disabled:opacity-50"
           >
             <option value="">{t('schedule.filter.all')}</option>
             {classTypes.map((ct) => (

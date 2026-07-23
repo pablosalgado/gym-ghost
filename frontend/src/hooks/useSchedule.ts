@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { AUTH_TOKEN_STORAGE_KEY } from './useAuth'
 import {
   isScheduleResponse,
+  type ClassType,
   type ScheduleItem,
   type ScheduleResponse,
 } from '../lib/api-types'
@@ -9,6 +10,7 @@ import type { Session } from '../features/schedule/types'
 
 interface UseScheduleResult {
   sessions: readonly Session[]
+  classTypes: readonly ClassType[]
   isLoading: boolean
   error: string | null
 }
@@ -25,6 +27,7 @@ function toSession(item: ScheduleItem): Session {
 
 export function useSchedule(dateKey: string, facilityId?: number): UseScheduleResult {
   const [sessions, setSessions] = useState<readonly Session[]>([])
+  const [classTypes, setClassTypes] = useState<readonly ClassType[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -52,6 +55,7 @@ export function useSchedule(dateKey: string, facilityId?: number): UseScheduleRe
 
       if (!response.ok) {
         setSessions([])
+        setClassTypes([])
         setError(`Request failed: ${response.status}`)
         return
       }
@@ -60,14 +64,17 @@ export function useSchedule(dateKey: string, facilityId?: number): UseScheduleRe
 
       if (!isScheduleResponse(payload)) {
         setSessions([])
+        setClassTypes([])
         setError('Invalid response format')
         return
       }
 
       const data: ScheduleResponse = payload
       setSessions(data.schedule.map(toSession))
+      setClassTypes(data.class_types)
     } catch {
       setSessions([])
+      setClassTypes([])
       setError('Network error')
     } finally {
       setIsLoading(false)
@@ -78,5 +85,5 @@ export function useSchedule(dateKey: string, facilityId?: number): UseScheduleRe
     fetchSchedule()
   }, [fetchSchedule])
 
-  return { sessions, isLoading, error }
+  return { sessions, classTypes, isLoading, error }
 }
