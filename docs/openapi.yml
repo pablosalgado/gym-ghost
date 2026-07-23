@@ -46,11 +46,27 @@ paths:
   /api/v1/schedule:
     get:
       summary: Get class schedule
-      description: Returns the current gym class schedule.
+      description: Returns gym class schedule entries and available class types. When `date` is omitted it defaults to today in America/Bogota time.
       tags:
         - Schedule
       security:
         - BearerAuth: []
+      parameters:
+        - name: date
+          in: query
+          description: Fetch schedule for this date (YYYY-MM-DD). Defaults to today in America/Bogota.
+          required: false
+          schema:
+            type: string
+            format: date
+            example: "2026-07-23"
+        - name: facility_id
+          in: query
+          description: Filter schedule entries by facility ID.
+          required: false
+          schema:
+            type: integer
+            example: 9
       responses:
         "200":
           description: Schedule retrieved successfully
@@ -271,30 +287,63 @@ components:
 
     ScheduleItem:
       type: object
+      required:
+        - id
+        - activity_name
+        - activity_id
+        - facility_id
+        - starts_at
       properties:
         id:
           type: integer
           description: Schedule entry ID
-        name:
+        activity_name:
           type: string
-          description: Class name
+          description: Name of the gym class activity
+          example: Spinning
+        activity_id:
+          type: integer
+          description: ID of the class type
         facility_id:
           type: integer
           description: ID of the facility hosting the class
-        city_id:
+        starts_at:
+          type: string
+          format: date-time
+          description: UTC ISO 8601 start time of the class
+          example: "2026-07-23T07:00:00Z"
+      additionalProperties: false
+
+    ClassType:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
           type: integer
-          description: ID of the city
+          description: Class type ID
+        name:
+          type: string
+          description: Class type display name
+          example: Spinning
       additionalProperties: false
 
     ScheduleResponse:
       type: object
       required:
         - schedule
+        - class_types
       properties:
         schedule:
           type: array
           items:
             $ref: "#/components/schemas/ScheduleItem"
+        class_types:
+          type: array
+          description: Unique class types available in the returned schedule entries
+          items:
+            $ref: "#/components/schemas/ClassType"
       additionalProperties: false
 
 security:
