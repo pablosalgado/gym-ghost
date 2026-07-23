@@ -32,7 +32,8 @@
       "facility": "Facility",
       "classType": "Class"
     },
-    "emptyState": "No classes for this selection."
+    "emptyState": "No classes for this selection.",
+    "retry": "Retry"
   },
   "nav": {
     "schedule": "Schedule"
