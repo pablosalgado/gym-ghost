@@ -59,6 +59,7 @@ export interface ScheduleItem {
 /** GET /api/v1/schedule — 200 response */
 export interface ScheduleResponse {
   schedule: ScheduleItem[]
+  class_types: { id: number; name: string }[]
 }
 
 /** Type guard: checks if a payload is a valid ErrorResponse */
