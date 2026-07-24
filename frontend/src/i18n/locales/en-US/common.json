@@ -33,7 +33,12 @@
       "classType": "Class"
     },
     "emptyState": "No classes for this selection.",
-    "retry": "Retry"
+    "retry": "Retry",
+    "booking": {
+      "reserve": "Reserve",
+      "reserveAt": "Reserves at {time}",
+      "retry": "Retry"
+    }
   },
   "nav": {
     "schedule": "Schedule"

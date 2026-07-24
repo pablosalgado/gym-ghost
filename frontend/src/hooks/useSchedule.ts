@@ -29,6 +29,7 @@ function toSession(item: ScheduleItem): Session {
     activityName: item.activity_name,
     activityId: item.activity_id,
     startsAt: item.starts_at,
+    bookingRequest: item.booking_request,
   }
 }
 

@@ -5,7 +5,7 @@ import { describe, expect, it, vi, beforeEach } from 'vitest'
 import SchedulePage from './SchedulePage'
 import { formatDayLabel } from '../lib/date-time'
 import type { Session } from '../features/schedule/types'
-import type { ClassType } from '../lib/api-types'
+import type { ClassType, BookingRequest } from '../lib/api-types'
 import i18n from '../i18n/i18n'
 
 const MOCK_CLASS_TYPES: readonly ClassType[] = [
@@ -17,6 +17,27 @@ const MOCK_SESSIONS: readonly Session[] = [
   { id: '1', facilityId: 9, activityName: 'Yoga', activityId: 10, startsAt: '2026-07-18T12:00:00.000Z' },
   { id: '2', facilityId: 9, activityName: 'Spinning', activityId: 20, startsAt: '2026-07-18T14:00:00.000Z' },
 ]
+
+const MOCK_BOOKING_PENDING: BookingRequest = {
+  id: 100,
+  schedule_entry_id: 1,
+  status: 'pending',
+  booking_window_opens_at: '2026-07-18T10:00:00.000Z',
+}
+
+const MOCK_BOOKING_BOOKED: BookingRequest = {
+  id: 101,
+  schedule_entry_id: 1,
+  status: 'booked',
+  booking_window_opens_at: '2026-07-18T10:00:00.000Z',
+}
+
+const MOCK_BOOKING_FAILED: BookingRequest = {
+  id: 102,
+  schedule_entry_id: 1,
+  status: 'failed',
+  booking_window_opens_at: '2026-07-18T10:00:00.000Z',
+}
 
 const DEFAULT_SCHEDULE_RESULT = {
   sessions: [] as readonly Session[],
@@ -39,8 +60,19 @@ vi.mock('../hooks/useFacilities', () => ({
   useFacilities: () => ({ facilities: [], isLoading: false, error: null }),
 }))
 
+let bookingReturn = {
+  create: vi.fn().mockResolvedValue(undefined) as (scheduleEntryId: number) => Promise<void>,
+  isLoading: false,
+  error: null as string | null,
+  bookingRequest: null as BookingRequest | null,
+}
+
 vi.mock('../hooks/useSchedule', () => ({
   useSchedule: () => scheduleReturn,
+}))
+
+vi.mock('../hooks/useBookingRequest', () => ({
+  useBookingRequest: () => bookingReturn,
 }))
 
 const FROZEN_UTC = '2026-07-18T02:30:00.000Z'
@@ -57,6 +89,12 @@ describe('SchedulePage', () => {
   beforeEach(() => {
     vi.setSystemTime(new Date(FROZEN_UTC))
     scheduleReturn = { ...DEFAULT_SCHEDULE_RESULT }
+    bookingReturn = {
+      create: vi.fn().mockResolvedValue(undefined),
+      isLoading: false,
+      error: null,
+      bookingRequest: null,
+    }
   })
 
   it('renders 14 day buttons', () => {
@@ -170,6 +208,159 @@ describe('SchedulePage', () => {
         expect(within(sessionList).getByText('Yoga')).toBeInTheDocument()
       })
       expect(within(sessionList).queryByText('Spinning')).not.toBeInTheDocument()
+    })
+  })
+
+  describe('booking state', () => {
+    it('renders Reserve button for sessions without a booking request', () => {
+      scheduleReturn = {
+        ...DEFAULT_SCHEDULE_RESULT,
+        sessions: MOCK_SESSIONS,
+        classTypes: MOCK_CLASS_TYPES,
+      }
+
+      renderPage()
+
+      const sessionList = screen.getByRole('list')
+      const reserveButtons = within(sessionList).getAllByRole('button', { name: /Reservar|Reserve/ })
+      expect(reserveButtons).toHaveLength(2)
+    })
+
+    it('calls useBookingRequest.create when Reserve button is clicked', async () => {
+      scheduleReturn = {
+        ...DEFAULT_SCHEDULE_RESULT,
+        sessions: MOCK_SESSIONS,
+        classTypes: MOCK_CLASS_TYPES,
+      }
+
+      const user = userEvent.setup()
+      renderPage()
+
+      const sessionList = screen.getByRole('list')
+      const reserveButtons = within(sessionList).getAllByRole('button', { name: /Reservar|Reserve/ })
+      await user.click(reserveButtons[0])
+
+      expect(bookingReturn.create).toHaveBeenCalledWith(1)
+    })
+
+    it('renders pending state with clock icon and reserve time', () => {
+      scheduleReturn = {
+        ...DEFAULT_SCHEDULE_RESULT,
+        sessions: [
+          { ...MOCK_SESSIONS[0], bookingRequest: MOCK_BOOKING_PENDING },
+          MOCK_SESSIONS[1],
+        ],
+        classTypes: MOCK_CLASS_TYPES,
+      }
+
+      renderPage()
+
+      const sessionList = screen.getByRole('list')
+      expect(within(sessionList).getByText(/Reservas a las|Reserves at/)).toBeInTheDocument()
+
+      const reserveButtons = within(sessionList).queryAllByRole('button', { name: /Reservar|Reserve/ })
+      expect(reserveButtons).toHaveLength(1)
+    })
+
+    it('renders booked state with green checkmark', () => {
+      scheduleReturn = {
+        ...DEFAULT_SCHEDULE_RESULT,
+        sessions: [
+          { ...MOCK_SESSIONS[0], bookingRequest: MOCK_BOOKING_BOOKED },
+          MOCK_SESSIONS[1],
+        ],
+        classTypes: MOCK_CLASS_TYPES,
+      }
+
+      renderPage()
+
+      const sessionList = screen.getByRole('list')
+      expect(within(sessionList).getByLabelText('Booked')).toBeInTheDocument()
+
+      expect(within(sessionList).getByRole('button', { name: /Reservar|Reserve/ })).toBeInTheDocument()
+    })
+
+    it('renders failed state with warning icon and Retry button', () => {
+      scheduleReturn = {
+        ...DEFAULT_SCHEDULE_RESULT,
+        sessions: [
+          { ...MOCK_SESSIONS[0], bookingRequest: MOCK_BOOKING_FAILED },
+        ],
+        classTypes: MOCK_CLASS_TYPES,
+      }
+
+      renderPage()
+
+      const sessionList = screen.getByRole('list')
+      expect(within(sessionList).getByRole('button', { name: /Reintentar|Retry/ })).toBeInTheDocument()
+    })
+
+    it('disables Reserve button when booking is loading', () => {
+      scheduleReturn = {
+        ...DEFAULT_SCHEDULE_RESULT,
+        sessions: MOCK_SESSIONS,
+        classTypes: MOCK_CLASS_TYPES,
+      }
+      bookingReturn = {
+        create: vi.fn().mockResolvedValue(undefined),
+        isLoading: true,
+        error: null,
+        bookingRequest: null,
+      }
+
+      renderPage()
+
+      const sessionList = screen.getByRole('list')
+      const buttons = within(sessionList).getAllByRole('button', { name: /Cargando|Loading/ })
+      expect(buttons).toHaveLength(2)
+      buttons.forEach((btn) => {
+        expect(btn).toBeDisabled()
+      })
+    })
+
+    it('shows error and Retry button on the targeted row after failed create', async () => {
+      scheduleReturn = {
+        ...DEFAULT_SCHEDULE_RESULT,
+        sessions: MOCK_SESSIONS,
+        classTypes: MOCK_CLASS_TYPES,
+      }
+      bookingReturn = {
+        create: vi.fn().mockResolvedValue(undefined),
+        isLoading: false,
+        error: 'Schedule entry is in the past.',
+        bookingRequest: null,
+      }
+
+      const user = userEvent.setup()
+      renderPage()
+
+      const sessionList = screen.getByRole('list')
+      const reserveButtons = within(sessionList).getAllByRole('button', { name: /Reservar|Reserve/ })
+      await user.click(reserveButtons[0])
+
+      expect(within(sessionList).getByText('Schedule entry is in the past.')).toBeInTheDocument()
+      expect(within(sessionList).getByRole('button', { name: /Reintentar|Retry/ })).toBeInTheDocument()
+    })
+
+    it('optimistically shows pending state from hook bookingRequest after create succeeds', () => {
+      scheduleReturn = {
+        ...DEFAULT_SCHEDULE_RESULT,
+        sessions: MOCK_SESSIONS,
+        classTypes: MOCK_CLASS_TYPES,
+      }
+      bookingReturn = {
+        create: vi.fn().mockResolvedValue(undefined),
+        isLoading: false,
+        error: null,
+        bookingRequest: MOCK_BOOKING_PENDING,
+      }
+
+      renderPage()
+
+      const sessionList = screen.getByRole('list')
+      expect(within(sessionList).getByText(/Reservas a las|Reserves at/)).toBeInTheDocument()
+
+      expect(within(sessionList).getByRole('button', { name: /Reservar|Reserve/ })).toBeInTheDocument()
     })
   })
 })
