@@ -1,4 +1,5 @@
 class GymMember < ApplicationRecord
+  has_many :booking_requests, dependent: :restrict_with_error
   has_many :partner_tokens, dependent: :destroy
 
   # Reversibly encrypted plaintext partner credential. Decrypts on read so
