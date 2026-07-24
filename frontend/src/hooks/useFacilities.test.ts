@@ -38,6 +38,7 @@ describe('useFacilities', () => {
     expect(result.current.error).toBeNull()
     expect(fetch).toHaveBeenCalledWith('/api/v1/facilities', {
       headers: { Authorization: `Bearer ${AUTH_TOKEN}` },
+      cache: 'no-store',
     })
   })
 
@@ -57,6 +58,7 @@ describe('useFacilities', () => {
     expect(result.current.facilities).toEqual([MOCK_FACILITIES[0]])
     expect(fetch).toHaveBeenCalledWith('/api/v1/facilities?city_id=1', {
       headers: { Authorization: `Bearer ${AUTH_TOKEN}` },
+      cache: 'no-store',
     })
   })
 
@@ -87,6 +89,7 @@ describe('useFacilities', () => {
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2))
     expect(fetchMock).toHaveBeenLastCalledWith('/api/v1/facilities?city_id=1', {
       headers: { Authorization: `Bearer ${AUTH_TOKEN}` },
+      cache: 'no-store',
     })
   })
 

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { AUTH_TOKEN_STORAGE_KEY } from './useAuth'
 import {
   isFacilitiesResponse,
@@ -17,6 +17,14 @@ export function useFacilities(cityId?: number): UseFacilitiesResult {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  const cancelledRef = useRef(false)
+
+  useEffect(() => {
+    return () => {
+      cancelledRef.current = true
+    }
+  }, [])
+
   const fetchFacilities = useCallback(async () => {
     const token = localStorage.getItem(AUTH_TOKEN_STORAGE_KEY)
     if (!token) {
@@ -25,6 +33,7 @@ export function useFacilities(cityId?: number): UseFacilitiesResult {
       return
     }
 
+    cancelledRef.current = false
     setIsLoading(true)
     setError(null)
 
@@ -34,7 +43,10 @@ export function useFacilities(cityId?: number): UseFacilitiesResult {
         headers: {
           Authorization: `Bearer ${token}`,
         },
+        cache: 'no-store',
       })
+
+      if (cancelledRef.current) return
 
       if (!response.ok) {
         setFacilities([])
@@ -43,6 +55,8 @@ export function useFacilities(cityId?: number): UseFacilitiesResult {
       }
 
       const payload: unknown = await response.json()
+
+      if (cancelledRef.current) return
 
       if (!isFacilitiesResponse(payload)) {
         setFacilities([])
@@ -53,15 +67,23 @@ export function useFacilities(cityId?: number): UseFacilitiesResult {
       const data: FacilitiesResponse = payload
       setFacilities(data.facilities)
     } catch {
+      if (cancelledRef.current) return
       setFacilities([])
       setError('Network error')
     } finally {
-      setIsLoading(false)
+      if (!cancelledRef.current) {
+        setIsLoading(false)
+      }
     }
   }, [cityId])
 
   useEffect(() => {
+    cancelledRef.current = false
     fetchFacilities()
+
+    return () => {
+      cancelledRef.current = true
+    }
   }, [fetchFacilities])
 
   return { facilities, isLoading, error }
