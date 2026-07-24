@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import i18n from '../i18n/i18n'
 import {
@@ -12,6 +12,9 @@ import { useCities } from '../hooks/useCities'
 import { useFacilities } from '../hooks/useFacilities'
 import { useSchedule } from '../hooks/useSchedule'
 import { useBookingRequest } from '../hooks/useBookingRequest'
+
+const DEFAULT_CITY_NAME = 'BOGOTÁ, D.C.'
+const DEFAULT_FACILITY_NAME = 'C.C Parque La Colina'
 
 export default function SchedulePage() {
   const { t } = useTranslation()
@@ -38,6 +41,27 @@ export default function SchedulePage() {
 
   const booking = useBookingRequest()
   const [createTargetId, setCreateTargetId] = useState<number | null>(null)
+
+  const cityPreselected = useRef(false)
+  const facilityPreselected = useRef(false)
+
+  useEffect(() => {
+    if (cityId !== undefined || cityPreselected.current || citiesLoading || cities.length === 0) return
+    const match = cities.find((c) => c.city_name === DEFAULT_CITY_NAME)
+    if (match) {
+      cityPreselected.current = true
+      setCityId(match.id)
+    }
+  }, [cities, citiesLoading, cityId])
+
+  useEffect(() => {
+    if (facilityId !== undefined || facilityPreselected.current || facilitiesLoading || facilitiesForCity.length === 0) return
+    const match = facilitiesForCity.find((f) => f.display_name === DEFAULT_FACILITY_NAME)
+    if (match) {
+      facilityPreselected.current = true
+      setFacilityId(match.id)
+    }
+  }, [facilitiesForCity, facilitiesLoading, facilityId])
 
   // Reset activity filter when facility or date changes —
   // the previously selected class type may not exist in the new response.

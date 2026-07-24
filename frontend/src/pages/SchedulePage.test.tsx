@@ -187,6 +187,63 @@ describe('SchedulePage', () => {
     expect(screen.queryByText('Network error')).not.toBeInTheDocument()
   })
 
+  describe('default city and facility selection', () => {
+    it('auto-selects BOGOTÁ, D.C. when cities include it and no city is selected yet', () => {
+      citiesReturn = {
+        cities: [
+          { id: 3, city_name: 'MEDELLÍN' },
+          { id: 1, city_name: 'BOGOTÁ, D.C.' },
+        ],
+        isLoading: false,
+        error: null,
+      }
+      facilitiesReturn = {
+        facilities: [],
+        isLoading: true,
+        error: null,
+      }
+
+      renderPage()
+
+      const citySelect = screen.getByLabelText(/Ciudad|City/) as HTMLSelectElement
+      expect(citySelect.value).toBe('1')
+    })
+
+    it('does not auto-select city when the default name does not appear in results', () => {
+      citiesReturn = {
+        cities: [{ id: 3, city_name: 'MEDELLÍN' }],
+        isLoading: false,
+        error: null,
+      }
+
+      renderPage()
+
+      const citySelect = screen.getByLabelText(/Ciudad|City/) as HTMLSelectElement
+      expect(citySelect.value).toBe('')
+    })
+
+    it('auto-selects C.C Parque La Colina once the city is set and its facilities load', () => {
+      citiesReturn = {
+        cities: [{ id: 1, city_name: 'BOGOTÁ, D.C.' }],
+        isLoading: false,
+        error: null,
+      }
+      facilitiesReturn = {
+        facilities: [
+          { id: 5, display_name: 'C.C Unicentro', city_id: 1 },
+          { id: 9, display_name: 'C.C Parque La Colina', city_id: 1 },
+        ],
+        isLoading: false,
+        error: null,
+      }
+
+      renderPage()
+
+      const facilitySelect = screen.getByLabelText(/Sede|Facility/) as HTMLSelectElement
+      expect(facilitySelect.value).toBe('9')
+    })
+  })
+
   describe('class-type filter', () => {
     it('shows only All option when no class types are available', () => {
       renderPage()
