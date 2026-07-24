@@ -132,6 +132,55 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /api/v1/booking_requests:
+    post:
+      summary: Create a booking request
+      description: |
+        Creates a pending booking request for a schedule entry. A background job is
+        scheduled to process the request when the booking window opens (24 hours before
+        the class starts in America/Bogota time).
+      tags:
+        - Bookings
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BookingRequestRequest"
+      responses:
+        "201":
+          description: Booking request created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BookingRequestResponse"
+        "401":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Schedule entry not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Duplicate booking request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "422":
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /api/v1/openapi.json:
     get:
       summary: OpenAPI specification
@@ -312,6 +361,13 @@ components:
           format: date-time
           description: UTC ISO 8601 start time of the class
           example: "2026-07-23T07:00:00Z"
+        booking_request:
+          oneOf:
+            - $ref: "#/components/schemas/ScheduleBookingRequest"
+            - type: "null"
+          description: |
+            The current user's booking request for this session. Null when no
+            request exists or no gym member profile is linked.
       additionalProperties: false
 
     ClassType:
@@ -344,6 +400,78 @@ components:
           description: Unique class types available in the returned schedule entries
           items:
             $ref: "#/components/schemas/ClassType"
+      additionalProperties: false
+
+    ScheduleBookingRequest:
+      type: object
+      required:
+        - id
+        - status
+        - booking_window_opens_at
+      properties:
+        id:
+          type: integer
+          description: Booking request ID
+        status:
+          type: string
+          enum:
+            - pending
+            - booked
+            - failed
+          description: Current booking status
+        booking_window_opens_at:
+          type: string
+          format: date-time
+          description: UTC ISO 8601 time when the booking window opens
+          example: "2026-07-31T07:00:00Z"
+      additionalProperties: false
+
+    BookingRequestRequest:
+      type: object
+      required:
+        - schedule_entry_id
+      properties:
+        schedule_entry_id:
+          type: integer
+          description: ID of the schedule entry to request a booking for
+          example: 42
+      additionalProperties: false
+
+    BookingRequestItem:
+      type: object
+      required:
+        - id
+        - status
+        - booking_window_opens_at
+        - schedule_entry_id
+      properties:
+        id:
+          type: integer
+          description: Booking request ID
+        status:
+          type: string
+          enum:
+            - pending
+            - booked
+            - failed
+          description: Current booking status
+        booking_window_opens_at:
+          type: string
+          format: date-time
+          description: UTC ISO 8601 time when the booking window opens
+          example: "2026-07-31T07:00:00Z"
+        schedule_entry_id:
+          type: integer
+          description: ID of the schedule entry this booking is for
+      additionalProperties: false
+
+    BookingRequestResponse:
+      type: object
+      required:
+        - booking_request
+      properties:
+        booking_request:
+          $ref: "#/components/schemas/BookingRequestItem"
       additionalProperties: false
 
 security:
