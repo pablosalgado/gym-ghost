@@ -33,12 +33,16 @@ RSpec.describe Partner::ActivitiesService do
         {
           "activity_name" => "Spinning",
           "branch_id"     => 1,
+          "activity_id"   => "act-uuid-001",
+          "activ_config_id" => 100,
           "start_time"    => "2026-07-21T07:00:00Z",
           "date"          => "2026-07-21"
         },
         {
           "activity_name" => "Yoga",
           "branch_id"     => 99,
+          "activity_id"   => "act-uuid-002",
+          "activ_config_id" => 200,
           "start_time"    => "2026-07-21T08:00:00Z",
           "date"          => "2026-07-21"
         }
@@ -58,7 +62,7 @@ RSpec.describe Partner::ActivitiesService do
         allow(described_class).to receive(:get).and_return(response)
       end
 
-      it "creates ClassType and ScheduleEntry records" do
+      it "creates ClassType and ScheduleEntry records with partner activity identifiers" do
         entries = service.fetch(facility:, date:)
 
         expect(ClassType.count).to eq(2)
@@ -71,6 +75,8 @@ RSpec.describe Partner::ActivitiesService do
         expect(entry.class_type).to eq(class_type)
         expect(entry.start_time).to eq("2026-07-21T07:00:00Z")
         expect(entry.date).to eq(Date.new(2026, 7, 21))
+        expect(entry.partner_activity_id).to eq("act-uuid-001")
+        expect(entry.activ_config_id).to eq(100)
 
         expect(entries).to be_an(Array)
         expect(entries.length).to eq(1)
@@ -105,6 +111,38 @@ RSpec.describe Partner::ActivitiesService do
         expect(first_entries.length).to eq(1)
         expect(second_entries.length).to eq(1)
         expect(first_entries.first).to eq(second_entries.first)
+      end
+    end
+
+    context "when partner response omits activity identifiers" do
+      let(:payload_without_ids) do
+        {
+          "status" => "OK",
+          "data" => [
+            {
+              "activity_name" => "Spinning",
+              "branch_id"     => 1,
+              "start_time"    => "2026-07-21T07:00:00Z",
+              "date"          => "2026-07-21"
+            }
+          ]
+        }
+      end
+
+      before do
+        response = instance_double(HTTParty::Response,
+                                   success?: true,
+                                   code: 200,
+                                   parsed_response: payload_without_ids)
+        allow(described_class).to receive(:get).and_return(response)
+      end
+
+      it "stores nil for partner_activity_id and activ_config_id" do
+        entries = service.fetch(facility:, date:)
+
+        entry = entries.first
+        expect(entry.partner_activity_id).to be_nil
+        expect(entry.activ_config_id).to be_nil
       end
     end
 
