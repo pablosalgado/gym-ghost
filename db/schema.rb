@@ -10,7 +10,21 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_23_135442) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_24_190812) do
+  create_table "booking_requests", force: :cascade do |t|
+    t.datetime "booking_window_opens_at", null: false
+    t.datetime "created_at", null: false
+    t.string "error_message"
+    t.integer "gym_member_id", null: false
+    t.string "partner_confirmation_id"
+    t.integer "schedule_entry_id", null: false
+    t.integer "status", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.index ["gym_member_id", "schedule_entry_id"], name: "idx_booking_requests_on_member_schedule_unique_active", unique: true, where: "status IN (0, 1)"
+    t.index ["gym_member_id"], name: "index_booking_requests_on_gym_member_id"
+    t.index ["schedule_entry_id"], name: "index_booking_requests_on_schedule_entry_id"
+  end
+
   create_table "cities", force: :cascade do |t|
     t.string "city_name", null: false
     t.datetime "created_at", null: false
@@ -59,10 +73,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_23_135442) do
   end
 
   create_table "schedule_entries", force: :cascade do |t|
+    t.integer "activ_config_id"
     t.integer "class_type_id", null: false
     t.datetime "created_at", null: false
     t.date "date", null: false
     t.integer "facility_id", null: false
+    t.string "partner_activity_id"
     t.datetime "start_time", null: false
     t.datetime "updated_at", null: false
     t.index ["class_type_id"], name: "index_schedule_entries_on_class_type_id"
@@ -87,6 +103,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_23_135442) do
     t.index ["email"], name: "index_users_on_email", unique: true
   end
 
+  add_foreign_key "booking_requests", "gym_members"
+  add_foreign_key "booking_requests", "schedule_entries"
   add_foreign_key "facilities", "cities"
   add_foreign_key "partner_tokens", "gym_members"
   add_foreign_key "schedule_entries", "class_types"
