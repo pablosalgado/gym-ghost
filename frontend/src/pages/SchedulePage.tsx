@@ -11,6 +11,7 @@ import { filterSessions } from '../features/schedule/filterSessions'
 import { useCities } from '../hooks/useCities'
 import { useFacilities } from '../hooks/useFacilities'
 import { useSchedule } from '../hooks/useSchedule'
+import { useBookingRequest } from '../hooks/useBookingRequest'
 
 export default function SchedulePage() {
   const { t } = useTranslation()
@@ -35,6 +36,9 @@ export default function SchedulePage() {
     manualRetry,
   } = useSchedule(selectedDate, facilityId)
 
+  const booking = useBookingRequest()
+  const [createTargetId, setCreateTargetId] = useState<number | null>(null)
+
   // Reset activity filter when facility or date changes —
   // the previously selected class type may not exist in the new response.
   useEffect(() => {
@@ -52,6 +56,11 @@ export default function SchedulePage() {
   }
 
   const isExhausted = retryCount >= maxRetries && scheduleSessions.length === 0
+
+  async function handleReserve(scheduleEntryId: number) {
+    setCreateTargetId(scheduleEntryId)
+    await booking.create(scheduleEntryId)
+  }
 
   return (
     <div className="mx-auto max-w-4xl px-3 py-6 sm:px-4">
@@ -168,21 +177,91 @@ export default function SchedulePage() {
         </div>
       ) : (
         <ul className="divide-y divide-gray-200 rounded-lg border border-gray-200">
-          {sessions.map((session) => (
+          {sessions.map((session) => {
+            const sessionId = Number(session.id)
+            const isTarget = createTargetId === sessionId
+
+            let activeBookingRequest = session.bookingRequest ?? null
+
+            if (booking.bookingRequest && booking.bookingRequest.schedule_entry_id === sessionId) {
+              activeBookingRequest = booking.bookingRequest
+            }
+
+            return (
             <li key={session.id} className="flex items-center gap-4 px-4 py-3">
-              <span className="w-20 text-sm font-medium text-gray-900">
+              <span className="w-20 shrink-0 text-sm font-medium text-gray-900">
                 {formatTimeOfDay(session.startsAt, locale, DEFAULT_TIME_ZONE)}
               </span>
-              <div className="flex-1">
-                <p className="font-medium">
-                  {session.activityName}
-                </p>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium truncate">{session.activityName}</p>
                 <p className="text-sm text-gray-600">
                   {session.facilityId}
                 </p>
               </div>
+              <div className="shrink-0">
+                {activeBookingRequest && activeBookingRequest.status === 'pending' && (
+                  <span className="flex items-center gap-1 text-sm text-gray-500">
+                    <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>{t('schedule.booking.reserveAt', { time: formatTimeOfDay(activeBookingRequest.booking_window_opens_at, locale, DEFAULT_TIME_ZONE) })}</span>
+                  </span>
+                )}
+
+                {activeBookingRequest && activeBookingRequest.status === 'booked' && (
+                  <span className="flex items-center gap-1 text-sm text-green-600" aria-label="Booked">
+                    <svg className="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </span>
+                )}
+
+                {activeBookingRequest && activeBookingRequest.status === 'failed' && (
+                  <div className="flex items-center gap-2">
+                    <span className="flex items-center gap-1 text-sm text-red-600">
+                      <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                      </svg>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleReserve(sessionId)}
+                      disabled={booking.isLoading}
+                      className="min-h-11 min-w-11 rounded bg-red-100 px-3 py-2 text-sm font-medium text-red-700 hover:bg-red-200 disabled:opacity-50"
+                    >
+                      {t('schedule.booking.retry')}
+                    </button>
+                  </div>
+                )}
+
+                {!activeBookingRequest && isTarget && booking.error && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-red-600">{booking.error}</span>
+                    <button
+                      type="button"
+                      onClick={() => handleReserve(sessionId)}
+                      disabled={booking.isLoading}
+                      className="min-h-11 min-w-11 rounded bg-red-100 px-3 py-2 text-sm font-medium text-red-700 hover:bg-red-200 disabled:opacity-50"
+                    >
+                      {t('schedule.booking.retry')}
+                    </button>
+                  </div>
+                )}
+
+                {!activeBookingRequest && !(isTarget && booking.error) && (
+                  <button
+                    type="button"
+                    onClick={() => handleReserve(sessionId)}
+                    disabled={booking.isLoading}
+                    className="min-h-11 min-w-11 rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+                  >
+                    {booking.isLoading ? t('common.loading') : t('schedule.booking.reserve')}
+                  </button>
+                )}
+              </div>
             </li>
-          ))}
+            )
+          })}
         </ul>
       )}
     </div>
