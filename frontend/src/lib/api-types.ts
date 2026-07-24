@@ -53,6 +53,14 @@ export interface ClassType {
   name: string
 }
 
+/** POST /api/v1/booking_requests — booking request status per schedule entry */
+export interface BookingRequest {
+  id: number
+  schedule_entry_id: number
+  status: "pending" | "booked" | "failed"
+  booking_window_opens_at: string
+}
+
 /** GET /api/v1/schedule — single schedule entry */
 export interface ScheduleItem {
   id: number
@@ -60,12 +68,18 @@ export interface ScheduleItem {
   activity_id: number
   facility_id: number
   starts_at: string
+  booking_request?: BookingRequest | null
 }
 
 /** GET /api/v1/schedule — 200 response */
 export interface ScheduleResponse {
   schedule: ScheduleItem[]
   class_types: ClassType[]
+}
+
+/** POST /api/v1/booking_requests — 200 response */
+export interface CreateBookingRequestResponse {
+  booking_request: BookingRequest
 }
 
 /** Type guard: checks if a payload is a valid ErrorResponse */
@@ -117,5 +131,16 @@ export function isScheduleResponse(payload: unknown): payload is ScheduleRespons
     Array.isArray((payload as Record<string, unknown>).schedule) &&
     'class_types' in payload &&
     Array.isArray((payload as Record<string, unknown>).class_types)
+  )
+}
+
+/** Type guard: checks if a payload is a valid CreateBookingRequestResponse */
+export function isBookingRequestResponse(payload: unknown): payload is CreateBookingRequestResponse {
+  return (
+    typeof payload === 'object' &&
+    payload !== null &&
+    'booking_request' in payload &&
+    typeof (payload as Record<string, unknown>).booking_request === 'object' &&
+    (payload as Record<string, unknown>).booking_request !== null
   )
 }
