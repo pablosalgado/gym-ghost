@@ -191,5 +191,132 @@ RSpec.describe "Schedule", type: :request do
       expect(response).to have_http_status(:ok)
       expect(response.parsed_body).to eq("schedule" => [], "class_types" => [])
     end
+
+    it "includes null booking_request when no gym member profile exists" do
+      facility = create(:facility)
+      class_type = create(:class_type, name: "Yoga")
+      create(
+        :schedule_entry,
+        facility: facility,
+        class_type: class_type,
+        date: Date.new(2026, 7, 21),
+        start_time: Time.zone.parse("2026-07-21 07:00:00 UTC")
+      )
+
+      user = create(:user, email: "no-gym-profile@example.com")
+      raw_token = SecureRandom.hex(32)
+      create(:token, user:, digest: Token.digest(raw_token))
+
+      get "/api/v1/schedule",
+          params: { date: "2026-07-21" },
+          headers: { "Authorization" => "Bearer #{raw_token}" }
+
+      expect(response).to have_http_status(:ok)
+      body = response.parsed_body
+      expect(body["schedule"].length).to eq(1)
+      expect(body["schedule"].first["booking_request"]).to be_nil
+    end
+
+    it "includes pending booking_request for sessions with a pending request" do
+      facility = create(:facility)
+      class_type = create(:class_type, name: "Spinning")
+      schedule_entry = create(
+        :schedule_entry,
+        facility: facility,
+        class_type: class_type,
+        date: Date.new(2026, 8, 1),
+        start_time: Time.zone.parse("2026-08-01 07:00:00 UTC")
+      )
+
+      user = create(:user, email: "member@example.com")
+      gym_member = create(:gym_member, email: "member@example.com")
+      raw_token = SecureRandom.hex(32)
+      create(:token, user:, digest: Token.digest(raw_token))
+
+      booking_request = create(
+        :booking_request,
+        gym_member: gym_member,
+        schedule_entry: schedule_entry,
+        status: :pending,
+        booking_window_opens_at: Time.zone.parse("2026-07-31 07:00:00 UTC")
+      )
+
+      get "/api/v1/schedule",
+          params: { date: "2026-08-01" },
+          headers: { "Authorization" => "Bearer #{raw_token}" }
+
+      expect(response).to have_http_status(:ok)
+      body = response.parsed_body
+      expect(body["schedule"].length).to eq(1)
+      expect(body["schedule"].first["booking_request"]).to eq(
+        "id" => booking_request.id,
+        "status" => "pending",
+        "booking_window_opens_at" => "2026-07-31T07:00:00Z"
+      )
+    end
+
+    it "includes booked booking_request for sessions with a booked request" do
+      facility = create(:facility)
+      class_type = create(:class_type, name: "CrossFit")
+      schedule_entry = create(
+        :schedule_entry,
+        facility: facility,
+        class_type: class_type,
+        date: Date.new(2026, 8, 2),
+        start_time: Time.zone.parse("2026-08-02 09:00:00 UTC")
+      )
+
+      user = create(:user, email: "member@example.com")
+      gym_member = create(:gym_member, email: "member@example.com")
+      raw_token = SecureRandom.hex(32)
+      create(:token, user:, digest: Token.digest(raw_token))
+
+      booking_request = create(
+        :booking_request,
+        :booked,
+        gym_member: gym_member,
+        schedule_entry: schedule_entry,
+        booking_window_opens_at: Time.zone.parse("2026-08-01 09:00:00 UTC")
+      )
+
+      get "/api/v1/schedule",
+          params: { date: "2026-08-02" },
+          headers: { "Authorization" => "Bearer #{raw_token}" }
+
+      expect(response).to have_http_status(:ok)
+      body = response.parsed_body
+      expect(body["schedule"].length).to eq(1)
+      expect(body["schedule"].first["booking_request"]).to eq(
+        "id" => booking_request.id,
+        "status" => "booked",
+        "booking_window_opens_at" => "2026-08-01T09:00:00Z"
+      )
+    end
+
+    it "includes null booking_request for session with no request when gym member exists" do
+      facility = create(:facility)
+      class_type = create(:class_type, name: "Yoga")
+      create(
+        :schedule_entry,
+        facility: facility,
+        class_type: class_type,
+        date: Date.new(2026, 8, 3),
+        start_time: Time.zone.parse("2026-08-03 07:00:00 UTC")
+      )
+
+      user = create(:user, email: "member@example.com")
+      create(:gym_member, email: "member@example.com")
+      raw_token = SecureRandom.hex(32)
+      create(:token, user:, digest: Token.digest(raw_token))
+
+      get "/api/v1/schedule",
+          params: { date: "2026-08-03" },
+          headers: { "Authorization" => "Bearer #{raw_token}" }
+
+      expect(response).to have_http_status(:ok)
+      body = response.parsed_body
+      expect(body["schedule"].length).to eq(1)
+      expect(body["schedule"].first["booking_request"]).to be_nil
+    end
   end
 end
