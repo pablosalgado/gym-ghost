@@ -7,6 +7,7 @@ Rails.application.routes.draw do
       get "/schedule", to: "schedule#index"
       get "/cities", to: "cities#index"
       get "/facilities", to: "facilities#index"
+      resources :booking_requests, only: [ :create ]
       get "/openapi.json", to: "openapi#show"
       get "/docs", to: "docs#show"
     end
