@@ -53,13 +53,15 @@ module Partner
         entry_date = item["date"] || date
         entry_date = Date.parse(entry_date.to_s) if entry_date.is_a?(String)
 
-        entry = ScheduleEntry.find_or_create_by!(
+        entry = ScheduleEntry.find_or_initialize_by(
           facility: facility_record,
           class_type: class_type,
           start_time: start_time
-        ) do |e|
-          e.date = entry_date
-        end
+        )
+        entry.date = entry_date
+        entry.partner_activity_id = item["activity_id"]
+        entry.activ_config_id = item["activ_config_id"]
+        entry.save!
 
         entries << entry
       end
