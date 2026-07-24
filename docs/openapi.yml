@@ -361,6 +361,13 @@ components:
           format: date-time
           description: UTC ISO 8601 start time of the class
           example: "2026-07-23T07:00:00Z"
+        booking_request:
+          oneOf:
+            - $ref: "#/components/schemas/ScheduleBookingRequest"
+            - type: "null"
+          description: |
+            The current user's booking request for this session. Null when no
+            request exists or no gym member profile is linked.
       additionalProperties: false
 
     ClassType:
@@ -393,6 +400,30 @@ components:
           description: Unique class types available in the returned schedule entries
           items:
             $ref: "#/components/schemas/ClassType"
+      additionalProperties: false
+
+    ScheduleBookingRequest:
+      type: object
+      required:
+        - id
+        - status
+        - booking_window_opens_at
+      properties:
+        id:
+          type: integer
+          description: Booking request ID
+        status:
+          type: string
+          enum:
+            - pending
+            - booked
+            - failed
+          description: Current booking status
+        booking_window_opens_at:
+          type: string
+          format: date-time
+          description: UTC ISO 8601 time when the booking window opens
+          example: "2026-07-31T07:00:00Z"
       additionalProperties: false
 
     BookingRequestRequest:
