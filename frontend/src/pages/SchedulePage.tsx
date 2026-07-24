@@ -19,12 +19,12 @@ export default function SchedulePage() {
   const days = useMemo(() => windowFromToday(14, DEFAULT_TIME_ZONE), [])
 
   const [selectedDate, setSelectedDate] = useState(() => days[0])
-  const [cityId, setCityId] = useState<number | undefined>(1)
-  const [facilityId, setFacilityId] = useState<number | undefined>(9)
+  const [cityId, setCityId] = useState<number | undefined>()
+  const [facilityId, setFacilityId] = useState<number | undefined>()
   const [activityId, setActivityId] = useState<number | undefined>()
 
-  const { cities } = useCities()
-  const { facilities: facilitiesForCity } = useFacilities(cityId)
+  const { cities, isLoading: citiesLoading, error: citiesError } = useCities()
+  const { facilities: facilitiesForCity, isLoading: facilitiesLoading, error: facilitiesError } = useFacilities(cityId)
   const {
     sessions: scheduleSessions,
     classTypes,
@@ -108,6 +108,9 @@ export default function SchedulePage() {
               </option>
             ))}
           </select>
+          {!citiesLoading && citiesError && (
+            <p className="text-xs text-red-600">{citiesError}</p>
+          )}
         </div>
 
         <div className="flex flex-col gap-1">
@@ -127,6 +130,9 @@ export default function SchedulePage() {
               </option>
             ))}
           </select>
+          {!facilitiesLoading && facilitiesError && (
+            <p className="text-xs text-red-600">{facilitiesError}</p>
+          )}
         </div>
 
         <div className="flex flex-col gap-1">

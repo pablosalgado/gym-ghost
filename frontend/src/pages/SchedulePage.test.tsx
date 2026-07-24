@@ -5,7 +5,7 @@ import { describe, expect, it, vi, beforeEach } from 'vitest'
 import SchedulePage from './SchedulePage'
 import { formatDayLabel } from '../lib/date-time'
 import type { Session } from '../features/schedule/types'
-import type { ClassType, BookingRequest } from '../lib/api-types'
+import type { ClassType, BookingRequest, City, Facility } from '../lib/api-types'
 import i18n from '../i18n/i18n'
 
 const MOCK_CLASS_TYPES: readonly ClassType[] = [
@@ -52,12 +52,24 @@ const DEFAULT_SCHEDULE_RESULT = {
 
 let scheduleReturn = { ...DEFAULT_SCHEDULE_RESULT }
 
+let citiesReturn: { cities: readonly City[]; isLoading: boolean; error: string | null } = {
+  cities: [],
+  isLoading: false,
+  error: null,
+}
+
+let facilitiesReturn: { facilities: readonly Facility[]; isLoading: boolean; error: string | null } = {
+  facilities: [],
+  isLoading: false,
+  error: null,
+}
+
 vi.mock('../hooks/useCities', () => ({
-  useCities: () => ({ cities: [], isLoading: false, error: null }),
+  useCities: () => citiesReturn,
 }))
 
 vi.mock('../hooks/useFacilities', () => ({
-  useFacilities: () => ({ facilities: [], isLoading: false, error: null }),
+  useFacilities: () => facilitiesReturn,
 }))
 
 let bookingReturn = {
@@ -89,6 +101,8 @@ describe('SchedulePage', () => {
   beforeEach(() => {
     vi.setSystemTime(new Date(FROZEN_UTC))
     scheduleReturn = { ...DEFAULT_SCHEDULE_RESULT }
+    citiesReturn = { cities: [], isLoading: false, error: null }
+    facilitiesReturn = { facilities: [], isLoading: false, error: null }
     bookingReturn = {
       create: vi.fn().mockResolvedValue(undefined),
       isLoading: false,
@@ -139,6 +153,38 @@ describe('SchedulePage', () => {
     const options = facilitySelect.querySelectorAll('option')
     expect(options).toHaveLength(1)
     expect(options[0].textContent).toMatch(/Todas|All/)
+  })
+
+  it('displays city error when useCities returns an error and is not loading', () => {
+    citiesReturn = { cities: [], isLoading: false, error: 'Not authenticated' }
+
+    renderPage()
+
+    expect(screen.getByText('Not authenticated')).toBeInTheDocument()
+  })
+
+  it('displays facility error when useFacilities returns an error and is not loading', () => {
+    facilitiesReturn = { facilities: [], isLoading: false, error: 'Network error' }
+
+    renderPage()
+
+    expect(screen.getByText('Network error')).toBeInTheDocument()
+  })
+
+  it('does not display city error while still loading', () => {
+    citiesReturn = { cities: [], isLoading: true, error: 'Not authenticated' }
+
+    renderPage()
+
+    expect(screen.queryByText('Not authenticated')).not.toBeInTheDocument()
+  })
+
+  it('does not display facility error while still loading', () => {
+    facilitiesReturn = { facilities: [], isLoading: true, error: 'Network error' }
+
+    renderPage()
+
+    expect(screen.queryByText('Network error')).not.toBeInTheDocument()
   })
 
   describe('class-type filter', () => {
