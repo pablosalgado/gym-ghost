@@ -3,9 +3,9 @@ set -euo pipefail
 
 project_name="gym-ghost-e2e"
 export HOST_PORT="${HOST_PORT:-3001}"
-export APP_HOSTS="${APP_HOSTS:-e2e.gym-ghost.test}"
+export APP_HOSTS="${APP_HOSTS:-e2e.gym-ghost.test,localhost}"
 export SECRET_KEY_BASE="${SECRET_KEY_BASE:-e2e-smoke-test-secret-hash-32char!!}"
-export ATTR_ENCRYPTED_KEY="${ATTR_ENCRYPTED_KEY:-e2e-smoke-test-encryption-32byte!!!}"
+export ATTR_ENCRYPTED_KEY="${ATTR_ENCRYPTED_KEY:-e2e-smoke-encryption-key-32bytes}"
 export SMOKE_USER_EMAIL="${SMOKE_USER_EMAIL:-smoke-test@gymghost.test}"
 export SMOKE_USER_PASSWORD="${SMOKE_USER_PASSWORD:-SmokeTest123!}"
 
