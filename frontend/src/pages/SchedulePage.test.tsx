@@ -5,7 +5,7 @@ import { describe, expect, it, vi, beforeEach } from 'vitest'
 import SchedulePage from './SchedulePage'
 import { formatDayLabel } from '../lib/date-time'
 import type { Session } from '../features/schedule/types'
-import type { ClassType, BookingRequest } from '../lib/api-types'
+import type { ClassType, BookingRequest, City, Facility } from '../lib/api-types'
 import i18n from '../i18n/i18n'
 
 const MOCK_CLASS_TYPES: readonly ClassType[] = [
@@ -52,12 +52,24 @@ const DEFAULT_SCHEDULE_RESULT = {
 
 let scheduleReturn = { ...DEFAULT_SCHEDULE_RESULT }
 
+let citiesReturn: { cities: readonly City[]; isLoading: boolean; error: string | null } = {
+  cities: [],
+  isLoading: false,
+  error: null,
+}
+
+let facilitiesReturn: { facilities: readonly Facility[]; isLoading: boolean; error: string | null } = {
+  facilities: [],
+  isLoading: false,
+  error: null,
+}
+
 vi.mock('../hooks/useCities', () => ({
-  useCities: () => ({ cities: [], isLoading: false, error: null }),
+  useCities: () => citiesReturn,
 }))
 
 vi.mock('../hooks/useFacilities', () => ({
-  useFacilities: () => ({ facilities: [], isLoading: false, error: null }),
+  useFacilities: () => facilitiesReturn,
 }))
 
 let bookingReturn = {
@@ -89,6 +101,8 @@ describe('SchedulePage', () => {
   beforeEach(() => {
     vi.setSystemTime(new Date(FROZEN_UTC))
     scheduleReturn = { ...DEFAULT_SCHEDULE_RESULT }
+    citiesReturn = { cities: [], isLoading: false, error: null }
+    facilitiesReturn = { facilities: [], isLoading: false, error: null }
     bookingReturn = {
       create: vi.fn().mockResolvedValue(undefined),
       isLoading: false,
@@ -139,6 +153,63 @@ describe('SchedulePage', () => {
     const options = facilitySelect.querySelectorAll('option')
     expect(options).toHaveLength(1)
     expect(options[0].textContent).toMatch(/Todas|All/)
+  })
+
+  describe('default city and facility selection', () => {
+    it('auto-selects BOGOTÁ, D.C. when cities include it and no city is selected yet', () => {
+      citiesReturn = {
+        cities: [
+          { id: 3, city_name: 'MEDELLÍN' },
+          { id: 1, city_name: 'BOGOTÁ, D.C.' },
+        ],
+        isLoading: false,
+        error: null,
+      }
+      facilitiesReturn = {
+        facilities: [],
+        isLoading: true,
+        error: null,
+      }
+
+      renderPage()
+
+      const citySelect = screen.getByLabelText(/Ciudad|City/) as HTMLSelectElement
+      expect(citySelect.value).toBe('1')
+    })
+
+    it('does not auto-select city when the default name does not appear in results', () => {
+      citiesReturn = {
+        cities: [{ id: 3, city_name: 'MEDELLÍN' }],
+        isLoading: false,
+        error: null,
+      }
+
+      renderPage()
+
+      const citySelect = screen.getByLabelText(/Ciudad|City/) as HTMLSelectElement
+      expect(citySelect.value).toBe('')
+    })
+
+    it('auto-selects C.C Parque La Colina once the city is set and its facilities load', () => {
+      citiesReturn = {
+        cities: [{ id: 1, city_name: 'BOGOTÁ, D.C.' }],
+        isLoading: false,
+        error: null,
+      }
+      facilitiesReturn = {
+        facilities: [
+          { id: 5, display_name: 'C.C Unicentro', city_id: 1 },
+          { id: 9, display_name: 'C.C Parque La Colina', city_id: 1 },
+        ],
+        isLoading: false,
+        error: null,
+      }
+
+      renderPage()
+
+      const facilitySelect = screen.getByLabelText(/Sede|Facility/) as HTMLSelectElement
+      expect(facilitySelect.value).toBe('9')
+    })
   })
 
   describe('class-type filter', () => {

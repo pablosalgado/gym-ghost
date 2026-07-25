@@ -62,23 +62,44 @@ RSpec.describe "Cities", type: :request do
       expect(city.keys).to match_array(%w[id city_name])
     end
 
-    it "enqueues SyncFacilitiesJob when the cities table is empty" do
+    it "runs SyncFacilitiesJob inline when the cities table is empty" do
       user = create(:user)
       raw_token = SecureRandom.hex(32)
       create(:token, user:, digest: Token.digest(raw_token))
+      service = instance_double(Partner::FacilitiesService)
 
-      expect { get "/api/v1/cities", headers: { "Authorization" => "Bearer #{raw_token}" } }
-        .to have_enqueued_job(SyncFacilitiesJob)
+      allow(Partner::FacilitiesService).to receive(:new).and_return(service)
+      allow(service).to receive(:sync) do
+        create(:city, city_name: "BOGOTÁ, D.C.")
+        []
+      end
+
+      get "/api/v1/cities", headers: { "Authorization" => "Bearer #{raw_token}" }
+
+      expect(response).to have_http_status(:ok)
+      expect(Partner::FacilitiesService).to have_received(:new).once
+      expect(service).to have_received(:sync).once
+      expect(response.parsed_body["cities"]).to contain_exactly(
+        { "id" => kind_of(Integer), "city_name" => "BOGOTÁ, D.C." }
+      )
     end
 
-    it "does not enqueue SyncFacilitiesJob when cities already exist" do
+    it "does not run SyncFacilitiesJob when cities already exist" do
       user = create(:user)
       raw_token = SecureRandom.hex(32)
       create(:token, user:, digest: Token.digest(raw_token))
-      create(:city)
+      create(:city, city_name: "Medellín")
+      service = instance_double(Partner::FacilitiesService)
+      allow(Partner::FacilitiesService).to receive(:new).and_return(service)
+      allow(service).to receive(:sync)
 
-      expect { get "/api/v1/cities", headers: { "Authorization" => "Bearer #{raw_token}" } }
-        .not_to have_enqueued_job(SyncFacilitiesJob)
+      get "/api/v1/cities", headers: { "Authorization" => "Bearer #{raw_token}" }
+
+      expect(response).to have_http_status(:ok)
+      expect(Partner::FacilitiesService).not_to have_received(:new)
+      expect(response.parsed_body["cities"]).to contain_exactly(
+        { "id" => kind_of(Integer), "city_name" => "Medellín" }
+      )
     end
   end
 end
