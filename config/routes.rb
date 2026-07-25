@@ -14,4 +14,11 @@ Rails.application.routes.draw do
   end
 
   root to: redirect("/index.html")
+
+  # Serve index.html for client-side routes (SPA fallback).
+  # Non-API/non-health-check HTML GET requests get the React app entry point
+  # so React Router can handle /login, /schedule, etc.
+  get "*path",
+    to: ->(_) { [ 200, { Rack::CONTENT_TYPE => "text/html; charset=utf-8" }, [ Rails.public_path.join("index.html").read ] ] },
+    constraints: ->(req) { !req.path.start_with?("/api/", "/up") }
 end
