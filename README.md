@@ -53,9 +53,9 @@ Testing
 
 Git automatically runs `bin/ci` before each push after `scripts/setup_dev.sh` configures the repository hooks. A failed check blocks the push.
 
-### Smoke tests (live integration tests)
+### Live integration tests
 
-Smoke tests exercise real downstream APIs without mocking. They are tagged `smoke: true` and excluded from `bundle exec rspec` by default.
+Integration tests exercise real downstream APIs without mocking. They are tagged `integration: true` and excluded from `bundle exec rspec` by default.
 
 #### Setup
 
@@ -76,43 +76,47 @@ TEST_PARTNER_AUTH_EMAIL=your-test-member@partner.com
 TEST_PARTNER_AUTH_PASSWORD=your-test-password
 ```
 
-#### Running smoke tests
+#### Running integration tests
 
-- Run all smoke tests:
+- Run all integration tests:
   ```
-  bundle exec rspec --tag smoke
-  ```
-
-- Run a specific smoke test (override the exclusion with `--tag smoke`):
-  ```
-  bundle exec rspec spec/smoke/partner/auth_service_smoke_spec.rb --tag smoke
+  bundle exec rspec --tag integration
   ```
 
+- Run a specific integration test (override the exclusion with `--tag integration`):
   ```
-  bundle exec rspec spec/smoke/partner/activities_service_smoke_spec.rb --tag smoke
+  bundle exec rspec spec/integration/partner/auth_service_spec.rb --tag integration
   ```
 
   ```
-  bundle exec rspec spec/smoke/partner/facilities_service_smoke_spec.rb --tag smoke
+  bundle exec rspec spec/integration/partner/activities_service_spec.rb --tag integration
   ```
 
-#### Adding a new smoke test
+  ```
+  bundle exec rspec spec/integration/partner/facilities_service_spec.rb --tag integration
+  ```
+
+  ```
+  bundle exec rspec spec/integration/partner/booking_service_spec.rb --tag integration
+  ```
+
+#### Adding a new integration test
 
 Create a new test file following this convention:
 
-- Location: `spec/smoke/<area>/<name>_spec.rb`
-- Tag the top-level `describe` with `smoke: true`
+- Location: `spec/integration/<area>/<name>_spec.rb`
+- Tag the top-level `describe` with `integration: true`
 - Use a `before` block with `skip` when required ENV vars are missing
 - Skip gracefully when required ENV is missing
 
 Example structure:
 
 ```ruby
-RSpec.describe Partner::AuthService, smoke: true do
+RSpec.describe Partner::AuthService, integration: true do
   use_transactional_tests false
 
   # Skip gracefully when required environment variables are missing
-  skip "Set PARTNER_API_BASE_URL and all TEST_PARTNER_AUTH_* vars to run smoke tests" unless (
+  skip "Set PARTNER_API_BASE_URL and all TEST_PARTNER_AUTH_* vars to run integration tests" unless (
     ENV["PARTNER_API_BASE_URL"].present? &&
       ENV["TEST_PARTNER_AUTH_EMAIL"].present? &&
       ENV["TEST_PARTNER_AUTH_PASSWORD"].present? &&

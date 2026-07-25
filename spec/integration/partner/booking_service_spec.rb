@@ -1,11 +1,11 @@
 require "rails_helper"
 
-RSpec.describe "Partner::BookingService", smoke: true do
+RSpec.describe "Partner::BookingService", integration: true do
   before do
     skip "Set PARTNER_API_BASE_URL, PARTNER_ACTIVITIES_TOKEN, " \
          "PARTNER_AUTH_ORIGIN, PARTNER_AUTH_REFERER, " \
          "TEST_PARTNER_AUTH_EMAIL, TEST_PARTNER_AUTH_PASSWORD, " \
-         "and TEST_BRANCH_TOKEN to run smoke tests for BookingService" unless
+         "and TEST_BRANCH_TOKEN to run integration tests for BookingService" unless
       ENV["PARTNER_API_BASE_URL"].present? &&
       ENV["PARTNER_ACTIVITIES_TOKEN"].present? &&
       ENV["PARTNER_AUTH_ORIGIN"].present? &&
