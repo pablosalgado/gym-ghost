@@ -49,6 +49,7 @@ Testing
 - Backend: `bundle exec rspec`
 - Frontend: `cd frontend && npm run test`
 - Frontend type-check and production build: `cd frontend && npm run build`
+- E2E smoke: `cd frontend && npm run test:e2e` (Playwright, requires a running backend)
 - Full local CI, including an isolated Docker deployment smoke test: `bin/ci`
 
 Git automatically runs `bin/ci` before each push after `scripts/setup_dev.sh` configures the repository hooks. A failed check blocks the push.
@@ -132,6 +133,25 @@ RSpec.describe Partner::AuthService, integration: true do
   # ... test implementation
 end
 ```
+
+### E2E smoke test (Playwright)
+
+A Playwright test verifies the user-facing schedule page works end-to-end against a live backend.
+
+#### Running locally
+
+1. Start the Rails server: `bundle exec rails server`
+2. Seed the smoke test data:
+   ```
+   SMOKE_USER_EMAIL=smoke-test@gymghost.test SMOKE_USER_PASSWORD=SmokeTest123! bin/rails db:seed
+   ```
+3. Install Playwright browsers: `cd frontend && npx playwright install --with-deps chromium`
+4. Run the test:
+   ```
+   cd frontend && PLAYWRIGHT_BASE_URL=http://localhost:3000 SMOKE_USER_EMAIL=smoke-test@gymghost.test SMOKE_USER_PASSWORD=SmokeTest123! npm run test:e2e
+   ```
+
+`bin/ci` runs the e2e test automatically against a fresh Docker container — no manual setup needed in CI.
 
 Devcontainer
 - A .devcontainer/ is included. Open the folder in VS Code Remote Containers or Codespaces; postCreateCommand runs setup.

@@ -12,6 +12,8 @@ CI.run do
   step "Tests: Frontend", "cd frontend && npm run test"
   step "Build: Frontend", "cd frontend && npm run build"
   step "Smoke test: Docker deployment", "script/verify_docker.sh"
+  step "E2E: Install Playwright browsers", "cd frontend && npx playwright install --with-deps chromium"
+  step "E2E: Schedule page smoke test", "script/e2e_smoke.sh"
 
   # Optional: set a green GitHub commit status to unblock PR merge.
   # Requires the `gh` CLI and `gh extension install basecamp/gh-signoff`.
