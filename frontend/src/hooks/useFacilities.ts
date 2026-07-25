@@ -43,7 +43,6 @@ export function useFacilities(cityId?: number): UseFacilitiesResult {
         headers: {
           Authorization: `Bearer ${token}`,
         },
-        cache: 'no-store',
       })
 
       if (cancelledRef.current) return

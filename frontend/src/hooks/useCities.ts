@@ -42,7 +42,6 @@ export function useCities(): UseCitiesResult {
         headers: {
           Authorization: `Bearer ${token}`,
         },
-        cache: 'no-store',
       })
 
       if (cancelledRef.current) return

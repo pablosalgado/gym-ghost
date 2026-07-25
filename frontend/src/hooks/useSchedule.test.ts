@@ -73,7 +73,7 @@ describe('useSchedule', () => {
     expect(result.current.error).toBeNull()
     expect(fetch).toHaveBeenCalledWith(
       '/api/v1/schedule?date=2026-07-20&facility_id=5',
-      { headers: { Authorization: `Bearer ${AUTH_TOKEN}` }, cache: 'no-store' },
+      { headers: { Authorization: `Bearer ${AUTH_TOKEN}` } },
     )
   })
 
@@ -93,7 +93,7 @@ describe('useSchedule', () => {
     expect(result.current.sessions).toEqual(MAPPED_SESSIONS)
     expect(fetch).toHaveBeenCalledWith(
       '/api/v1/schedule?date=2026-07-20',
-      { headers: { Authorization: `Bearer ${AUTH_TOKEN}` }, cache: 'no-store' },
+      { headers: { Authorization: `Bearer ${AUTH_TOKEN}` } },
     )
   })
 
@@ -128,7 +128,7 @@ describe('useSchedule', () => {
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2))
     expect(fetchMock).toHaveBeenLastCalledWith(
       '/api/v1/schedule?date=2026-07-20&facility_id=9',
-      { headers: { Authorization: `Bearer ${AUTH_TOKEN}` }, cache: 'no-store' },
+      { headers: { Authorization: `Bearer ${AUTH_TOKEN}` } },
     )
   })
 
@@ -159,7 +159,7 @@ describe('useSchedule', () => {
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2))
     expect(fetchMock).toHaveBeenLastCalledWith(
       '/api/v1/schedule?date=2026-07-21',
-      { headers: { Authorization: `Bearer ${AUTH_TOKEN}` }, cache: 'no-store' },
+      { headers: { Authorization: `Bearer ${AUTH_TOKEN}` } },
     )
   })
 
@@ -402,7 +402,7 @@ describe('useSchedule', () => {
       expect(fetchMock).toHaveBeenCalledTimes(2)
       expect(fetchMock).toHaveBeenLastCalledWith(
         '/api/v1/schedule?date=2026-07-24&facility_id=9',
-        { headers: { Authorization: `Bearer ${AUTH_TOKEN}` }, cache: 'no-store' },
+        { headers: { Authorization: `Bearer ${AUTH_TOKEN}` } },
       )
     })
 
@@ -432,7 +432,7 @@ describe('useSchedule', () => {
       expect(fetchMock).toHaveBeenCalledTimes(2)
       expect(fetchMock).toHaveBeenLastCalledWith(
         '/api/v1/schedule?date=2026-07-24&facility_id=9',
-        { headers: { Authorization: `Bearer ${AUTH_TOKEN}` }, cache: 'no-store' },
+        { headers: { Authorization: `Bearer ${AUTH_TOKEN}` } },
       )
 
       vi.useRealTimers()

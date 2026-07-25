@@ -88,7 +88,6 @@ export function useSchedule(
             headers: {
               Authorization: `Bearer ${token}`,
             },
-            cache: 'no-store',
           },
         )
 

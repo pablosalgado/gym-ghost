@@ -38,7 +38,6 @@ describe('useCities', () => {
     expect(result.current.error).toBeNull()
     expect(fetch).toHaveBeenCalledWith('/api/v1/cities', {
       headers: { Authorization: `Bearer ${AUTH_TOKEN}` },
-      cache: 'no-store',
     })
   })
 
