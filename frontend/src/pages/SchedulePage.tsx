@@ -26,8 +26,8 @@ export default function SchedulePage() {
   const [facilityId, setFacilityId] = useState<number | undefined>()
   const [activityId, setActivityId] = useState<number | undefined>()
 
-  const { cities, isLoading: citiesLoading, error: citiesError } = useCities()
-  const { facilities: facilitiesForCity, isLoading: facilitiesLoading, error: facilitiesError } = useFacilities(cityId)
+  const { cities, isLoading: citiesLoading } = useCities()
+  const { facilities: facilitiesForCity, isLoading: facilitiesLoading } = useFacilities(cityId)
   const {
     sessions: scheduleSessions,
     classTypes,
@@ -132,9 +132,6 @@ export default function SchedulePage() {
               </option>
             ))}
           </select>
-          {!citiesLoading && citiesError && (
-            <p className="text-xs text-red-600">{citiesError}</p>
-          )}
         </div>
 
         <div className="flex flex-col gap-1">
@@ -154,9 +151,6 @@ export default function SchedulePage() {
               </option>
             ))}
           </select>
-          {!facilitiesLoading && facilitiesError && (
-            <p className="text-xs text-red-600">{facilitiesError}</p>
-          )}
         </div>
 
         <div className="flex flex-col gap-1">

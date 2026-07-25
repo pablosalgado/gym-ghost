@@ -155,38 +155,6 @@ describe('SchedulePage', () => {
     expect(options[0].textContent).toMatch(/Todas|All/)
   })
 
-  it('displays city error when useCities returns an error and is not loading', () => {
-    citiesReturn = { cities: [], isLoading: false, error: 'Not authenticated' }
-
-    renderPage()
-
-    expect(screen.getByText('Not authenticated')).toBeInTheDocument()
-  })
-
-  it('displays facility error when useFacilities returns an error and is not loading', () => {
-    facilitiesReturn = { facilities: [], isLoading: false, error: 'Network error' }
-
-    renderPage()
-
-    expect(screen.getByText('Network error')).toBeInTheDocument()
-  })
-
-  it('does not display city error while still loading', () => {
-    citiesReturn = { cities: [], isLoading: true, error: 'Not authenticated' }
-
-    renderPage()
-
-    expect(screen.queryByText('Not authenticated')).not.toBeInTheDocument()
-  })
-
-  it('does not display facility error while still loading', () => {
-    facilitiesReturn = { facilities: [], isLoading: true, error: 'Network error' }
-
-    renderPage()
-
-    expect(screen.queryByText('Network error')).not.toBeInTheDocument()
-  })
-
   describe('default city and facility selection', () => {
     it('auto-selects BOGOTÁ, D.C. when cities include it and no city is selected yet', () => {
       citiesReturn = {

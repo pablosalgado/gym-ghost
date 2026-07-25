@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { AUTH_TOKEN_STORAGE_KEY } from './useAuth'
 import {
   isCitiesResponse,
@@ -17,14 +17,6 @@ export function useCities(): UseCitiesResult {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const cancelledRef = useRef(false)
-
-  useEffect(() => {
-    return () => {
-      cancelledRef.current = true
-    }
-  }, [])
-
   const fetchCities = useCallback(async () => {
     const token = localStorage.getItem(AUTH_TOKEN_STORAGE_KEY)
     if (!token) {
@@ -33,7 +25,6 @@ export function useCities(): UseCitiesResult {
       return
     }
 
-    cancelledRef.current = false
     setIsLoading(true)
     setError(null)
 
@@ -44,8 +35,6 @@ export function useCities(): UseCitiesResult {
         },
       })
 
-      if (cancelledRef.current) return
-
       if (!response.ok) {
         setCities([])
         setError(`Request failed: ${response.status}`)
@@ -53,8 +42,6 @@ export function useCities(): UseCitiesResult {
       }
 
       const payload: unknown = await response.json()
-
-      if (cancelledRef.current) return
 
       if (!isCitiesResponse(payload)) {
         setCities([])
@@ -65,23 +52,15 @@ export function useCities(): UseCitiesResult {
       const data: CitiesResponse = payload
       setCities(data.cities)
     } catch {
-      if (cancelledRef.current) return
       setCities([])
       setError('Network error')
     } finally {
-      if (!cancelledRef.current) {
-        setIsLoading(false)
-      }
+      setIsLoading(false)
     }
   }, [])
 
   useEffect(() => {
-    cancelledRef.current = false
     fetchCities()
-
-    return () => {
-      cancelledRef.current = true
-    }
   }, [fetchCities])
 
   return { cities, isLoading, error }
