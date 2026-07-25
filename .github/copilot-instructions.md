@@ -85,7 +85,7 @@ gym-ghost/
 │   ├── lib/partner/         # Partner service specs
 │   ├── models/              # Model specs
 │   ├── requests/api/v1/     # Request specs (type: :request required)
-│   ├── smoke/               # Smoke/integration tests
+│   ├── integration/          # Live integration tests
 │   └── support/             # Test support modules
 ├── bin/                     # Executables (ci, setup, rubocop, etc.)
 ├── script/verify_docker.sh  # Docker smoke test
@@ -108,7 +108,7 @@ gym-ghost/
 | Partner API integration | `lib/partner/` | Service classes for partner API calls |
 | Add test | `spec/requests/api/v1/` or `spec/models/` | Declare `type: :request` or `type: :model` explicitly |
 | CI pipeline | `config/ci.rb` | `bin/ci` runs all steps sequentially |
-| Partner smoke test (RSpec) | `spec/smoke/partner/auth_service_smoke_spec.rb` | Excluded from `bundle exec rspec`; run via `bundle exec rspec --tag smoke` |
+| Partner integration test (RSpec) | `spec/integration/partner/auth_service_spec.rb` | Excluded from `bundle exec rspec`; run via `bundle exec rspec --tag integration` |
 | Docker | `Dockerfile`, `docker-compose.yml` | Multi-stage build: frontend → Rails |
 
 ## Setup and development

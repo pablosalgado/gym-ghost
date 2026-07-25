@@ -1,9 +1,9 @@
 require "rails_helper"
 
-RSpec.describe Partner::AuthService, smoke: true do
+RSpec.describe Partner::AuthService, integration: true do
   before do
     skip "Set PARTNER_API_BASE_URL, all TEST_PARTNER_AUTH_* vars (including " \
-         "REFERER and ORIGIN) to run smoke tests" unless
+         "REFERER and ORIGIN) to run integration tests" unless
       ENV["PARTNER_API_BASE_URL"].present? &&
       ENV["TEST_PARTNER_AUTH_EMAIL"].present? &&
       ENV["TEST_PARTNER_AUTH_PASSWORD"].present? &&
