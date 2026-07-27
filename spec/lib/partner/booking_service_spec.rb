@@ -39,9 +39,11 @@ RSpec.describe Partner::BookingService do
 
   describe "#book" do
     context "when the partner token is missing or expired" do
-      it "raises BookingError" do
+      before { allow(gym_member).to receive(:password).and_return("") }
+
+      it "raises AuthenticationError when member cannot authenticate" do
         expect { service.book(schedule_entry:) }
-          .to raise_error(Partner::BookingError, "No valid partner token available")
+          .to raise_error(Partner::AuthenticationError, "Missing partner password")
       end
     end
 
@@ -89,14 +91,14 @@ RSpec.describe Partner::BookingService do
             body: a_string_including(
               '"activity_id":"act-001"',
               '"activ_config_id":7',
-              '"activity_date":"2026-07-21"',
+              '"activity_date":"2026-07-21T07:00:00Z"',
               '"token_branch":"evo-abc"',
-              '"activity_start":"2026-07-21T07:00:00Z"',
+              '"activity_start":"07:00"',
               '"timezone":"America/Bogota"',
               '"activity_name":"Spinning"',
               '"capacity":20',
               '"branch_name":"Test Branch"',
-              '"branch_id":42',
+              '"branch_id":"42"',
               '"partner_name":"EVO"',
               '"country_code":"CO"',
               '"booking_origin":"WEB"'

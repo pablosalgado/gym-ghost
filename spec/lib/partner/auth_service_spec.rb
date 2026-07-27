@@ -54,7 +54,7 @@ RSpec.describe Partner::AuthService do
                                              "status" => "OK",
                                              "data" => {
                                                "access_token"  => jwt,
-                                               "refresh_token" => "refresh_abc123"
+                                               "refresh_token" => build_jwt(exp: exp_epoch)
                                              },
                                              "errors" => []
                                            })
@@ -66,7 +66,7 @@ RSpec.describe Partner::AuthService do
 
         expect(token).to be_persisted
         expect(token.access_token).to eq(jwt)
-        expect(token.refresh_token).to eq("refresh_abc123")
+        expect(token.refresh_token).to eq(build_jwt(exp: exp_epoch))
         expect(token.token_expires_at).to eq(Time.at(exp_epoch).utc)
         expect(token.gym_member).to eq(gym_member)
       end
@@ -128,20 +128,20 @@ RSpec.describe Partner::AuthService do
       end
     end
 
-    context "when the access_token JWT has no exp claim" do
+    context "when the refresh_token JWT has no exp claim" do
       before do
         header       = Base64.urlsafe_encode64('{"alg":"HS256","typ":"JWT"}', padding: false)
         payload      = Base64.urlsafe_encode64('{"iat":1234}', padding: false)
         sig          = Base64.urlsafe_encode64("fake", padding: false)
-        jwt          = "#{header}.#{payload}.#{sig}"
+        no_exp_jwt   = "#{header}.#{payload}.#{sig}"
         bad_response = instance_double(HTTParty::Response,
                                         success?: true,
                                         code: 200,
                                         parsed_response: {
                                           "status" => "OK",
                                           "data" => {
-                                            "access_token"  => jwt,
-                                            "refresh_token" => "refresh_abc"
+                                            "access_token"  => build_jwt,
+                                            "refresh_token" => no_exp_jwt
                                           },
                                           "errors" => []
                                         })
@@ -166,7 +166,7 @@ RSpec.describe Partner::AuthService do
                                               "status" => "OK",
                                               "data" => {
                                                 "access_token"  => jwt,
-                                                "refresh_token" => "refresh_abc123"
+                                                "refresh_token" => build_jwt(exp: exp_epoch)
                                               },
                                               "errors" => []
                                             })
@@ -223,7 +223,7 @@ RSpec.describe Partner::AuthService do
                                              "status" => "OK",
                                              "data" => {
                                                "access_token"  => jwt,
-                                               "refresh_token" => "refresh_new"
+                                               "refresh_token" => build_jwt(exp: exp_epoch)
                                              },
                                              "errors" => []
                                            })
@@ -235,7 +235,7 @@ RSpec.describe Partner::AuthService do
 
         token = service.login
         expect(token.access_token).to eq(jwt)
-        expect(token.refresh_token).to eq("refresh_new")
+        expect(token.refresh_token).to eq(build_jwt(exp: exp_epoch))
       end
     end
 
