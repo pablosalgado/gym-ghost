@@ -43,6 +43,11 @@ module Api
         }, status: :created
       end
 
+      def destroy
+        BookingRequest.find(params[:id]).destroy!
+        head :no_content
+      end
+
       private
 
       def booking_request_params
