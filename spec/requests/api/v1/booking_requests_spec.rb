@@ -186,4 +186,143 @@ RSpec.describe "BookingRequests", type: :request do
       )
     end
   end
+
+  describe "DELETE /api/v1/booking_requests/:id" do
+    it "returns 401 when no token is provided" do
+      booking_request = create(:booking_request)
+      delete "/api/v1/booking_requests/#{booking_request.id}"
+
+      expect(response).to have_http_status(:unauthorized)
+      expect(response.parsed_body).to eq(
+        "errors" => [
+          {
+            "status" => 401,
+            "title" => "Unauthorized",
+            "detail" => "Authentication token is missing or invalid."
+          }
+        ]
+      )
+    end
+
+    it "returns 401 when token is invalid" do
+      booking_request = create(:booking_request)
+      delete "/api/v1/booking_requests/#{booking_request.id}",
+             headers: { "Authorization" => "Bearer invalid-token" }
+
+      expect(response).to have_http_status(:unauthorized)
+      expect(response.parsed_body).to eq(
+        "errors" => [
+          {
+            "status" => 401,
+            "title" => "Unauthorized",
+            "detail" => "Authentication token is missing or invalid."
+          }
+        ]
+      )
+    end
+
+    it "returns 204 and destroys the booking request" do
+      user = create(:user, email: "member@example.com")
+      gym_member = create(:gym_member, email: "member@example.com")
+      raw_token = SecureRandom.hex(32)
+      create(:token, user:, digest: Token.digest(raw_token))
+
+      booking_request = create(:booking_request, gym_member:)
+
+      expect {
+        delete "/api/v1/booking_requests/#{booking_request.id}",
+               headers: { "Authorization" => "Bearer #{raw_token}" }
+      }.to change(BookingRequest, :count).by(-1)
+
+      expect(response).to have_http_status(:no_content)
+      expect(response.body).to be_empty
+    end
+
+    it "returns 404 when booking request does not exist" do
+      user = create(:user, email: "member@example.com")
+      create(:gym_member, email: "member@example.com")
+      raw_token = SecureRandom.hex(32)
+      create(:token, user:, digest: Token.digest(raw_token))
+
+      delete "/api/v1/booking_requests/99999",
+             headers: { "Authorization" => "Bearer #{raw_token}" }
+
+      expect(response).to have_http_status(:not_found)
+      expect(response.parsed_body).to eq(
+        "errors" => [
+          {
+            "status" => 404,
+            "title" => "Not Found",
+            "detail" => "The requested resource does not exist."
+          }
+        ]
+      )
+    end
+
+    it "returns 404 when booking request belongs to another user" do
+      owner = create(:user, email: "owner@example.com")
+      owner_member = create(:gym_member, email: "owner@example.com")
+      owner_raw_token = SecureRandom.hex(32)
+      create(:token, user: owner, digest: Token.digest(owner_raw_token))
+
+      booking_request = create(:booking_request, gym_member: owner_member)
+
+      other_user = create(:user, email: "other@example.com")
+      create(:gym_member, email: "other@example.com")
+      other_raw_token = SecureRandom.hex(32)
+      create(:token, user: other_user, digest: Token.digest(other_raw_token))
+
+      delete "/api/v1/booking_requests/#{booking_request.id}",
+             headers: { "Authorization" => "Bearer #{other_raw_token}" }
+
+      expect(response).to have_http_status(:not_found)
+      expect(response.parsed_body).to eq(
+        "errors" => [
+          {
+            "status" => 404,
+            "title" => "Not Found",
+            "detail" => "The requested resource does not exist."
+          }
+        ]
+      )
+    end
+
+    it "returns 404 when the authenticated user has no gym member profile" do
+      user = create(:user, email: "noprofile@example.com")
+      raw_token = SecureRandom.hex(32)
+      create(:token, user:, digest: Token.digest(raw_token))
+
+      booking_request = create(:booking_request)
+
+      delete "/api/v1/booking_requests/#{booking_request.id}",
+             headers: { "Authorization" => "Bearer #{raw_token}" }
+
+      expect(response).to have_http_status(:not_found)
+      expect(response.parsed_body).to eq(
+        "errors" => [
+          {
+            "status" => 404,
+            "title" => "Not Found",
+            "detail" => "The requested resource does not exist."
+          }
+        ]
+      )
+    end
+
+    it "allows cancelling a booking request in failed status" do
+      user = create(:user, email: "member@example.com")
+      gym_member = create(:gym_member, email: "member@example.com")
+      raw_token = SecureRandom.hex(32)
+      create(:token, user:, digest: Token.digest(raw_token))
+
+      booking_request = create(:booking_request, :failed, gym_member:)
+
+      expect {
+        delete "/api/v1/booking_requests/#{booking_request.id}",
+               headers: { "Authorization" => "Bearer #{raw_token}" }
+      }.to change(BookingRequest, :count).by(-1)
+
+      expect(response).to have_http_status(:no_content)
+    end
+  end
 end

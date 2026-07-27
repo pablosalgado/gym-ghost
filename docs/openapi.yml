@@ -181,6 +181,40 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /api/v1/booking_requests/{id}:
+    delete:
+      summary: Cancel a booking request
+      description: |
+        Cancels (destroys) a booking request. Only the gym member who created
+        the booking request can cancel it. Non-owner requests return 404 to
+        avoid leaking existence information.
+      tags:
+        - Bookings
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of the booking request to cancel
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Booking request cancelled successfully
+        "401":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Booking request not found or does not belong to the authenticated user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /api/v1/openapi.json:
     get:
       summary: OpenAPI specification
