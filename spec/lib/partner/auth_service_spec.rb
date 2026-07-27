@@ -195,5 +195,61 @@ RSpec.describe Partner::AuthService do
           .to raise_error(Partner::AuthenticationError, "Missing partner password")
       end
     end
+
+    context "when a valid PartnerToken already exists" do
+      let!(:existing_token) { create(:partner_token, gym_member: gym_member, token_expires_at: 1.hour.from_now) }
+
+      it "returns the existing token without calling the partner API" do
+        expect(described_class).not_to receive(:post)
+
+        token = service.login
+
+        expect(token).to eq(existing_token)
+        expect(token.gym_member).to eq(gym_member)
+      end
+    end
+
+    context "when only expired PartnerTokens exist" do
+      let(:exp_epoch) { 2.hours.from_now.to_i }
+      let(:jwt)       { build_jwt(exp: exp_epoch) }
+
+      before do
+        create(:partner_token, gym_member: gym_member, token_expires_at: 1.hour.ago)
+
+        success_response = instance_double(HTTParty::Response,
+                                           success?: true,
+                                           code: 200,
+                                           parsed_response: {
+                                             "status" => "OK",
+                                             "data" => {
+                                               "access_token"  => jwt,
+                                               "refresh_token" => "refresh_new"
+                                             },
+                                             "errors" => []
+                                           })
+        allow(described_class).to receive(:post).and_return(success_response)
+      end
+
+      it "requests a new token from the partner API" do
+        expect { service.login }.to change(gym_member.partner_tokens, :count).by(1)
+
+        token = service.login
+        expect(token.access_token).to eq(jwt)
+        expect(token.refresh_token).to eq("refresh_new")
+      end
+    end
+
+    context "when multiple valid tokens exist" do
+      let!(:older_token) { create(:partner_token, gym_member: gym_member, token_expires_at: 1.hour.from_now, created_at: 1.day.ago) }
+      let!(:newest_token) { create(:partner_token, gym_member: gym_member, token_expires_at: 1.hour.from_now, created_at: 1.hour.ago) }
+
+      it "returns the most recently created valid token" do
+        expect(described_class).not_to receive(:post)
+
+        token = service.login
+
+        expect(token).to eq(newest_token)
+      end
+    end
   end
 end

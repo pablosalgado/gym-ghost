@@ -30,10 +30,15 @@ module Partner
     end
 
     # Performs the partner login and stores the returned tokens.
+    # When a valid (non‑expired) PartnerToken already exists for the gym
+    # member, it is returned immediately without calling the partner API.
     # Returns the persisted PartnerToken on success.
     # Raises Partner::AuthenticationError on any authentication failure.
     def login
       raise AuthenticationError, "Missing partner password" if gym_member.password.blank?
+
+      existing_token = gym_member.partner_tokens.valid_tokens.order(created_at: :desc).first
+      return existing_token if existing_token
 
       response = request_login
       payload = parse_payload(response)
