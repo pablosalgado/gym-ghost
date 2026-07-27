@@ -282,6 +282,61 @@ describe('SchedulePage', () => {
     })
   })
 
+  describe('class color accent', () => {
+    it('applies a deterministic pastel left border color to each session card', () => {
+      scheduleReturn = {
+        ...DEFAULT_SCHEDULE_RESULT,
+        sessions: MOCK_SESSIONS,
+        classTypes: MOCK_CLASS_TYPES,
+      }
+
+      renderPage()
+
+      const listItems = screen.getAllByRole('listitem')
+      expect(listItems).toHaveLength(2)
+
+      const firstBorder = listItems[0].style.borderLeftColor
+      const secondBorder = listItems[1].style.borderLeftColor
+
+      expect(firstBorder).toBeTruthy()
+      expect(secondBorder).toBeTruthy()
+    })
+
+    it('assigns the same color to sessions with the same class name', () => {
+      const sessions: Session[] = [
+        { id: '1', facilityId: 9, activityName: 'Yoga', activityId: 10, startsAt: '2026-07-18T12:00:00.000Z' },
+        { id: '2', facilityId: 9, activityName: 'Yoga', activityId: 10, startsAt: '2026-07-18T14:00:00.000Z' },
+      ]
+      scheduleReturn = {
+        ...DEFAULT_SCHEDULE_RESULT,
+        sessions,
+        classTypes: MOCK_CLASS_TYPES,
+      }
+
+      renderPage()
+
+      const listItems = screen.getAllByRole('listitem')
+      expect(listItems).toHaveLength(2)
+
+      expect(listItems[0].style.borderLeftColor).toBe(listItems[1].style.borderLeftColor)
+    })
+
+    it('assigns different colors to sessions with different class names', () => {
+      scheduleReturn = {
+        ...DEFAULT_SCHEDULE_RESULT,
+        sessions: MOCK_SESSIONS,
+        classTypes: MOCK_CLASS_TYPES,
+      }
+
+      renderPage()
+
+      const listItems = screen.getAllByRole('listitem')
+      expect(listItems).toHaveLength(2)
+
+      expect(listItems[0].style.borderLeftColor).not.toBe(listItems[1].style.borderLeftColor)
+    })
+  })
+
   describe('booking state', () => {
     function getAllDots(
       list: HTMLElement,

@@ -8,6 +8,7 @@ import {
   windowFromToday,
 } from '../lib/date-time'
 import { filterSessions } from '../features/schedule/filterSessions'
+import { classColors } from '../lib/class-colors'
 import { useCities } from '../hooks/useCities'
 import { useFacilities } from '../hooks/useFacilities'
 import { useSchedule } from '../hooks/useSchedule'
@@ -201,7 +202,7 @@ export default function SchedulePage() {
           )}
         </div>
       ) : (
-        <ul className="divide-y divide-gray-200 rounded-lg border border-gray-200">
+        <ul className="flex flex-col gap-2">
           {sessions.map((session) => {
             const sessionId = Number(session.id)
             const isTarget = createTargetId === sessionId
@@ -212,8 +213,14 @@ export default function SchedulePage() {
               activeBookingRequest = booking.bookingRequest
             }
 
+            const colors = classColors(session.activityName)
+
             return (
-            <li key={session.id} className="flex items-center gap-4 px-4 py-3">
+            <li
+              key={session.id}
+              className="flex items-center gap-4 border-l-4 rounded-lg px-4 py-3 transition-colors"
+              style={{ borderLeftColor: colors.border, backgroundColor: colors.background }}
+            >
               <span className="w-20 shrink-0 text-sm font-medium text-gray-900">
                 {formatTimeOfDay(session.startsAt, locale, DEFAULT_TIME_ZONE)}
               </span>
