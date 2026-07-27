@@ -259,11 +259,9 @@ RSpec.describe "BookingRequests", type: :request do
       )
     end
 
-    it "returns 404 when booking request belongs to another user" do
+    it "allows any authenticated user to cancel a booking request by ID" do
       owner = create(:user, email: "owner@example.com")
       owner_member = create(:gym_member, email: "owner@example.com")
-      owner_raw_token = SecureRandom.hex(32)
-      create(:token, user: owner, digest: Token.digest(owner_raw_token))
 
       booking_request = create(:booking_request, gym_member: owner_member)
 
@@ -272,41 +270,27 @@ RSpec.describe "BookingRequests", type: :request do
       other_raw_token = SecureRandom.hex(32)
       create(:token, user: other_user, digest: Token.digest(other_raw_token))
 
-      delete "/api/v1/booking_requests/#{booking_request.id}",
-             headers: { "Authorization" => "Bearer #{other_raw_token}" }
+      expect {
+        delete "/api/v1/booking_requests/#{booking_request.id}",
+               headers: { "Authorization" => "Bearer #{other_raw_token}" }
+      }.to change(BookingRequest, :count).by(-1)
 
-      expect(response).to have_http_status(:not_found)
-      expect(response.parsed_body).to eq(
-        "errors" => [
-          {
-            "status" => 404,
-            "title" => "Not Found",
-            "detail" => "The requested resource does not exist."
-          }
-        ]
-      )
+      expect(response).to have_http_status(:no_content)
     end
 
-    it "returns 404 when the authenticated user has no gym member profile" do
+    it "allows any authenticated user to cancel a booking request regardless of gym member profile" do
       user = create(:user, email: "noprofile@example.com")
       raw_token = SecureRandom.hex(32)
       create(:token, user:, digest: Token.digest(raw_token))
 
       booking_request = create(:booking_request)
 
-      delete "/api/v1/booking_requests/#{booking_request.id}",
-             headers: { "Authorization" => "Bearer #{raw_token}" }
+      expect {
+        delete "/api/v1/booking_requests/#{booking_request.id}",
+               headers: { "Authorization" => "Bearer #{raw_token}" }
+      }.to change(BookingRequest, :count).by(-1)
 
-      expect(response).to have_http_status(:not_found)
-      expect(response.parsed_body).to eq(
-        "errors" => [
-          {
-            "status" => 404,
-            "title" => "Not Found",
-            "detail" => "The requested resource does not exist."
-          }
-        ]
-      )
+      expect(response).to have_http_status(:no_content)
     end
 
     it "allows cancelling a booking request in failed status" do
