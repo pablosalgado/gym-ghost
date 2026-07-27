@@ -57,7 +57,7 @@ module Partner
       gym_member.partner_tokens.create!(
         access_token:,
         refresh_token:,
-        token_expires_at: decode_jwt_expiry(access_token)
+        token_expires_at: decode_jwt_expiry(refresh_token)
       )
     end
 

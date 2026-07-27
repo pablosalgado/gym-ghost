@@ -55,10 +55,7 @@ module Partner
     attr_reader :gym_member
 
     def access_token
-      token = gym_member.partner_tokens.valid_tokens.order(created_at: :desc).first
-      raise BookingError, "No valid partner token available" unless token
-
-      token.access_token
+      Partner::AuthService.new(gym_member:).login.access_token
     end
 
     def request_booking(schedule_entry)
@@ -79,12 +76,12 @@ module Partner
         activ_config_id: schedule_entry.activ_config_id,
         activity_date:  schedule_entry.date.iso8601,
         token_branch:   schedule_entry.facility.evo_token,
-        activity_start: schedule_entry.start_time.utc.iso8601,
+        activity_start: schedule_entry.start_time.strftime("%H:%M"),
         timezone:       "America/Bogota",
         activity_name:  schedule_entry.class_type.name,
         capacity:       20,
         branch_name:    schedule_entry.facility.name,
-        branch_id:      schedule_entry.facility.external_id,
+        branch_id:      "#{schedule_entry.facility.external_id}",
         partner_name:   "EVO",
         country_code:   "CO",
         booking_origin: "WEB"
