@@ -13,6 +13,7 @@ import { useCities } from '../hooks/useCities'
 import { useFacilities } from '../hooks/useFacilities'
 import { useSchedule } from '../hooks/useSchedule'
 import { useBookingRequest } from '../hooks/useBookingRequest'
+import type { BookingRequest } from '../lib/api-types'
 import BookingStatusBadge from '../components/BookingStatusBadge'
 
 const DEFAULT_CITY_NAME = 'BOGOTÁ, D.C.'
@@ -43,6 +44,8 @@ export default function SchedulePage() {
 
   const booking = useBookingRequest()
   const [createTargetId, setCreateTargetId] = useState<number | null>(null)
+  const [cancelTargetId, setCancelTargetId] = useState<number | null>(null)
+  const [confirmCancelId, setConfirmCancelId] = useState<number | null>(null)
 
   const cityPreselected = useRef(false)
   const facilityPreselected = useRef(false)
@@ -86,6 +89,31 @@ export default function SchedulePage() {
   async function handleReserve(scheduleEntryId: number) {
     setCreateTargetId(scheduleEntryId)
     await booking.create(scheduleEntryId)
+  }
+
+  async function handleCardTap(sessionId: number, activeBookingRequest: BookingRequest | null) {
+    if (activeBookingRequest && activeBookingRequest.status === 'failed') {
+      return
+    }
+
+    if (activeBookingRequest && activeBookingRequest.status === 'pending') {
+      setCancelTargetId(sessionId)
+      await booking.cancel(activeBookingRequest.id)
+      return
+    }
+
+    if (activeBookingRequest && activeBookingRequest.status === 'booked') {
+      setConfirmCancelId(sessionId)
+      return
+    }
+
+    setCreateTargetId(sessionId)
+    await booking.create(sessionId)
+  }
+
+  async function handleConfirmCancel(bookingRequestId: number) {
+    setConfirmCancelId(null)
+    await booking.cancel(bookingRequestId)
   }
 
   return (
@@ -202,10 +230,45 @@ export default function SchedulePage() {
           )}
         </div>
       ) : (
+        <>
+        {confirmCancelId !== null && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+            <div className="mx-4 w-full max-w-sm rounded-lg bg-white p-6 shadow-lg">
+              <p className="mb-4 text-center text-lg font-medium">
+                {t('schedule.booking.cancelConfirm')}
+              </p>
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setConfirmCancelId(null)}
+                  className="min-h-11 flex-1 rounded bg-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-300"
+                >
+                  No
+                </button>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const bookingRequestId = sessions
+                      .find((s) => Number(s.id) === confirmCancelId)
+                      ?.bookingRequest?.id
+                    if (bookingRequestId !== undefined && bookingRequestId !== null) {
+                      await handleConfirmCancel(bookingRequestId)
+                    }
+                  }}
+                  className="min-h-11 flex-1 rounded bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+                >
+                  {t('schedule.booking.retry')}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         <ul className="flex flex-col gap-2">
           {sessions.map((session) => {
             const sessionId = Number(session.id)
-            const isTarget = createTargetId === sessionId
+            const isCreateTarget = createTargetId === sessionId
+            const isCancelTarget = cancelTargetId === sessionId
 
             let activeBookingRequest = session.bookingRequest ?? null
 
@@ -215,11 +278,33 @@ export default function SchedulePage() {
 
             const colors = classColors(session.activityName)
 
+            const isBusy = booking.isLoading && (isCreateTarget || isCancelTarget)
+
+            const isFailed = activeBookingRequest?.status === 'failed'
+
             return (
             <li
               key={session.id}
-              className="flex items-center gap-4 border-l-4 rounded-lg px-4 py-3 transition-colors"
-              style={{ borderLeftColor: colors.border, backgroundColor: colors.background }}
+              onClick={() => {
+                if (isFailed) return
+                void handleCardTap(sessionId, activeBookingRequest)
+              }}
+              onKeyDown={(e) => {
+                if (isFailed) return
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault()
+                  void handleCardTap(sessionId, activeBookingRequest)
+                }
+              }}
+              role={isFailed ? undefined : 'button'}
+              tabIndex={isFailed ? undefined : 0}
+              aria-label={session.activityName}
+              className="flex items-center gap-4 border-l-4 rounded-lg px-4 py-3 transition-opacity cursor-pointer"
+              style={{
+                borderLeftColor: colors.border,
+                backgroundColor: colors.background,
+                opacity: isBusy ? 0.5 : 1,
+              }}
             >
               <span className="w-20 shrink-0 text-sm font-medium text-gray-900">
                 {formatTimeOfDay(session.startsAt, locale, DEFAULT_TIME_ZONE)}
@@ -243,21 +328,27 @@ export default function SchedulePage() {
                 )}
 
                 {activeBookingRequest && activeBookingRequest.status === 'failed' && (
-                  <BookingStatusBadge
-                    status="failed"
-                    onRetry={() => handleReserve(sessionId)}
-                    isLoading={booking.isLoading}
-                    retryLabel={t('schedule.booking.retry')}
-                  />
+                  // eslint-disable-next-line jsx-a11y/no-static-element-interactions
+                  <span onClick={(e) => e.stopPropagation()}>
+                    <BookingStatusBadge
+                      status="failed"
+                      onRetry={() => handleReserve(sessionId)}
+                      isLoading={booking.isLoading}
+                      retryLabel={t('schedule.booking.retry')}
+                    />
+                  </span>
                 )}
 
-                {!activeBookingRequest && isTarget && booking.error && (
+                {!activeBookingRequest && isCreateTarget && booking.error && (
                   <div className="flex items-center gap-2">
                     <BookingStatusBadge status="available" />
                     <span className="text-sm text-red-600">{booking.error}</span>
                     <button
                       type="button"
-                      onClick={() => handleReserve(sessionId)}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleReserve(sessionId)
+                      }}
                       disabled={booking.isLoading}
                       className="min-h-11 min-w-11 rounded bg-red-100 px-3 py-2 text-sm font-medium text-red-700 hover:bg-red-200 disabled:opacity-50"
                     >
@@ -266,24 +357,15 @@ export default function SchedulePage() {
                   </div>
                 )}
 
-                {!activeBookingRequest && !(isTarget && booking.error) && (
-                  <div className="flex items-center gap-2">
-                    <BookingStatusBadge status="available" />
-                    <button
-                      type="button"
-                      onClick={() => handleReserve(sessionId)}
-                      disabled={booking.isLoading}
-                      className="min-h-11 min-w-11 rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
-                    >
-                      {booking.isLoading ? t('common.loading') : t('schedule.booking.reserve')}
-                    </button>
-                  </div>
+                {!activeBookingRequest && !(isCreateTarget && booking.error) && (
+                  <BookingStatusBadge status="available" />
                 )}
               </div>
             </li>
             )
           })}
         </ul>
+        </>
       )}
     </div>
   )

@@ -8,6 +8,7 @@ import {
 
 export interface UseBookingRequestResult {
   create: (scheduleEntryId: number) => Promise<void>
+  cancel: (bookingRequestId: number) => Promise<boolean>
   isLoading: boolean
   error: string | null
   bookingRequest: BookingRequest | null
@@ -83,5 +84,54 @@ export function useBookingRequest(): UseBookingRequestResult {
     }
   }, [])
 
-  return { create, isLoading, error, bookingRequest }
+  const cancel = useCallback(async (bookingRequestId: number): Promise<boolean> => {
+    const token = localStorage.getItem(AUTH_TOKEN_STORAGE_KEY)
+    if (!token) {
+      setError('Not authenticated')
+      return false
+    }
+
+    cancelledRef.current = false
+    setIsLoading(true)
+    setError(null)
+
+    try {
+      const response = await fetch(`/api/v1/booking_requests/${bookingRequestId}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+
+      if (cancelledRef.current) return false
+
+      if (response.status === 404) {
+        setError('Booking request not found')
+        return false
+      }
+
+      if (!response.ok) {
+        const payload: unknown = await response.json().catch(() => null)
+        if (isErrorResponse(payload) && payload.errors.length > 0) {
+          setError(payload.errors[0].detail)
+        } else {
+          setError(`Request failed: ${response.status}`)
+        }
+        return false
+      }
+
+      setBookingRequest(null)
+      return true
+    } catch {
+      if (cancelledRef.current) return false
+      setError('Network error')
+      return false
+    } finally {
+      if (!cancelledRef.current) {
+        setIsLoading(false)
+      }
+    }
+  }, [])
+
+  return { create, cancel, isLoading, error, bookingRequest }
 }

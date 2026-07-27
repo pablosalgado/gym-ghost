@@ -74,6 +74,7 @@ vi.mock('../hooks/useFacilities', () => ({
 
 let bookingReturn = {
   create: vi.fn().mockResolvedValue(undefined) as (scheduleEntryId: number) => Promise<void>,
+  cancel: vi.fn().mockResolvedValue(true) as (bookingRequestId: number) => Promise<boolean>,
   isLoading: false,
   error: null as string | null,
   bookingRequest: null as BookingRequest | null,
@@ -105,6 +106,7 @@ describe('SchedulePage', () => {
     facilitiesReturn = { facilities: [], isLoading: false, error: null }
     bookingReturn = {
       create: vi.fn().mockResolvedValue(undefined),
+      cancel: vi.fn().mockResolvedValue(true),
       isLoading: false,
       error: null,
       bookingRequest: null,
@@ -283,6 +285,11 @@ describe('SchedulePage', () => {
   })
 
   describe('class color accent', () => {
+    function getCards(): HTMLElement[] {
+      const list = screen.getByRole('list')
+      return Array.from(list.querySelectorAll('li'))
+    }
+
     it('applies a deterministic pastel left border color to each session card', () => {
       scheduleReturn = {
         ...DEFAULT_SCHEDULE_RESULT,
@@ -292,11 +299,11 @@ describe('SchedulePage', () => {
 
       renderPage()
 
-      const listItems = screen.getAllByRole('listitem')
-      expect(listItems).toHaveLength(2)
+      const cards = getCards()
+      expect(cards).toHaveLength(2)
 
-      const firstBorder = listItems[0].style.borderLeftColor
-      const secondBorder = listItems[1].style.borderLeftColor
+      const firstBorder = cards[0].style.borderLeftColor
+      const secondBorder = cards[1].style.borderLeftColor
 
       expect(firstBorder).toBeTruthy()
       expect(secondBorder).toBeTruthy()
@@ -315,10 +322,10 @@ describe('SchedulePage', () => {
 
       renderPage()
 
-      const listItems = screen.getAllByRole('listitem')
-      expect(listItems).toHaveLength(2)
+      const cards = getCards()
+      expect(cards).toHaveLength(2)
 
-      expect(listItems[0].style.borderLeftColor).toBe(listItems[1].style.borderLeftColor)
+      expect(cards[0].style.borderLeftColor).toBe(cards[1].style.borderLeftColor)
     })
 
     it('assigns different colors to sessions with different class names', () => {
@@ -330,10 +337,10 @@ describe('SchedulePage', () => {
 
       renderPage()
 
-      const listItems = screen.getAllByRole('listitem')
-      expect(listItems).toHaveLength(2)
+      const cards = getCards()
+      expect(cards).toHaveLength(2)
 
-      expect(listItems[0].style.borderLeftColor).not.toBe(listItems[1].style.borderLeftColor)
+      expect(cards[0].style.borderLeftColor).not.toBe(cards[1].style.borderLeftColor)
     })
   })
 
@@ -360,7 +367,11 @@ describe('SchedulePage', () => {
       })
     }
 
-    it('renders all three dots inactive plus Reserve button for sessions without a booking request', () => {
+    function getCard(list: HTMLElement, name: string) {
+      return within(list).getByRole('button', { name })
+    }
+
+    it('renders all three dots inactive with cards as tappable buttons', () => {
       scheduleReturn = {
         ...DEFAULT_SCHEDULE_RESULT,
         sessions: MOCK_SESSIONS,
@@ -376,11 +387,12 @@ describe('SchedulePage', () => {
       expect(getAllDots(sessionList, 'Booked')).toHaveLength(2)
       expect(getAllDots(sessionList, 'Failed')).toHaveLength(2)
 
-      const reserveButtons = within(sessionList).getAllByRole('button', { name: /Reservar|Reserve/ })
-      expect(reserveButtons).toHaveLength(2)
+      // Cards are now buttons themselves (no separate Reserve button)
+      expect(getCard(sessionList, 'Yoga')).toBeInTheDocument()
+      expect(getCard(sessionList, 'Spinning')).toBeInTheDocument()
     })
 
-    it('calls useBookingRequest.create when Reserve button is clicked', async () => {
+    it('calls useBookingRequest.create when an unreserved card is tapped', async () => {
       scheduleReturn = {
         ...DEFAULT_SCHEDULE_RESULT,
         sessions: MOCK_SESSIONS,
@@ -391,8 +403,8 @@ describe('SchedulePage', () => {
       renderPage()
 
       const sessionList = screen.getByRole('list')
-      const reserveButtons = within(sessionList).getAllByRole('button', { name: /Reservar|Reserve/ })
-      await user.click(reserveButtons[0])
+      const yogaCard = getCard(sessionList, 'Yoga')
+      await user.click(yogaCard)
 
       expect(bookingReturn.create).toHaveBeenCalledWith(1)
     })
@@ -425,8 +437,10 @@ describe('SchedulePage', () => {
 
       expect(within(sessionList).getByText(/Reservas a las|Reserves at/)).toBeInTheDocument()
 
-      const reserveButtons = within(sessionList).queryAllByRole('button', { name: /Reservar|Reserve/ })
-      expect(reserveButtons).toHaveLength(1)
+      // No reserve buttons — the second card is just tappable, not a labelled button with "Reserve"
+      expect(
+        within(sessionList).queryByRole('button', { name: /Reservar|Reserve/ })
+      ).not.toBeInTheDocument()
     })
 
     it('renders booked state with green check dot lit', () => {
@@ -450,7 +464,11 @@ describe('SchedulePage', () => {
       expect(getAllDots(sessionList, 'Booked')).toHaveLength(2)
       expect(getAllDots(sessionList, 'Failed')).toHaveLength(2)
 
-      expect(within(sessionList).getByRole('button', { name: /Reservar|Reserve/ })).toBeInTheDocument()
+      // No reserve button — the second card is a tappable button with the session name
+      expect(
+        within(sessionList).queryByRole('button', { name: /Reservar|Reserve/ })
+      ).not.toBeInTheDocument()
+      expect(getCard(sessionList, 'Spinning')).toBeInTheDocument()
     })
 
     it('renders failed state with red X dot lit and Retry button', () => {
@@ -470,9 +488,13 @@ describe('SchedulePage', () => {
       expect(failedDot).toHaveClass('bg-red-500')
 
       expect(within(sessionList).getByRole('button', { name: /Reintentar|Retry/ })).toBeInTheDocument()
+
+      // Failed card should NOT be a tappable button (no role="button")
+      const listItems = sessionList.querySelectorAll('li')
+      expect(listItems[0]).not.toHaveAttribute('role', 'button')
     })
 
-    it('disables Reserve button when booking is loading', () => {
+    it('dims the card during loading after tap', async () => {
       scheduleReturn = {
         ...DEFAULT_SCHEDULE_RESULT,
         sessions: MOCK_SESSIONS,
@@ -480,19 +502,23 @@ describe('SchedulePage', () => {
       }
       bookingReturn = {
         create: vi.fn().mockResolvedValue(undefined),
+        cancel: vi.fn().mockResolvedValue(true),
         isLoading: true,
         error: null,
         bookingRequest: null,
       }
 
+      const user = userEvent.setup()
       renderPage()
 
       const sessionList = screen.getByRole('list')
-      const buttons = within(sessionList).getAllByRole('button', { name: /Cargando|Loading/ })
-      expect(buttons).toHaveLength(2)
-      buttons.forEach((btn) => {
-        expect(btn).toBeDisabled()
-      })
+      const yogaCard = getCard(sessionList, 'Yoga')
+      await user.click(yogaCard)
+
+      expect(yogaCard.style.opacity).toBe('0.5')
+      // Second card should not be dimmed
+      const spinningCard = getCard(sessionList, 'Spinning')
+      expect(spinningCard.style.opacity).toBe('1')
     })
 
     it('shows error and Retry button on the targeted row after failed create', async () => {
@@ -503,6 +529,7 @@ describe('SchedulePage', () => {
       }
       bookingReturn = {
         create: vi.fn().mockResolvedValue(undefined),
+        cancel: vi.fn().mockResolvedValue(true),
         isLoading: false,
         error: 'Schedule entry is in the past.',
         bookingRequest: null,
@@ -512,8 +539,8 @@ describe('SchedulePage', () => {
       renderPage()
 
       const sessionList = screen.getByRole('list')
-      const reserveButtons = within(sessionList).getAllByRole('button', { name: /Reservar|Reserve/ })
-      await user.click(reserveButtons[0])
+      const yogaCard = getCard(sessionList, 'Yoga')
+      await user.click(yogaCard)
 
       assertAllInactive(sessionList)
 
@@ -529,6 +556,7 @@ describe('SchedulePage', () => {
       }
       bookingReturn = {
         create: vi.fn().mockResolvedValue(undefined),
+        cancel: vi.fn().mockResolvedValue(true),
         isLoading: false,
         error: null,
         bookingRequest: MOCK_BOOKING_PENDING,
@@ -539,7 +567,126 @@ describe('SchedulePage', () => {
       const sessionList = screen.getByRole('list')
       expect(within(sessionList).getByText(/Reservas a las|Reserves at/)).toBeInTheDocument()
 
-      expect(within(sessionList).getByRole('button', { name: /Reservar|Reserve/ })).toBeInTheDocument()
+      // No reserve button — the second card is tappable only
+      expect(
+        within(sessionList).queryByRole('button', { name: /Reservar|Reserve/ })
+      ).not.toBeInTheDocument()
+    })
+
+    it('calls cancel when a pending card is tapped', async () => {
+      scheduleReturn = {
+        ...DEFAULT_SCHEDULE_RESULT,
+        sessions: [
+          { ...MOCK_SESSIONS[0], bookingRequest: MOCK_BOOKING_PENDING },
+        ],
+        classTypes: MOCK_CLASS_TYPES,
+      }
+      bookingReturn = {
+        create: vi.fn().mockResolvedValue(undefined),
+        cancel: vi.fn().mockResolvedValue(true),
+        isLoading: false,
+        error: null,
+        bookingRequest: null,
+      }
+
+      const user = userEvent.setup()
+      renderPage()
+
+      const sessionList = screen.getByRole('list')
+      const yogaCard = getCard(sessionList, 'Yoga')
+      await user.click(yogaCard)
+
+      expect(bookingReturn.cancel).toHaveBeenCalledWith(MOCK_BOOKING_PENDING.id)
+    })
+
+    it('shows confirmation dialog when a booked card is tapped', async () => {
+      scheduleReturn = {
+        ...DEFAULT_SCHEDULE_RESULT,
+        sessions: [
+          { ...MOCK_SESSIONS[0], bookingRequest: MOCK_BOOKING_BOOKED },
+        ],
+        classTypes: MOCK_CLASS_TYPES,
+      }
+      bookingReturn = {
+        create: vi.fn().mockResolvedValue(undefined),
+        cancel: vi.fn().mockResolvedValue(true),
+        isLoading: false,
+        error: null,
+        bookingRequest: null,
+      }
+
+      const user = userEvent.setup()
+      renderPage()
+
+      const sessionList = screen.getByRole('list')
+      const yogaCard = getCard(sessionList, 'Yoga')
+      await user.click(yogaCard)
+
+      // Confirmation dialog should appear
+      expect(screen.getByText(/Cancel reservation\?|¿Cancelar reserva?/)).toBeInTheDocument()
+      expect(bookingReturn.cancel).not.toHaveBeenCalled()
+
+      // Dismiss dialog
+      const noButton = screen.getByRole('button', { name: 'No' })
+      await user.click(noButton)
+      expect(screen.queryByText(/Cancel reservation\?|¿Cancelar reserva?/)).not.toBeInTheDocument()
+    })
+
+    it('confirms cancel when confirm button is clicked on dialog', async () => {
+      scheduleReturn = {
+        ...DEFAULT_SCHEDULE_RESULT,
+        sessions: [
+          { ...MOCK_SESSIONS[0], bookingRequest: MOCK_BOOKING_BOOKED },
+        ],
+        classTypes: MOCK_CLASS_TYPES,
+      }
+      bookingReturn = {
+        create: vi.fn().mockResolvedValue(undefined),
+        cancel: vi.fn().mockResolvedValue(true),
+        isLoading: false,
+        error: null,
+        bookingRequest: null,
+      }
+
+      const user = userEvent.setup()
+      renderPage()
+
+      const sessionList = screen.getByRole('list')
+      const yogaCard = getCard(sessionList, 'Yoga')
+      await user.click(yogaCard)
+
+      const retryButton = screen.getByRole('button', { name: /Reintentar|Retry/ })
+      await user.click(retryButton)
+
+      expect(bookingReturn.cancel).toHaveBeenCalledWith(MOCK_BOOKING_BOOKED.id)
+      expect(screen.queryByText(/Cancel reservation\?|¿Cancelar reserva?/)).not.toBeInTheDocument()
+    })
+
+    it('does nothing when a failed card is tapped', async () => {
+      scheduleReturn = {
+        ...DEFAULT_SCHEDULE_RESULT,
+        sessions: [
+          { ...MOCK_SESSIONS[0], bookingRequest: MOCK_BOOKING_FAILED },
+        ],
+        classTypes: MOCK_CLASS_TYPES,
+      }
+      bookingReturn = {
+        create: vi.fn().mockResolvedValue(undefined),
+        cancel: vi.fn().mockResolvedValue(true),
+        isLoading: false,
+        error: null,
+        bookingRequest: null,
+      }
+
+      const user = userEvent.setup()
+      renderPage()
+
+      // Failed card is not a button, so getByRole('button', {name: 'Yoga'}) will not find it
+      const listItems = screen.getAllByRole('listitem')
+      await user.click(listItems[0])
+
+      expect(bookingReturn.create).not.toHaveBeenCalled()
+      expect(bookingReturn.cancel).not.toHaveBeenCalled()
     })
   })
 })
