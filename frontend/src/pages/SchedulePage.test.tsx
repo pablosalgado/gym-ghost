@@ -314,7 +314,7 @@ describe('SchedulePage', () => {
       expect(bookingReturn.create).toHaveBeenCalledWith(1)
     })
 
-    it('renders pending state with clock icon and reserve time', () => {
+    it('renders pending state with amber badge, clock icon and reserve time', () => {
       scheduleReturn = {
         ...DEFAULT_SCHEDULE_RESULT,
         sessions: [
@@ -327,13 +327,17 @@ describe('SchedulePage', () => {
       renderPage()
 
       const sessionList = screen.getByRole('list')
+
+      const pendingBadge = within(sessionList).getByLabelText('Pending')
+      expect(pendingBadge).toHaveClass('bg-amber-500')
+
       expect(within(sessionList).getByText(/Reservas a las|Reserves at/)).toBeInTheDocument()
 
       const reserveButtons = within(sessionList).queryAllByRole('button', { name: /Reservar|Reserve/ })
       expect(reserveButtons).toHaveLength(1)
     })
 
-    it('renders booked state with green checkmark', () => {
+    it('renders booked state with green badge and checkmark', () => {
       scheduleReturn = {
         ...DEFAULT_SCHEDULE_RESULT,
         sessions: [
@@ -346,12 +350,15 @@ describe('SchedulePage', () => {
       renderPage()
 
       const sessionList = screen.getByRole('list')
-      expect(within(sessionList).getByLabelText('Booked')).toBeInTheDocument()
+
+      const bookedBadge = within(sessionList).getByLabelText('Booked')
+      expect(bookedBadge).toBeInTheDocument()
+      expect(bookedBadge).toHaveClass('bg-emerald-500')
 
       expect(within(sessionList).getByRole('button', { name: /Reservar|Reserve/ })).toBeInTheDocument()
     })
 
-    it('renders failed state with warning icon and Retry button', () => {
+    it('renders failed state with red badge and Retry button', () => {
       scheduleReturn = {
         ...DEFAULT_SCHEDULE_RESULT,
         sessions: [
@@ -363,6 +370,10 @@ describe('SchedulePage', () => {
       renderPage()
 
       const sessionList = screen.getByRole('list')
+
+      const failedBadge = within(sessionList).getByLabelText('Failed')
+      expect(failedBadge).toHaveClass('bg-red-500')
+
       expect(within(sessionList).getByRole('button', { name: /Reintentar|Retry/ })).toBeInTheDocument()
     })
 
