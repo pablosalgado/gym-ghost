@@ -1,18 +1,24 @@
 /**
- * Derive a deterministic pastel color from a class name.
+ * Derive deterministic class colors from a class name.
  *
- * Uses the Java-style string hash (lossy, stable, no crypto needed)
- * to pick a hue, then outputs an HSLA string with muted saturation
- * and high lightness so the result is always legible on white.
+ * Uses the Java-style string hash to pick a hue, then outputs
+ * two CSS HSLA strings that share the same hue:
+ * - `border`: solid, clearly visible for the left accent
+ * - `background`: very subtle pastel tint for the card surface
  *
- * The color is *always* pastel — saturation and lightness are fixed
- * at 50% / 85%, with 40% alpha so the tint is subtle.
+ * Adding a new class type requires no code changes — the hash
+ * automatically assigns a new hue.
  */
 
 const HUE_RANGE = 360
-const SATURATION = 50
-const LIGHTNESS = 85
-const ALPHA = 0.4
+
+const BORDER_SATURATION = 55
+const BORDER_LIGHTNESS = 65
+const BORDER_ALPHA = 1
+
+const BG_SATURATION = 50
+const BG_LIGHTNESS = 88
+const BG_ALPHA = 0.35
 
 /**
  * Deterministic hash of a string to an integer.
@@ -27,10 +33,13 @@ function hashCode(name: string): number {
 }
 
 /**
- * Map any string to a pastel HSLA color.
- * @returns CSS HSLA function string, e.g. `"hsla(42, 50%, 85%, 0.4)"`
+ * Map any string to a pair of class colors.
+ * @returns `{ border, background }` with CSS HSLA function strings
  */
-export function classNameToColor(name: string): string {
+export function classColors(name: string): { border: string; background: string } {
   const hue = ((hashCode(name) % HUE_RANGE) + HUE_RANGE) % HUE_RANGE
-  return `hsla(${hue}, ${SATURATION}%, ${LIGHTNESS}%, ${ALPHA})`
+  return {
+    border: `hsla(${hue}, ${BORDER_SATURATION}%, ${BORDER_LIGHTNESS}%, ${BORDER_ALPHA})`,
+    background: `hsla(${hue}, ${BG_SATURATION}%, ${BG_LIGHTNESS}%, ${BG_ALPHA})`,
+  }
 }
