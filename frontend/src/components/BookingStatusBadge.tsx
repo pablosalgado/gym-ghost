@@ -1,115 +1,79 @@
-import type { ReactElement } from 'react'
-
 type BookingStatus = 'pending' | 'booked' | 'failed' | 'available'
 
-const STATUS_CONFIG: Record<
-  BookingStatus,
-  { bg: string; icon: ReactElement; label: string }
-> = {
-  available: {
-    bg: 'bg-gray-300',
-    label: 'Available',
-    icon: (
-      <svg
-        className="h-3 w-3"
-        viewBox="0 0 12 12"
-        fill="none"
-        aria-hidden="true"
-      >
-        <circle
-          cx="6"
-          cy="6"
-          r="4.5"
-          stroke="white"
-          strokeWidth="1.5"
-        />
-      </svg>
-    ),
-  },
-  pending: {
-    bg: 'bg-amber-500',
-    label: 'Pending',
-    icon: (
-      <svg
-        className="h-3 w-3"
-        viewBox="0 0 12 12"
-        fill="none"
-        aria-hidden="true"
-      >
-        <circle
-          cx="6"
-          cy="6"
-          r="4.5"
-          stroke="white"
-          strokeWidth="1.5"
-        />
-        <path
-          d="M6 4v2l1.5 1"
-          stroke="white"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
-    ),
-  },
-  booked: {
-    bg: 'bg-emerald-500',
-    label: 'Booked',
-    icon: (
-      <svg
-        className="h-3 w-3"
-        viewBox="0 0 12 12"
-        fill="none"
-        aria-hidden="true"
-      >
-        <path
-          d="M2.5 6l2.5 2.5 4.5-5"
-          stroke="white"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
-    ),
-  },
-  failed: {
-    bg: 'bg-red-500',
-    label: 'Failed',
-    icon: (
-      <svg
-        className="h-3 w-3"
-        viewBox="0 0 12 12"
-        fill="none"
-        aria-hidden="true"
-      >
-        <path
-          d="M6 4v3m0 2h.005"
-          stroke="white"
-          strokeWidth="1.8"
-          strokeLinecap="round"
-        />
-      </svg>
-    ),
-  },
+const DOT_BASE = 'inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full'
+
+const INACTIVE_BG = 'bg-gray-200'
+const INACTIVE_STROKE = 'stroke-gray-400'
+
+const PENDING_BG = 'bg-amber-500'
+const BOOKED_BG = 'bg-emerald-500'
+const FAILED_BG = 'bg-red-500'
+
+interface DotDef {
+  key: BookingStatus
+  label: string
+  activeBg: string
+  icon: React.ReactElement
 }
 
-function StatusDot({ status }: { status: BookingStatus }) {
-  const config = STATUS_CONFIG[status]
+const DOTS: readonly DotDef[] = [
+  {
+    key: 'pending',
+    label: 'Pending',
+    activeBg: PENDING_BG,
+    icon: (
+      <svg className="h-3 w-3" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+        <circle cx="6" cy="6" r="4.5" strokeWidth="1.5" />
+        <path d="M6 4v2l1.5 1" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    ),
+  },
+  {
+    key: 'booked',
+    label: 'Booked',
+    activeBg: BOOKED_BG,
+    icon: (
+      <svg className="h-3 w-3" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+        <path d="M2.5 6l2.5 2.5 4.5-5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    ),
+  },
+  {
+    key: 'failed',
+    label: 'Failed',
+    activeBg: FAILED_BG,
+    icon: (
+      <svg className="h-3 w-3" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+        <path d="M3.5 3.5l5 5m0-5l-5 5" strokeWidth="1.8" strokeLinecap="round" />
+      </svg>
+    ),
+  },
+]
+
+function StatusDot({
+  dot,
+  active,
+}: {
+  dot: DotDef
+  active: boolean
+}) {
+  const bg = active ? dot.activeBg : INACTIVE_BG
+  const stroke = active ? 'stroke-white' : INACTIVE_STROKE
 
   return (
     <span
-      className={`inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${config.bg}`}
-      aria-label={config.label}
+      className={`${DOT_BASE} ${bg} ${stroke}`}
+      aria-label={dot.label}
+      aria-current={active ? 'true' : undefined}
     >
-      {config.icon}
+      {dot.icon}
     </span>
   )
 }
 
 export interface BookingStatusBadgeProps {
   status: BookingStatus
-  /** Formatted time label shown next to the pending icon. */
+  /** Formatted time label shown when pending. */
   pendingLabel?: string
   /** Retry handler for failed status. */
   onRetry?: () => void
@@ -128,30 +92,24 @@ export default function BookingStatusBadge({
   isLoading = false,
   retryLabel = 'Retry',
 }: BookingStatusBadgeProps) {
-  if (status === 'available') {
-    return <StatusDot status="available" />
-  }
+  const showText = status === 'pending' && pendingLabel
+  const showRetry = status === 'failed' && onRetry
 
-  if (status === 'pending') {
-    return (
-      <span className="inline-flex items-center gap-1.5 text-sm">
-        <StatusDot status="pending" />
-        {pendingLabel && (
-          <span className="text-gray-500">{pendingLabel}</span>
-        )}
-      </span>
-    )
-  }
-
-  if (status === 'booked') {
-    return <StatusDot status="booked" />
-  }
-
-  // failed
   return (
-    <span className="inline-flex items-center gap-2">
-      <StatusDot status="failed" />
-      {onRetry && (
+    <span className="inline-flex items-center gap-1.5">
+      <span className="inline-flex items-center gap-0.5">
+        {DOTS.map((dot) => (
+          <StatusDot
+            key={dot.key}
+            dot={dot}
+            active={dot.key === status}
+          />
+        ))}
+      </span>
+      {showText && (
+        <span className="text-sm text-gray-500">{pendingLabel}</span>
+      )}
+      {showRetry && (
         <button
           type="button"
           onClick={onRetry}

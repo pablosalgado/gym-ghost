@@ -3,32 +3,43 @@ import { userEvent } from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import BookingStatusBadge from './BookingStatusBadge'
 
+function activeDot(name: string) {
+  const dot = screen.getByLabelText(name)
+  expect(dot).toHaveAttribute('aria-current', 'true')
+  return dot
+}
+
+function inactiveDot(name: string) {
+  const dot = screen.getByLabelText(name)
+  expect(dot).not.toHaveAttribute('aria-current')
+  return dot
+}
+
 describe('BookingStatusBadge', () => {
   describe('available status', () => {
-    it('renders a gray badge with Available label', () => {
+    it('renders all three dots inactive', () => {
       render(<BookingStatusBadge status="available" />)
 
-      const badge = screen.getByLabelText('Available')
-      expect(badge).toBeInTheDocument()
-      expect(badge).toHaveClass('bg-gray-300')
+      expect(inactiveDot('Pending')).toHaveClass('bg-gray-200')
+      expect(inactiveDot('Booked')).toHaveClass('bg-gray-200')
+      expect(inactiveDot('Failed')).toHaveClass('bg-gray-200')
     })
 
     it('renders no text or buttons', () => {
       render(<BookingStatusBadge status="available" />)
 
-      const badge = screen.getByLabelText('Available')
       expect(screen.queryByRole('button')).not.toBeInTheDocument()
-      expect(badge.parentElement?.textContent).toBe('')
+      expect(screen.getByLabelText('Pending').parentElement?.parentElement?.textContent).toBe('')
     })
   })
 
   describe('pending status', () => {
-    it('renders an amber badge with Pending label', () => {
+    it('lights the pending dot amber, others gray', () => {
       render(<BookingStatusBadge status="pending" />)
 
-      const badge = screen.getByLabelText('Pending')
-      expect(badge).toBeInTheDocument()
-      expect(badge).toHaveClass('bg-amber-500')
+      expect(activeDot('Pending')).toHaveClass('bg-amber-500')
+      expect(inactiveDot('Booked')).toHaveClass('bg-gray-200')
+      expect(inactiveDot('Failed')).toHaveClass('bg-gray-200')
     })
 
     it('renders the pendingLabel text when provided', () => {
@@ -45,29 +56,27 @@ describe('BookingStatusBadge', () => {
     it('does not render text when pendingLabel is omitted', () => {
       render(<BookingStatusBadge status="pending" />)
 
-      const badge = screen.getByLabelText('Pending')
-      const container = badge.parentElement!
-      expect(container.textContent).toBe('')
+      expect(screen.queryByText(/./)).toBeNull()
     })
   })
 
   describe('booked status', () => {
-    it('renders a green badge with Booked label', () => {
+    it('lights the booked dot green, others gray', () => {
       render(<BookingStatusBadge status="booked" />)
 
-      const badge = screen.getByLabelText('Booked')
-      expect(badge).toBeInTheDocument()
-      expect(badge).toHaveClass('bg-emerald-500')
+      expect(activeDot('Booked')).toHaveClass('bg-emerald-500')
+      expect(inactiveDot('Pending')).toHaveClass('bg-gray-200')
+      expect(inactiveDot('Failed')).toHaveClass('bg-gray-200')
     })
   })
 
   describe('failed status', () => {
-    it('renders a red badge with Failed label', () => {
+    it('lights the failed dot red, others gray', () => {
       render(<BookingStatusBadge status="failed" />)
 
-      const badge = screen.getByLabelText('Failed')
-      expect(badge).toBeInTheDocument()
-      expect(badge).toHaveClass('bg-red-500')
+      expect(activeDot('Failed')).toHaveClass('bg-red-500')
+      expect(inactiveDot('Pending')).toHaveClass('bg-gray-200')
+      expect(inactiveDot('Booked')).toHaveClass('bg-gray-200')
     })
 
     it('renders retry button when onRetry is provided', () => {
