@@ -45,7 +45,7 @@ module Api
 
       def destroy
         gym_member = GymMember.find_by!(email: current_user.email)
-        booking_request = BookingRequest.find_by!(id: params[:id], gym_member: gym_member)
+        booking_request = gym_member.booking_requests.find(params[:id])
         booking_request.destroy!
         head :no_content
       end
