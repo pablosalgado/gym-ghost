@@ -2,7 +2,13 @@ require "rails_helper"
 
 RSpec.describe "Schedule", type: :request do
   include_context "with OpenAPI contract"
+
   describe "GET /api/v1/schedule" do
+    let(:frozen_time) { Time.zone.parse("2026-07-21T06:00:00Z") }
+
+    around do |example|
+      travel_to(frozen_time) { example.run }
+    end
     it "returns unauthorized when header is missing" do
       get "/api/v1/schedule"
 
@@ -317,6 +323,100 @@ RSpec.describe "Schedule", type: :request do
       body = response.parsed_body
       expect(body["schedule"].length).to eq(1)
       expect(body["schedule"].first["booking_request"]).to be_nil
+    end
+
+    it "excludes entries with start_time in the past when same day has future entries" do
+      facility = create(:facility)
+      class_type = create(:class_type, name: "Yoga")
+      future_entry = create(
+        :schedule_entry,
+        facility: facility,
+        class_type: class_type,
+        date: Date.new(2026, 7, 21),
+        start_time: Time.zone.parse("2026-07-21 07:00:00 UTC")
+      )
+      create(
+        :schedule_entry,
+        facility: facility,
+        class_type: class_type,
+        date: Date.new(2026, 7, 21),
+        start_time: Time.zone.parse("2026-07-21 05:00:00 UTC")
+      )
+
+      user = create(:user)
+      raw_token = SecureRandom.hex(32)
+      create(:token, user:, digest: Token.digest(raw_token))
+
+      get "/api/v1/schedule",
+          params: { date: "2026-07-21" },
+          headers: { "Authorization" => "Bearer #{raw_token}" }
+
+      expect(response).to have_http_status(:ok)
+      body = response.parsed_body
+      expect(body["schedule"].length).to eq(1)
+      expect(body["schedule"].first["id"]).to eq(future_entry.id)
+    end
+
+    it "returns empty schedule when all entries for the date are in the past" do
+      facility = create(:facility)
+      class_type = create(:class_type, name: "Yoga")
+      create(
+        :schedule_entry,
+        facility: facility,
+        class_type: class_type,
+        date: Date.new(2026, 7, 21),
+        start_time: Time.zone.parse("2026-07-21 04:00:00 UTC")
+      )
+      create(
+        :schedule_entry,
+        facility: facility,
+        class_type: class_type,
+        date: Date.new(2026, 7, 21),
+        start_time: Time.zone.parse("2026-07-21 05:00:00 UTC")
+      )
+
+      user = create(:user)
+      raw_token = SecureRandom.hex(32)
+      create(:token, user:, digest: Token.digest(raw_token))
+
+      get "/api/v1/schedule",
+          params: { date: "2026-07-21" },
+          headers: { "Authorization" => "Bearer #{raw_token}" }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body).to eq("schedule" => [], "class_types" => [])
+    end
+
+    it "returns all entries when all start_times are in the future" do
+      facility = create(:facility)
+      yoga = create(:class_type, name: "Yoga")
+      spinning = create(:class_type, name: "Spinning")
+      create(
+        :schedule_entry,
+        facility: facility,
+        class_type: yoga,
+        date: Date.new(2026, 7, 21),
+        start_time: Time.zone.parse("2026-07-21 07:00:00 UTC")
+      )
+      create(
+        :schedule_entry,
+        facility: facility,
+        class_type: spinning,
+        date: Date.new(2026, 7, 21),
+        start_time: Time.zone.parse("2026-07-21 08:00:00 UTC")
+      )
+
+      user = create(:user)
+      raw_token = SecureRandom.hex(32)
+      create(:token, user:, digest: Token.digest(raw_token))
+
+      get "/api/v1/schedule",
+          params: { date: "2026-07-21" },
+          headers: { "Authorization" => "Bearer #{raw_token}" }
+
+      expect(response).to have_http_status(:ok)
+      body = response.parsed_body
+      expect(body["schedule"].length).to eq(2)
     end
   end
 end
