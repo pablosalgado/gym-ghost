@@ -74,7 +74,7 @@ module Partner
       {
         activity_id:    schedule_entry.partner_activity_id,
         activ_config_id: schedule_entry.activ_config_id,
-        activity_date:  schedule_entry.date.iso8601,
+        activity_date:  schedule_entry.start_time.iso8601,
         token_branch:   schedule_entry.facility.evo_token,
         activity_start: schedule_entry.start_time.strftime("%H:%M"),
         timezone:       "America/Bogota",

@@ -29,7 +29,7 @@ RSpec.describe "Partner::BookingService", integration: true do
 
       # Fetch real schedule entry for today
       schedule_entries = Partner::ActivitiesService.new.fetch(facility: facility, date: Time.zone.today)
-      schedule_entry = schedule_entries.select { |schedule_entry| schedule_entry.start_time > Time.zone.today }.first
+      schedule_entry = schedule_entries.select { |schedule_entry| schedule_entry.start_time > Time.zone.tomorrow.midnight }.first
 
       Partner::BookingService.new(gym_member:).book(schedule_entry:)
 
