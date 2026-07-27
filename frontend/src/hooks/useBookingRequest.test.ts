@@ -279,4 +279,139 @@ describe('useBookingRequest', () => {
     expect(result.current.bookingRequest).toBeNull()
     expect(result.current.error).toBeNull()
   })
+
+  describe('cancel', () => {
+    it('deletes the booking request and returns true on success', async () => {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: true,
+          status: 204,
+        })
+      )
+
+      const { result } = renderHook(() => useBookingRequest())
+
+      // First create a booking request so one is tracked
+      vi.stubGlobal(
+        'fetch',
+        vi.fn()
+          .mockResolvedValueOnce({
+            ok: true,
+            status: 201,
+            json: () => Promise.resolve(MOCK_SUCCESS_RESPONSE),
+          })
+          .mockResolvedValueOnce({
+            ok: true,
+            status: 204,
+          })
+      )
+
+      await act(async () => {
+        await result.current.create(42)
+      })
+
+      expect(result.current.bookingRequest).not.toBeNull()
+
+      const success = await act(() => result.current.cancel(1))
+
+      expect(success).toBe(true)
+      expect(result.current.bookingRequest).toBeNull()
+      expect(result.current.error).toBeNull()
+      expect(result.current.isLoading).toBe(false)
+      expect(fetch).toHaveBeenLastCalledWith('/api/v1/booking_requests/1', {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${AUTH_TOKEN}`,
+        },
+      })
+    })
+
+    it('returns false and sets error on 404 not found', async () => {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 404,
+        })
+      )
+
+      const { result } = renderHook(() => useBookingRequest())
+
+      const success = await act(() => result.current.cancel(999))
+
+      expect(success).toBe(false)
+      expect(result.current.error).toBe('Booking request not found')
+      expect(result.current.isLoading).toBe(false)
+    })
+
+    it('returns false and sets error on other non-ok responses', async () => {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 500,
+          json: () => Promise.resolve({
+            errors: [{ status: 500, title: 'Internal Server Error', detail: 'Something went wrong' }],
+          }),
+        })
+      )
+
+      const { result } = renderHook(() => useBookingRequest())
+
+      const success = await act(() => result.current.cancel(1))
+
+      expect(success).toBe(false)
+      expect(result.current.error).toBe('Something went wrong')
+      expect(result.current.isLoading).toBe(false)
+    })
+
+    it('returns false on network error', async () => {
+      vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('Network down')))
+
+      const { result } = renderHook(() => useBookingRequest())
+
+      const success = await act(() => result.current.cancel(1))
+
+      expect(success).toBe(false)
+      expect(result.current.error).toBe('Network error')
+      expect(result.current.isLoading).toBe(false)
+    })
+
+    it('returns false when no auth token is present', async () => {
+      localStorage.clear()
+
+      const { result } = renderHook(() => useBookingRequest())
+
+      const success = await act(() => result.current.cancel(1))
+
+      expect(success).toBe(false)
+      expect(result.current.error).toBe('Not authenticated')
+      expect(result.current.isLoading).toBe(false)
+    })
+
+    it('returns false when component unmounts during cancel', async () => {
+      let resolveFetch: (value: unknown) => void
+      const fetchPromise = new Promise<unknown>((resolve) => {
+        resolveFetch = resolve
+      })
+      vi.stubGlobal('fetch', vi.fn().mockReturnValue(fetchPromise))
+
+      const { result, unmount } = renderHook(() => useBookingRequest())
+
+      let cancelPromise: Promise<boolean> = Promise.resolve(false)
+      await act(async () => {
+        cancelPromise = result.current.cancel(1)
+      })
+
+      unmount()
+
+      resolveFetch!({ ok: true, status: 204 })
+
+      const success = await cancelPromise
+
+      expect(success).toBe(false)
+      expect(result.current.error).toBeNull()
+    })
+  })
 })

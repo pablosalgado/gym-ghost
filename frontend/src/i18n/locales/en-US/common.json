@@ -37,7 +37,8 @@
     "booking": {
       "reserve": "Reserve",
       "reserveAt": "Reserves at {time}",
-      "retry": "Retry"
+      "retry": "Retry",
+      "cancelConfirm": "Cancel reservation?"
     }
   },
   "nav": {
