@@ -87,7 +87,7 @@ RSpec.describe "BookingRequests", type: :request do
       )
     end
 
-    it "creates a booking request and enqueues a job" do
+    it "schedules job for booking window when it opens in the future" do
       user = create(:user, email: "member@example.com")
       gym_member = create(:gym_member, email: "member@example.com")
       raw_token = SecureRandom.hex(32)
@@ -97,6 +97,43 @@ RSpec.describe "BookingRequests", type: :request do
         :schedule_entry,
         date: Date.new(2026, 8, 1),
         start_time: Time.zone.parse("2026-08-01 07:00:00 UTC")
+      )
+
+      expected_window = Time.zone.parse("2026-07-31 07:00:00 UTC")
+
+      expect {
+        post "/api/v1/booking_requests",
+             params: { schedule_entry_id: schedule_entry.id },
+             headers: { "Authorization" => "Bearer #{raw_token}" },
+             as: :json
+      }.to have_enqueued_job(BookingRequestJob).at(expected_window)
+
+      expect(response).to have_http_status(:created)
+      body = response.parsed_body
+      expect(body["booking_request"]).to include(
+        "status" => "pending",
+        "schedule_entry_id" => schedule_entry.id
+      )
+      expect(body["booking_request"]["id"]).to be_present
+      expect(body["booking_request"]["booking_window_opens_at"]).to be_present
+
+      booking_request = BookingRequest.find(body["booking_request"]["id"])
+      expect(booking_request.gym_member).to eq(gym_member)
+      expect(booking_request.status).to eq("pending")
+      expect(booking_request.booking_window_opens_at.utc.iso8601).to eq("2026-07-31T07:00:00Z")
+    end
+
+    it "enqueues job immediately when booking window is already open" do
+      user = create(:user, email: "member@example.com")
+      gym_member = create(:gym_member, email: "member@example.com")
+      raw_token = SecureRandom.hex(32)
+      create(:token, user:, digest: Token.digest(raw_token))
+
+      # Create a schedule entry starting 1 hour from now — booking window opened 23 hours ago
+      schedule_entry = create(
+        :schedule_entry,
+        date: Date.current,
+        start_time: 1.hour.from_now
       )
 
       expect {
@@ -113,12 +150,11 @@ RSpec.describe "BookingRequests", type: :request do
         "schedule_entry_id" => schedule_entry.id
       )
       expect(body["booking_request"]["id"]).to be_present
-      expect(body["booking_request"]["booking_window_opens_at"]).to be_present
 
       booking_request = BookingRequest.find(body["booking_request"]["id"])
       expect(booking_request.gym_member).to eq(gym_member)
       expect(booking_request.status).to eq("pending")
-      expect(booking_request.booking_window_opens_at.utc.iso8601).to eq("2026-07-31T07:00:00Z")
+      expect(booking_request.booking_window_opens_at).to be_past
     end
 
     it "returns 409 when a duplicate pending booking request exists" do
