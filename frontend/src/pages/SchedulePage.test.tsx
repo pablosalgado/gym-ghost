@@ -283,7 +283,7 @@ describe('SchedulePage', () => {
   })
 
   describe('booking state', () => {
-    it('renders Reserve button for sessions without a booking request', () => {
+    it('renders Reserve button with available badge for sessions without a booking request', () => {
       scheduleReturn = {
         ...DEFAULT_SCHEDULE_RESULT,
         sessions: MOCK_SESSIONS,
@@ -293,6 +293,13 @@ describe('SchedulePage', () => {
       renderPage()
 
       const sessionList = screen.getByRole('list')
+
+      const availableBadges = within(sessionList).getAllByLabelText('Available')
+      expect(availableBadges).toHaveLength(2)
+      availableBadges.forEach((badge) => {
+        expect(badge).toHaveClass('bg-gray-300')
+      })
+
       const reserveButtons = within(sessionList).getAllByRole('button', { name: /Reservar|Reserve/ })
       expect(reserveButtons).toHaveLength(2)
     })
@@ -331,6 +338,9 @@ describe('SchedulePage', () => {
       const pendingBadge = within(sessionList).getByLabelText('Pending')
       expect(pendingBadge).toHaveClass('bg-amber-500')
 
+      const availableBadge = within(sessionList).getByLabelText('Available')
+      expect(availableBadge).toHaveClass('bg-gray-300')
+
       expect(within(sessionList).getByText(/Reservas a las|Reserves at/)).toBeInTheDocument()
 
       const reserveButtons = within(sessionList).queryAllByRole('button', { name: /Reservar|Reserve/ })
@@ -354,6 +364,9 @@ describe('SchedulePage', () => {
       const bookedBadge = within(sessionList).getByLabelText('Booked')
       expect(bookedBadge).toBeInTheDocument()
       expect(bookedBadge).toHaveClass('bg-emerald-500')
+
+      const availableBadge = within(sessionList).getByLabelText('Available')
+      expect(availableBadge).toHaveClass('bg-gray-300')
 
       expect(within(sessionList).getByRole('button', { name: /Reservar|Reserve/ })).toBeInTheDocument()
     })
@@ -419,6 +432,9 @@ describe('SchedulePage', () => {
       const sessionList = screen.getByRole('list')
       const reserveButtons = within(sessionList).getAllByRole('button', { name: /Reservar|Reserve/ })
       await user.click(reserveButtons[0])
+
+      const availableBadges = within(sessionList).getAllByLabelText('Available')
+      expect(availableBadges).toHaveLength(2)
 
       expect(within(sessionList).getByText('Schedule entry is in the past.')).toBeInTheDocument()
       expect(within(sessionList).getByRole('button', { name: /Reintentar|Retry/ })).toBeInTheDocument()

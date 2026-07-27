@@ -1,11 +1,31 @@
 import type { ReactElement } from 'react'
 
-type BookingStatus = 'pending' | 'booked' | 'failed'
+type BookingStatus = 'pending' | 'booked' | 'failed' | 'available'
 
 const STATUS_CONFIG: Record<
   BookingStatus,
   { bg: string; icon: ReactElement; label: string }
 > = {
+  available: {
+    bg: 'bg-gray-300',
+    label: 'Available',
+    icon: (
+      <svg
+        className="h-3 w-3"
+        viewBox="0 0 12 12"
+        fill="none"
+        aria-hidden="true"
+      >
+        <circle
+          cx="6"
+          cy="6"
+          r="4.5"
+          stroke="white"
+          strokeWidth="1.5"
+        />
+      </svg>
+    ),
+  },
   pending: {
     bg: 'bg-amber-500',
     label: 'Pending',
@@ -108,6 +128,10 @@ export default function BookingStatusBadge({
   isLoading = false,
   retryLabel = 'Retry',
 }: BookingStatusBadgeProps) {
+  if (status === 'available') {
+    return <StatusDot status="available" />
+  }
+
   if (status === 'pending') {
     return (
       <span className="inline-flex items-center gap-1.5 text-sm">

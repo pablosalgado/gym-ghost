@@ -4,6 +4,24 @@ import { describe, expect, it, vi } from 'vitest'
 import BookingStatusBadge from './BookingStatusBadge'
 
 describe('BookingStatusBadge', () => {
+  describe('available status', () => {
+    it('renders a gray badge with Available label', () => {
+      render(<BookingStatusBadge status="available" />)
+
+      const badge = screen.getByLabelText('Available')
+      expect(badge).toBeInTheDocument()
+      expect(badge).toHaveClass('bg-gray-300')
+    })
+
+    it('renders no text or buttons', () => {
+      render(<BookingStatusBadge status="available" />)
+
+      const badge = screen.getByLabelText('Available')
+      expect(screen.queryByRole('button')).not.toBeInTheDocument()
+      expect(badge.parentElement?.textContent).toBe('')
+    })
+  })
+
   describe('pending status', () => {
     it('renders an amber badge with Pending label', () => {
       render(<BookingStatusBadge status="pending" />)

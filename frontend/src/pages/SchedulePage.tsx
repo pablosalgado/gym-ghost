@@ -246,6 +246,7 @@ export default function SchedulePage() {
 
                 {!activeBookingRequest && isTarget && booking.error && (
                   <div className="flex items-center gap-2">
+                    <BookingStatusBadge status="available" />
                     <span className="text-sm text-red-600">{booking.error}</span>
                     <button
                       type="button"
@@ -259,14 +260,17 @@ export default function SchedulePage() {
                 )}
 
                 {!activeBookingRequest && !(isTarget && booking.error) && (
-                  <button
-                    type="button"
-                    onClick={() => handleReserve(sessionId)}
-                    disabled={booking.isLoading}
-                    className="min-h-11 min-w-11 rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
-                  >
-                    {booking.isLoading ? t('common.loading') : t('schedule.booking.reserve')}
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <BookingStatusBadge status="available" />
+                    <button
+                      type="button"
+                      onClick={() => handleReserve(sessionId)}
+                      disabled={booking.isLoading}
+                      className="min-h-11 min-w-11 rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+                    >
+                      {booking.isLoading ? t('common.loading') : t('schedule.booking.reserve')}
+                    </button>
+                  </div>
                 )}
               </div>
             </li>
