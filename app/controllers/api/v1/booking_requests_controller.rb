@@ -31,7 +31,11 @@ module Api
 
         booking_request.save!
 
-        BookingRequestJob.set(wait_until: booking_window_opens_at).perform_later(booking_request.id)
+        if booking_window_opens_at.past?
+          BookingRequestJob.perform_later(booking_request.id)
+        else
+          BookingRequestJob.set(wait_until: booking_window_opens_at).perform_later(booking_request.id)
+        end
 
         render json: {
           booking_request: {
