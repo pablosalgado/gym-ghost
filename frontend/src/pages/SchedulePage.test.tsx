@@ -283,7 +283,29 @@ describe('SchedulePage', () => {
   })
 
   describe('booking state', () => {
-    it('renders Reserve button for sessions without a booking request', () => {
+    function getAllDots(
+      list: HTMLElement,
+      name: string,
+    ) {
+      return within(list).getAllByLabelText(name)
+    }
+
+    function getActiveDot(list: HTMLElement, name: string) {
+      const dots = within(list).getAllByLabelText(name)
+      const active = dots.find((d) => d.getAttribute('aria-current') === 'true')
+      if (!active) throw new Error(`No active dot found for label "${name}"`)
+      return active
+    }
+
+    function assertAllInactive(list: HTMLElement) {
+      ;(['Pending', 'Booked', 'Failed'] as const).forEach((label) => {
+        getAllDots(list, label).forEach((dot) => {
+          expect(dot).not.toHaveAttribute('aria-current')
+        })
+      })
+    }
+
+    it('renders all three dots inactive plus Reserve button for sessions without a booking request', () => {
       scheduleReturn = {
         ...DEFAULT_SCHEDULE_RESULT,
         sessions: MOCK_SESSIONS,
@@ -293,6 +315,12 @@ describe('SchedulePage', () => {
       renderPage()
 
       const sessionList = screen.getByRole('list')
+
+      assertAllInactive(sessionList)
+      expect(getAllDots(sessionList, 'Pending')).toHaveLength(2)
+      expect(getAllDots(sessionList, 'Booked')).toHaveLength(2)
+      expect(getAllDots(sessionList, 'Failed')).toHaveLength(2)
+
       const reserveButtons = within(sessionList).getAllByRole('button', { name: /Reservar|Reserve/ })
       expect(reserveButtons).toHaveLength(2)
     })
@@ -314,7 +342,7 @@ describe('SchedulePage', () => {
       expect(bookingReturn.create).toHaveBeenCalledWith(1)
     })
 
-    it('renders pending state with clock icon and reserve time', () => {
+    it('renders pending state with amber clock dot lit and reserve time', () => {
       scheduleReturn = {
         ...DEFAULT_SCHEDULE_RESULT,
         sessions: [
@@ -327,13 +355,26 @@ describe('SchedulePage', () => {
       renderPage()
 
       const sessionList = screen.getByRole('list')
+
+      const pendingDot = getActiveDot(sessionList, 'Pending')
+      expect(pendingDot).toHaveClass('bg-amber-500')
+
+      const pendingDots = getAllDots(sessionList, 'Pending')
+      expect(pendingDots).toHaveLength(2)
+      const [activePending, inactivePending] = pendingDots
+      expect(activePending).toHaveAttribute('aria-current', 'true')
+      expect(inactivePending).not.toHaveAttribute('aria-current')
+
+      expect(getAllDots(sessionList, 'Booked')).toHaveLength(2)
+      expect(getAllDots(sessionList, 'Failed')).toHaveLength(2)
+
       expect(within(sessionList).getByText(/Reservas a las|Reserves at/)).toBeInTheDocument()
 
       const reserveButtons = within(sessionList).queryAllByRole('button', { name: /Reservar|Reserve/ })
       expect(reserveButtons).toHaveLength(1)
     })
 
-    it('renders booked state with green checkmark', () => {
+    it('renders booked state with green check dot lit', () => {
       scheduleReturn = {
         ...DEFAULT_SCHEDULE_RESULT,
         sessions: [
@@ -346,12 +387,18 @@ describe('SchedulePage', () => {
       renderPage()
 
       const sessionList = screen.getByRole('list')
-      expect(within(sessionList).getByLabelText('Booked')).toBeInTheDocument()
+
+      const bookedDot = getActiveDot(sessionList, 'Booked')
+      expect(bookedDot).toHaveClass('bg-emerald-500')
+
+      expect(getAllDots(sessionList, 'Pending')).toHaveLength(2)
+      expect(getAllDots(sessionList, 'Booked')).toHaveLength(2)
+      expect(getAllDots(sessionList, 'Failed')).toHaveLength(2)
 
       expect(within(sessionList).getByRole('button', { name: /Reservar|Reserve/ })).toBeInTheDocument()
     })
 
-    it('renders failed state with warning icon and Retry button', () => {
+    it('renders failed state with red X dot lit and Retry button', () => {
       scheduleReturn = {
         ...DEFAULT_SCHEDULE_RESULT,
         sessions: [
@@ -363,6 +410,10 @@ describe('SchedulePage', () => {
       renderPage()
 
       const sessionList = screen.getByRole('list')
+
+      const failedDot = getActiveDot(sessionList, 'Failed')
+      expect(failedDot).toHaveClass('bg-red-500')
+
       expect(within(sessionList).getByRole('button', { name: /Reintentar|Retry/ })).toBeInTheDocument()
     })
 
@@ -408,6 +459,8 @@ describe('SchedulePage', () => {
       const sessionList = screen.getByRole('list')
       const reserveButtons = within(sessionList).getAllByRole('button', { name: /Reservar|Reserve/ })
       await user.click(reserveButtons[0])
+
+      assertAllInactive(sessionList)
 
       expect(within(sessionList).getByText('Schedule entry is in the past.')).toBeInTheDocument()
       expect(within(sessionList).getByRole('button', { name: /Reintentar|Retry/ })).toBeInTheDocument()

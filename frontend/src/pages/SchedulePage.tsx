@@ -12,6 +12,7 @@ import { useCities } from '../hooks/useCities'
 import { useFacilities } from '../hooks/useFacilities'
 import { useSchedule } from '../hooks/useSchedule'
 import { useBookingRequest } from '../hooks/useBookingRequest'
+import BookingStatusBadge from '../components/BookingStatusBadge'
 
 const DEFAULT_CITY_NAME = 'BOGOTÁ, D.C.'
 const DEFAULT_FACILITY_NAME = 'C.C Parque La Colina'
@@ -224,42 +225,28 @@ export default function SchedulePage() {
               </div>
               <div className="shrink-0">
                 {activeBookingRequest && activeBookingRequest.status === 'pending' && (
-                  <span className="flex items-center gap-1 text-sm text-gray-500">
-                    <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <span>{t('schedule.booking.reserveAt', { time: formatTimeOfDay(activeBookingRequest.booking_window_opens_at, locale, DEFAULT_TIME_ZONE) })}</span>
-                  </span>
+                  <BookingStatusBadge
+                    status="pending"
+                    pendingLabel={t('schedule.booking.reserveAt', { time: formatTimeOfDay(activeBookingRequest.booking_window_opens_at, locale, DEFAULT_TIME_ZONE) })}
+                  />
                 )}
 
                 {activeBookingRequest && activeBookingRequest.status === 'booked' && (
-                  <span className="flex items-center gap-1 text-sm text-green-600" aria-label="Booked">
-                    <svg className="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                    </svg>
-                  </span>
+                  <BookingStatusBadge status="booked" />
                 )}
 
                 {activeBookingRequest && activeBookingRequest.status === 'failed' && (
-                  <div className="flex items-center gap-2">
-                    <span className="flex items-center gap-1 text-sm text-red-600">
-                      <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                      </svg>
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => handleReserve(sessionId)}
-                      disabled={booking.isLoading}
-                      className="min-h-11 min-w-11 rounded bg-red-100 px-3 py-2 text-sm font-medium text-red-700 hover:bg-red-200 disabled:opacity-50"
-                    >
-                      {t('schedule.booking.retry')}
-                    </button>
-                  </div>
+                  <BookingStatusBadge
+                    status="failed"
+                    onRetry={() => handleReserve(sessionId)}
+                    isLoading={booking.isLoading}
+                    retryLabel={t('schedule.booking.retry')}
+                  />
                 )}
 
                 {!activeBookingRequest && isTarget && booking.error && (
                   <div className="flex items-center gap-2">
+                    <BookingStatusBadge status="available" />
                     <span className="text-sm text-red-600">{booking.error}</span>
                     <button
                       type="button"
@@ -273,14 +260,17 @@ export default function SchedulePage() {
                 )}
 
                 {!activeBookingRequest && !(isTarget && booking.error) && (
-                  <button
-                    type="button"
-                    onClick={() => handleReserve(sessionId)}
-                    disabled={booking.isLoading}
-                    className="min-h-11 min-w-11 rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
-                  >
-                    {booking.isLoading ? t('common.loading') : t('schedule.booking.reserve')}
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <BookingStatusBadge status="available" />
+                    <button
+                      type="button"
+                      onClick={() => handleReserve(sessionId)}
+                      disabled={booking.isLoading}
+                      className="min-h-11 min-w-11 rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+                    >
+                      {booking.isLoading ? t('common.loading') : t('schedule.booking.reserve')}
+                    </button>
+                  </div>
                 )}
               </div>
             </li>
