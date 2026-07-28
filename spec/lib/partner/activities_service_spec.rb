@@ -208,5 +208,224 @@ RSpec.describe Partner::ActivitiesService do
           .to raise_error(Partner::ActivitiesError, "Missing data array in partner response")
       end
     end
+
+    context "with a mixed payload (holiday and non-holiday items)" do
+      let(:holiday_date) { Date.new(2026, 7, 20) }
+      let(:sunday_date)  { Date.new(2026, 7, 19) }
+
+      let(:mixed_payload) do
+        {
+          "status" => "OK",
+          "data" => [
+            {
+              "activity_name" => "Spinning",
+              "branch_id"     => 1,
+              "activity_id"   => "act-uuid-001",
+              "activ_config_id" => 100,
+              "start_time"    => "2026-07-21T07:00:00Z",
+              "date"          => "2026-07-21"
+            },
+            {
+              "activity_name" => "Yoga",
+              "branch_id"     => 1,
+              "activity_id"   => "act-uuid-002",
+              "activ_config_id" => 200,
+              "start_time"    => "2026-07-20T08:00:00Z",
+              "date"          => "2026-07-20"
+            }
+          ]
+        }
+      end
+
+      let!(:sunday_entry) do
+        sunday_ct = create(:class_type, name: "Spinning")
+        create(:schedule_entry,
+               facility: facility,
+               class_type: sunday_ct,
+               start_time: Time.zone.parse("2026-07-19T07:00:00Z"),
+               date: sunday_date,
+               partner_activity_id: "act-sunday-001",
+               activ_config_id: 999)
+      end
+
+      before do
+        response = instance_double(HTTParty::Response,
+                                   success?: true,
+                                   code: 200,
+                                   parsed_response: mixed_payload)
+        allow(described_class).to receive(:get).and_return(response)
+        allow(HolidayService).to receive(:holiday?).and_return(false)
+        allow(HolidayService).to receive(:holiday?).with(holiday_date).and_return(true)
+      end
+
+      it "processes non-holiday items normally" do
+        entries = service.fetch(facility:, date:)
+
+        non_holiday = entries.find { |e| e.date == Date.new(2026, 7, 21) }
+        expect(non_holiday).to be_present
+        expect(non_holiday.class_type.name).to eq("Spinning")
+      end
+
+      it "skips holiday items — no partner data inserted for the holiday date" do
+        service.fetch(facility:, date:)
+
+        holiday_entries = ScheduleEntry.where(facility:, date: holiday_date)
+        expect(holiday_entries.count).to eq(1)
+        expect(holiday_entries.first.partner_activity_id).to eq("act-sunday-001")
+      end
+
+      it "backfills from the last Sunday for the holiday date" do
+        service.fetch(facility:, date:)
+
+        backfilled = ScheduleEntry.find_by(facility:, date: holiday_date)
+        expect(backfilled).to be_present
+        expect(backfilled.class_type).to eq(sunday_entry.class_type)
+        expect(backfilled.partner_activity_id).to eq(sunday_entry.partner_activity_id)
+        expect(backfilled.activ_config_id).to eq(sunday_entry.activ_config_id)
+        expect(backfilled.start_time.to_date).to eq(holiday_date)
+      end
+
+      it "is idempotent — re-fetching does not duplicate backfill rows" do
+        service.fetch(facility:, date:)
+        service.fetch(facility:, date:)
+
+        expect(ScheduleEntry.where(facility:, date: holiday_date).count).to eq(1)
+      end
+
+      it "returns entries only for non-holiday items (backfilled entries excluded)" do
+        entries = service.fetch(facility:, date:)
+        expect(entries.length).to eq(1)
+        expect(entries.first.date).to eq(Date.new(2026, 7, 21))
+      end
+    end
+
+    context "when the last Sunday has no entries" do
+      let(:holiday_only_payload) do
+        {
+          "status" => "OK",
+          "data" => [
+            {
+              "activity_name" => "Spinning",
+              "branch_id"     => 1,
+              "activity_id"   => "act-uuid-001",
+              "activ_config_id" => 100,
+              "start_time"    => "2026-07-20T07:00:00Z",
+              "date"          => "2026-07-20"
+            }
+          ]
+        }
+      end
+
+      before do
+        response = instance_double(HTTParty::Response,
+                                   success?: true,
+                                   code: 200,
+                                   parsed_response: holiday_only_payload)
+        allow(described_class).to receive(:get).and_return(response)
+        allow(HolidayService).to receive(:holiday?).and_return(false)
+        allow(HolidayService).to receive(:holiday?).with(Date.new(2026, 7, 20)).and_return(true)
+      end
+
+      it "skips the holiday item silently without raising an error" do
+        expect { service.fetch(facility:, date:) }.not_to raise_error
+      end
+
+      it "does not create any backfill entries" do
+        service.fetch(facility:, date:)
+        expect(ScheduleEntry.where(facility:, date: Date.new(2026, 7, 20))).to be_empty
+      end
+    end
+
+    context "when the last Sunday is also a holiday" do
+      let(:holiday_date)  { Date.new(2026, 7, 20) }
+      let(:sunday_date)   { Date.new(2026, 7, 19) }
+      let(:saturday_date) { Date.new(2026, 7, 18) }
+
+      let(:holiday_only_payload) do
+        {
+          "status" => "OK",
+          "data" => [
+            {
+              "activity_name" => "Spinning",
+              "branch_id"     => 1,
+              "activity_id"   => "act-uuid-001",
+              "activ_config_id" => 100,
+              "start_time"    => "2026-07-20T07:00:00Z",
+              "date"          => "2026-07-20"
+            }
+          ]
+        }
+      end
+
+      let!(:saturday_entry) do
+        ct = create(:class_type, name: "Spinning")
+        create(:schedule_entry,
+               facility: facility,
+               class_type: ct,
+               start_time: Time.zone.parse("2026-07-18T07:00:00Z"),
+               date: saturday_date,
+               partner_activity_id: "act-sat-001",
+               activ_config_id: 888)
+      end
+
+      before do
+        response = instance_double(HTTParty::Response,
+                                   success?: true,
+                                   code: 200,
+                                   parsed_response: holiday_only_payload)
+        allow(described_class).to receive(:get).and_return(response)
+        allow(HolidayService).to receive(:holiday?).and_return(false)
+        allow(HolidayService).to receive(:holiday?).with(holiday_date).and_return(true)
+        allow(HolidayService).to receive(:holiday?).with(sunday_date).and_return(true)
+      end
+
+      it "walks back day-by-day and copies entries from the first non-holiday source" do
+        service.fetch(facility:, date: holiday_date)
+
+        backfilled = ScheduleEntry.find_by(facility:, date: holiday_date)
+        expect(backfilled).to be_present
+        expect(backfilled.class_type).to eq(saturday_entry.class_type)
+        expect(backfilled.partner_activity_id).to eq(saturday_entry.partner_activity_id)
+      end
+    end
+
+    context "when an item has no date (falls back to the date parameter)" do
+      let(:payload_without_item_date) do
+        {
+          "status" => "OK",
+          "data" => [
+            {
+              "activity_name" => "Spinning",
+              "branch_id"     => 1,
+              "activity_id"   => "act-uuid-001",
+              "activ_config_id" => 100,
+              "start_time"    => "2026-07-21T07:00:00Z"
+            }
+          ]
+        }
+      end
+
+      before do
+        response = instance_double(HTTParty::Response,
+                                   success?: true,
+                                   code: 200,
+                                   parsed_response: payload_without_item_date)
+        allow(described_class).to receive(:get).and_return(response)
+        allow(HolidayService).to receive(:holiday?).and_return(false)
+      end
+
+      it "uses the date parameter and processes normally when not a holiday" do
+        entries = service.fetch(facility:, date:)
+        expect(entries.length).to eq(1)
+        expect(entries.first.date).to eq(date)
+      end
+
+      it "skips the item when the date parameter is a holiday" do
+        allow(HolidayService).to receive(:holiday?).with(date).and_return(true)
+
+        entries = service.fetch(facility:, date:)
+        expect(entries).to be_empty
+      end
+    end
   end
 end

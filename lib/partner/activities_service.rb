@@ -22,6 +22,8 @@ module Partner
 
     ACTIVITIES_PATH = "/api/v1/activities/generic"
 
+    NON_HOLIDAY_SUNDAY_WALK_BACK_LIMIT = 7
+
     def initialize; end
 
     # Fetches activities for the given facility and date.
@@ -41,7 +43,9 @@ module Partner
       data = payload["data"]
       raise ActivitiesError, "Missing data array in partner response" unless data.is_a?(Array)
 
-      data.each_with_object([]) do |item, entries|
+      holiday_dates = Set.new
+
+      entries = data.each_with_object([]) do |item, result|
         next if item["activity_name"].blank?
 
         class_type = ClassType.find_or_create_by!(name: item["activity_name"])
@@ -50,8 +54,12 @@ module Partner
         next if facility_record.nil?
 
         start_time = item["start_time"]
-        entry_date = item["date"] || date
-        entry_date = Date.parse(entry_date.to_s) if entry_date.is_a?(String)
+        entry_date = resolve_entry_date(item, date)
+
+        if HolidayService.holiday?(entry_date)
+          holiday_dates << [ facility_record.id, entry_date ]
+          next
+        end
 
         entry = ScheduleEntry.find_or_initialize_by(
           facility: facility_record,
@@ -63,11 +71,66 @@ module Partner
         entry.activ_config_id = item["activ_config_id"]
         entry.save!
 
-        entries << entry
+        result << entry
       end
+
+      backfill_holidays(holiday_dates)
+
+      entries
     end
 
     private
+
+    def resolve_entry_date(item, fallback_date)
+      raw = item["date"] || fallback_date
+      raw.is_a?(String) ? Date.parse(raw) : raw
+    end
+
+    def backfill_holidays(holiday_dates)
+      holiday_dates.each do |facility_id, holiday_date|
+        source_date = find_source_sunday(holiday_date)
+        next unless source_date
+
+        sunday_entries = ScheduleEntry.where(facility_id: facility_id, date: source_date)
+        next if sunday_entries.none?
+
+        sunday_entries.each do |sunday_entry|
+          holiday_start = same_time_on_date(sunday_entry.start_time, holiday_date)
+
+          entry = ScheduleEntry.find_or_initialize_by(
+            facility_id: facility_id,
+            class_type: sunday_entry.class_type,
+            start_time: holiday_start
+          )
+          entry.date = holiday_date
+          entry.partner_activity_id = sunday_entry.partner_activity_id
+          entry.activ_config_id = sunday_entry.activ_config_id
+          entry.save!
+        end
+      end
+    end
+
+    def find_source_sunday(holiday_date)
+      candidate = holiday_date.prev_occurring(:sunday)
+      attempts = 0
+
+      while attempts < NON_HOLIDAY_SUNDAY_WALK_BACK_LIMIT
+        return candidate unless HolidayService.holiday?(candidate)
+
+        candidate = candidate.prev_day
+        attempts += 1
+      end
+
+      nil
+    end
+
+    def same_time_on_date(datetime, new_date)
+      local = datetime.in_time_zone(HolidayService::DEFAULT_TIME_ZONE)
+      Time.zone.local(
+        new_date.year, new_date.month, new_date.day,
+        local.hour, local.min, local.sec
+      )
+    end
 
     def request_activities(facility, date)
       activities_date = date.is_a?(String) ? date : date.iso8601
