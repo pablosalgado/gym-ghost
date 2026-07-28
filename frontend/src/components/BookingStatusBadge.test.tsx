@@ -29,7 +29,6 @@ describe('BookingStatusBadge', () => {
       render(<BookingStatusBadge status="available" />)
 
       expect(screen.queryByRole('button')).not.toBeInTheDocument()
-      expect(screen.getByLabelText('Pending').parentElement?.parentElement?.textContent).toBe('')
     })
   })
 
@@ -40,23 +39,6 @@ describe('BookingStatusBadge', () => {
       expect(activeDot('Pending')).toHaveClass('bg-amber-500')
       expect(inactiveDot('Booked')).toHaveClass('bg-gray-200')
       expect(inactiveDot('Failed')).toHaveClass('bg-gray-200')
-    })
-
-    it('renders the pendingLabel text when provided', () => {
-      render(
-        <BookingStatusBadge
-          status="pending"
-          pendingLabel="Reservas a las 10:00"
-        />
-      )
-
-      expect(screen.getByText('Reservas a las 10:00')).toBeInTheDocument()
-    })
-
-    it('does not render text when pendingLabel is omitted', () => {
-      render(<BookingStatusBadge status="pending" />)
-
-      expect(screen.queryByText(/./)).toBeNull()
     })
   })
 
@@ -77,45 +59,6 @@ describe('BookingStatusBadge', () => {
       expect(activeDot('Failed')).toHaveClass('bg-red-500')
       expect(inactiveDot('Pending')).toHaveClass('bg-gray-200')
       expect(inactiveDot('Booked')).toHaveClass('bg-gray-200')
-    })
-
-    it('renders retry button when onRetry is provided', () => {
-      const onRetry = vi.fn()
-      render(
-        <BookingStatusBadge status="failed" onRetry={onRetry} retryLabel="Reintentar" />
-      )
-
-      const button = screen.getByRole('button', { name: 'Reintentar' })
-      expect(button).toBeInTheDocument()
-
-      button.click()
-      expect(onRetry).toHaveBeenCalledOnce()
-    })
-
-    it('disables retry button when loading', () => {
-      render(
-        <BookingStatusBadge
-          status="failed"
-          onRetry={vi.fn()}
-          isLoading={true}
-          retryLabel="Reintentar"
-        />
-      )
-
-      const button = screen.getByRole('button', { name: 'Reintentar' })
-      expect(button).toBeDisabled()
-    })
-
-    it('does not render retry button when onRetry is omitted', () => {
-      render(<BookingStatusBadge status="failed" />)
-
-      expect(screen.queryByRole('button')).not.toBeInTheDocument()
-    })
-
-    it('uses default retryLabel "Retry" when not provided', () => {
-      render(<BookingStatusBadge status="failed" onRetry={vi.fn()} />)
-
-      expect(screen.getByRole('button', { name: 'Retry' })).toBeInTheDocument()
     })
   })
 })

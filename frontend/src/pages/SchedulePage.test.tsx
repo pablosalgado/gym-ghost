@@ -409,7 +409,7 @@ describe('SchedulePage', () => {
       expect(bookingReturn.create).toHaveBeenCalledWith(1)
     })
 
-    it('renders pending state with amber clock dot lit and reserve time', () => {
+    it('renders pending state with amber clock dot lit', () => {
       scheduleReturn = {
         ...DEFAULT_SCHEDULE_RESULT,
         sessions: [
@@ -434,8 +434,6 @@ describe('SchedulePage', () => {
 
       expect(getAllDots(sessionList, 'Booked')).toHaveLength(2)
       expect(getAllDots(sessionList, 'Failed')).toHaveLength(2)
-
-      expect(within(sessionList).getByText(/Reservas a las|Reserves at/)).toBeInTheDocument()
 
       // No reserve buttons — the second card is just tappable, not a labelled button with "Reserve"
       expect(
@@ -471,7 +469,7 @@ describe('SchedulePage', () => {
       expect(getCard(sessionList, 'Spinning')).toBeInTheDocument()
     })
 
-    it('renders failed state with red X dot lit and Retry button', () => {
+    it('renders failed state with red X dot lit', () => {
       scheduleReturn = {
         ...DEFAULT_SCHEDULE_RESULT,
         sessions: [
@@ -486,8 +484,6 @@ describe('SchedulePage', () => {
 
       const failedDot = getActiveDot(sessionList, 'Failed')
       expect(failedDot).toHaveClass('bg-red-500')
-
-      expect(within(sessionList).getByRole('button', { name: /Reintentar|Retry/ })).toBeInTheDocument()
 
       // Failed card should NOT be a tappable button (no role="button")
       const listItems = sessionList.querySelectorAll('li')
@@ -565,7 +561,6 @@ describe('SchedulePage', () => {
       renderPage()
 
       const sessionList = screen.getByRole('list')
-      expect(within(sessionList).getByText(/Reservas a las|Reserves at/)).toBeInTheDocument()
 
       // No reserve button — the second card is tappable only
       expect(

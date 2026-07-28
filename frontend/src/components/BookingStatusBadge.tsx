@@ -86,15 +86,7 @@ export interface BookingStatusBadgeProps {
 export type { BookingStatus }
 
 export default function BookingStatusBadge({
-  status,
-  pendingLabel,
-  onRetry,
-  isLoading = false,
-  retryLabel = 'Retry',
-}: BookingStatusBadgeProps) {
-  const showText = status === 'pending' && pendingLabel
-  const showRetry = status === 'failed' && onRetry
-
+  status}: BookingStatusBadgeProps) {
   return (
     <span className="inline-flex items-center gap-1.5">
       <span className="inline-flex items-center gap-0.5">
@@ -106,19 +98,6 @@ export default function BookingStatusBadge({
           />
         ))}
       </span>
-      {showText && (
-        <span className="text-sm text-gray-500">{pendingLabel}</span>
-      )}
-      {showRetry && (
-        <button
-          type="button"
-          onClick={onRetry}
-          disabled={isLoading}
-          className="min-h-11 min-w-11 rounded bg-red-100 px-3 py-2 text-sm font-medium text-red-700 hover:bg-red-200 disabled:opacity-50"
-        >
-          {retryLabel}
-        </button>
-      )}
     </span>
   )
 }
