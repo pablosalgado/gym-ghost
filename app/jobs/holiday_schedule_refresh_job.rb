@@ -22,7 +22,9 @@ class HolidayScheduleRefreshJob < ApplicationJob
   # through midnights. Add explicit retry on a future case-by-case basis
   # only.
   def perform
-    tomorrow = bogota_tomorrow
+    # The recurring schedule fires at 05:05 UTC (00:05 America/Bogota),
+    # so the next calendar day in UTC is also the next day in Colombia.
+    tomorrow = Time.current.tomorrow.to_date
 
     unless HolidayService.holiday?(tomorrow)
       Rails.logger.info(log_message(tomorrow, "not a holiday — nothing to refresh"))
@@ -49,10 +51,6 @@ class HolidayScheduleRefreshJob < ApplicationJob
   end
 
   private
-
-  def bogota_tomorrow
-    Time.current.in_time_zone(HolidayService::DEFAULT_TIME_ZONE).tomorrow.to_date
-  end
 
   def booking_request_facility_ids(date)
     BookingRequest
