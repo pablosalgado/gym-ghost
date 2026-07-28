@@ -1,6 +1,6 @@
 type BookingStatus = 'pending' | 'booked' | 'failed' | 'available'
 
-const DOT_BASE = 'inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full'
+const DOT_BASE = 'inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full'
 
 const INACTIVE_BG = 'bg-gray-200'
 const INACTIVE_STROKE = 'stroke-gray-400'
@@ -22,7 +22,7 @@ const DOTS: readonly DotDef[] = [
     label: 'Pending',
     activeBg: PENDING_BG,
     icon: (
-      <svg className="h-3 w-3" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+      <svg className="h-6 w-6" viewBox="0 0 12 12" fill="none" aria-hidden="true">
         <circle cx="6" cy="6" r="4.5" strokeWidth="1.5" />
         <path d="M6 4v2l1.5 1" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
@@ -33,7 +33,7 @@ const DOTS: readonly DotDef[] = [
     label: 'Booked',
     activeBg: BOOKED_BG,
     icon: (
-      <svg className="h-3 w-3" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+      <svg className="h-6 w-6" viewBox="0 0 12 12" fill="none" aria-hidden="true">
         <path d="M2.5 6l2.5 2.5 4.5-5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     ),
@@ -43,7 +43,7 @@ const DOTS: readonly DotDef[] = [
     label: 'Failed',
     activeBg: FAILED_BG,
     icon: (
-      <svg className="h-3 w-3" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+      <svg className="h-6 w-6" viewBox="0 0 12 12" fill="none" aria-hidden="true">
         <path d="M3.5 3.5l5 5m0-5l-5 5" strokeWidth="1.8" strokeLinecap="round" />
       </svg>
     ),
