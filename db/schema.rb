@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_24_190812) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_28_142954) do
   create_table "booking_requests", force: :cascade do |t|
     t.datetime "booking_window_opens_at", null: false
     t.datetime "created_at", null: false
@@ -82,6 +82,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_24_190812) do
     t.datetime "start_time", null: false
     t.datetime "updated_at", null: false
     t.index ["class_type_id"], name: "index_schedule_entries_on_class_type_id"
+    t.index ["facility_id", "class_type_id", "start_time"], name: "idx_on_facility_id_class_type_id_start_time_ccce54ca85", unique: true
     t.index ["facility_id", "class_type_id"], name: "index_schedule_entries_on_facility_id_and_class_type_id"
     t.index ["facility_id"], name: "index_schedule_entries_on_facility_id"
   end
