@@ -67,3 +67,5 @@ gem "shoulda-matchers", "~> 8.0", group: :test
 gem "committee", "~> 5.1", group: :test
 
 gem "rubocop", "~> 1.88", group: :development
+
+gem "holidays", "~> 11.1"
