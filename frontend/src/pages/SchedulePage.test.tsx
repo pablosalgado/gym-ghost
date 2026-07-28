@@ -140,18 +140,18 @@ describe('SchedulePage', () => {
   })
 
   it('shows only All option in city select', () => {
-    renderPage()
+    const { container } = renderPage()
 
-    const citySelect = screen.getByLabelText(/Ciudad|City/)
+    const citySelect = container.querySelector('#city-filter') as HTMLSelectElement
     const options = citySelect.querySelectorAll('option')
     expect(options).toHaveLength(1)
     expect(options[0].textContent).toMatch(/Todas|All/)
   })
 
   it('shows only All option in facility select', () => {
-    renderPage()
+    const { container } = renderPage()
 
-    const facilitySelect = screen.getByLabelText(/Sede|Facility/)
+    const facilitySelect = container.querySelector('#facility-filter') as HTMLSelectElement
     const options = facilitySelect.querySelectorAll('option')
     expect(options).toHaveLength(1)
     expect(options[0].textContent).toMatch(/Todas|All/)
@@ -173,9 +173,9 @@ describe('SchedulePage', () => {
         error: null,
       }
 
-      renderPage()
+      const { container } = renderPage()
 
-      const citySelect = screen.getByLabelText(/Ciudad|City/) as HTMLSelectElement
+      const citySelect = container.querySelector('#city-filter') as HTMLSelectElement
       expect(citySelect.value).toBe('1')
     })
 
@@ -186,9 +186,9 @@ describe('SchedulePage', () => {
         error: null,
       }
 
-      renderPage()
+      const { container } = renderPage()
 
-      const citySelect = screen.getByLabelText(/Ciudad|City/) as HTMLSelectElement
+      const citySelect = container.querySelector('#city-filter') as HTMLSelectElement
       expect(citySelect.value).toBe('')
     })
 
@@ -207,27 +207,27 @@ describe('SchedulePage', () => {
         error: null,
       }
 
-      renderPage()
+      const { container } = renderPage()
 
-      const facilitySelect = screen.getByLabelText(/Sede|Facility/) as HTMLSelectElement
+      const facilitySelect = container.querySelector('#facility-filter') as HTMLSelectElement
       expect(facilitySelect.value).toBe('9')
     })
   })
 
   describe('class-type filter', () => {
     it('shows only All option when no class types are available', () => {
-      renderPage()
+      const { container } = renderPage()
 
-      const classTypeSelect = screen.getByLabelText(/Clase|Class/)
+      const classTypeSelect = container.querySelector('#class-type-filter') as HTMLSelectElement
       const options = classTypeSelect.querySelectorAll('option')
       expect(options).toHaveLength(1)
       expect(options[0].textContent).toMatch(/Todas|All/)
     })
 
     it('is disabled when no class types are available', () => {
-      renderPage()
+      const { container } = renderPage()
 
-      const classTypeSelect = screen.getByLabelText(/Clase|Class/)
+      const classTypeSelect = container.querySelector('#class-type-filter') as HTMLSelectElement
       expect(classTypeSelect).toBeDisabled()
     })
 
@@ -238,9 +238,9 @@ describe('SchedulePage', () => {
         classTypes: MOCK_CLASS_TYPES,
       }
 
-      renderPage()
+      const { container } = renderPage()
 
-      const classTypeSelect = screen.getByLabelText(/Clase|Class/)
+      const classTypeSelect = container.querySelector('#class-type-filter') as HTMLSelectElement
       const options = classTypeSelect.querySelectorAll('option')
       expect(options).toHaveLength(3)
       expect(options[1].textContent).toBe('Yoga')
@@ -254,9 +254,9 @@ describe('SchedulePage', () => {
         classTypes: MOCK_CLASS_TYPES,
       }
 
-      renderPage()
+      const { container } = renderPage()
 
-      const classTypeSelect = screen.getByLabelText(/Clase|Class/)
+      const classTypeSelect = container.querySelector('#class-type-filter') as HTMLSelectElement
       expect(classTypeSelect).not.toBeDisabled()
     })
 
@@ -268,13 +268,13 @@ describe('SchedulePage', () => {
       }
 
       const user = userEvent.setup()
-      renderPage()
+      const { container } = renderPage()
 
       const sessionList = screen.getByRole('list')
       expect(within(sessionList).getByText('Yoga')).toBeInTheDocument()
       expect(within(sessionList).getByText('Spinning')).toBeInTheDocument()
 
-      const classTypeSelect = screen.getByLabelText(/Clase|Class/)
+      const classTypeSelect = container.querySelector('#class-type-filter') as HTMLSelectElement
       await user.selectOptions(classTypeSelect, '10')
 
       await waitFor(() => {

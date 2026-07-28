@@ -118,6 +118,7 @@ export default function SchedulePage() {
 
   return (
     <div className="mx-auto max-w-4xl px-3 py-6 sm:px-4">
+      <h1 className="hidden text-2xl font-bold mb-6">{t('schedule.title')}</h1>
       {/* Day strip */}
       <div className="mb-6 flex gap-1 overflow-x-auto pb-2">
         {days.map((dateKey) => {
