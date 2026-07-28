@@ -16,3 +16,8 @@ production:
     class: SyncFacilitiesJob
     queue: default
     schedule: every day at midnight
+
+  holiday_schedule_refresh:
+    class: HolidayScheduleRefreshJob
+    queue: default
+    schedule: every day at 05:05
