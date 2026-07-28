@@ -12,7 +12,7 @@ class HolidayService
 
       cache_key = "holiday_service/#{region}/#{resolved_date}"
 
-      memoized_cache[cache_key] ||= Rails.cache.fetch(cache_key, expires_in: 1.day) do
+      Rails.cache.fetch(cache_key, expires_in: 1.day) do
         holidays_on(resolved_date, region).any?
       end
     end
@@ -23,10 +23,6 @@ class HolidayService
 
       holidays = holidays_on(resolved_date, region)
       holidays.first&.[](:name)
-    end
-
-    def clear_cache!
-      Thread.current[:holiday_service_memo_cache] = nil
     end
 
     private
@@ -48,10 +44,6 @@ class HolidayService
 
     def holidays_on(date, region)
       Holidays.on(date, region, :observed)
-    end
-
-    def memoized_cache
-      Thread.current[:holiday_service_memo_cache] ||= {}
     end
   end
 end

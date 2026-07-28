@@ -4,7 +4,7 @@ require "rails_helper"
 
 RSpec.describe HolidayService do
   before do
-    described_class.clear_cache!
+    Rails.cache = ActiveSupport::Cache::MemoryStore.new
     Rails.cache.clear
   end
 
@@ -36,10 +36,10 @@ RSpec.describe HolidayService do
       expect(described_class.holiday?("2026-07-28")).to be false
     end
 
-    it "memoizes and caches results for performance" do
+    it "caches results using Rails.cache for performance" do
       expect(Holidays).to receive(:on).once.and_call_original
       expect(described_class.holiday?(Date.new(2026, 1, 1))).to be true
-      # Second call should hit cache/memoization
+      # Second call should hit Rails.cache
       expect(described_class.holiday?(Date.new(2026, 1, 1))).to be true
     end
   end
