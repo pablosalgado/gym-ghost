@@ -282,7 +282,11 @@ RSpec.describe Partner::ActivitiesService do
         expect(backfilled.class_type).to eq(sunday_entry.class_type)
         expect(backfilled.partner_activity_id).to eq(sunday_entry.partner_activity_id)
         expect(backfilled.activ_config_id).to eq(sunday_entry.activ_config_id)
-        expect(backfilled.start_time.to_date).to eq(holiday_date)
+        expect(backfilled.start_time).to eq(
+          sunday_entry.start_time.change(
+            year: holiday_date.year, month: holiday_date.month, day: holiday_date.day
+          )
+        )
       end
 
       it "is idempotent — re-fetching does not duplicate backfill rows" do
@@ -386,6 +390,11 @@ RSpec.describe Partner::ActivitiesService do
         expect(backfilled).to be_present
         expect(backfilled.class_type).to eq(saturday_entry.class_type)
         expect(backfilled.partner_activity_id).to eq(saturday_entry.partner_activity_id)
+        expect(backfilled.start_time).to eq(
+          saturday_entry.start_time.change(
+            year: holiday_date.year, month: holiday_date.month, day: holiday_date.day
+          )
+        )
       end
     end
 
