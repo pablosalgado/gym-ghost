@@ -311,15 +311,11 @@ export default function SchedulePage() {
               </span>
               <div className="flex-1 min-w-0">
                 <p className="font-medium truncate">{session.activityName}</p>
-                <p className="text-sm text-gray-600">
-                  {session.facilityId}
-                </p>
               </div>
               <div className="shrink-0">
                 {activeBookingRequest && activeBookingRequest.status === 'pending' && (
                   <BookingStatusBadge
                     status="pending"
-                    pendingLabel={t('schedule.booking.reserveAt', { time: formatTimeOfDay(activeBookingRequest.booking_window_opens_at, locale, DEFAULT_TIME_ZONE) })}
                   />
                 )}
 
@@ -334,7 +330,6 @@ export default function SchedulePage() {
                       status="failed"
                       onRetry={() => handleReserve(sessionId)}
                       isLoading={booking.isLoading}
-                      retryLabel={t('schedule.booking.retry')}
                     />
                   </span>
                 )}
