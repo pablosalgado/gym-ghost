@@ -118,8 +118,7 @@ export default function SchedulePage() {
 
   return (
     <div className="mx-auto max-w-4xl px-3 py-6 sm:px-4">
-      <h1 className="mb-4 text-2xl font-bold">{t('schedule.title')}</h1>
-
+      <h1 className="hidden text-2xl font-bold mb-6">{t('schedule.title')}</h1>
       {/* Day strip */}
       <div className="mb-6 flex gap-1 overflow-x-auto pb-2">
         {days.map((dateKey) => {
@@ -144,16 +143,13 @@ export default function SchedulePage() {
       </div>
 
       {/* Filters */}
-      <div className="mb-6 flex flex-wrap gap-3">
-        <div className="flex flex-col gap-1">
-          <label htmlFor="city-filter" className="text-sm font-medium text-gray-700">
-            {t('schedule.filter.city')}
-          </label>
+      <div className="mb-6 flex flex-col gap-4">
+        <div className="flex flex-col gap-1 w-full hidden">
           <select
             id="city-filter"
             value={cityId ?? ''}
             onChange={(event) => handleCityChange(event.target.value)}
-            className="min-h-11 rounded border border-gray-300 px-3 py-2"
+            className="w-full min-h-11 rounded border border-gray-300 px-3 py-2"
           >
             <option value="">{t('schedule.filter.all')}</option>
             {cities.map((city) => (
@@ -164,15 +160,12 @@ export default function SchedulePage() {
           </select>
         </div>
 
-        <div className="flex flex-col gap-1">
-          <label htmlFor="facility-filter" className="text-sm font-medium text-gray-700">
-            {t('schedule.filter.facility')}
-          </label>
+        <div className="flex flex-col gap-1 w-full">
           <select
             id="facility-filter"
             value={facilityId ?? ''}
             onChange={(event) => setFacilityId(event.target.value ? Number(event.target.value) : undefined)}
-            className="min-h-11 rounded border border-gray-300 px-3 py-2"
+            className="w-full min-h-11 rounded border border-gray-300 px-3 py-2"
           >
             <option value="">{t('schedule.filter.all')}</option>
             {facilitiesForCity.map((facility) => (
@@ -183,16 +176,13 @@ export default function SchedulePage() {
           </select>
         </div>
 
-        <div className="flex flex-col gap-1">
-          <label htmlFor="class-type-filter" className="text-sm font-medium text-gray-700">
-            {t('schedule.filter.classType')}
-          </label>
+        <div className="flex flex-col gap-1 w-full">
           <select
             id="class-type-filter"
             value={activityId ?? ''}
             onChange={(event) => setActivityId(event.target.value ? Number(event.target.value) : undefined)}
             disabled={classTypes.length === 0}
-            className="min-h-11 rounded border border-gray-300 px-3 py-2 disabled:opacity-50"
+            className="w-full min-h-11 rounded border border-gray-300 px-3 py-2 disabled:opacity-50"
           >
             <option value="">{t('schedule.filter.all')}</option>
             {classTypes.map((ct) => (
