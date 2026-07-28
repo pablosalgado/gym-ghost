@@ -9,8 +9,6 @@ RSpec.describe HolidayScheduleRefreshJob, type: :job do
     let(:class_type)   { create(:class_type) }
     let(:gym_member)   { create(:gym_member) }
 
-    # Bogota is UTC-5, so 05:05 UTC on Jul 19 = 00:05 Bogota Jul 19.
-    # "Tomorrow" in Bogota from that point is Jul 20.
     before do
       travel_to Time.zone.parse("2026-07-19 05:05:00 UTC")
     end
@@ -61,7 +59,7 @@ RSpec.describe HolidayScheduleRefreshJob, type: :job do
 
         before do
           allow(Partner::ActivitiesService).to receive(:new).and_return(service)
-          allow(service).to receive(:fetch)
+          allow(service).to receive(:fetch).and_return([])
           allow(Rails.logger).to receive(:info)
         end
 
@@ -82,6 +80,22 @@ RSpec.describe HolidayScheduleRefreshJob, type: :job do
 
           expect(Rails.logger).to have_received(:info).with(/entries refreshed/)
         end
+
+        it "updates activ_config_id from returned entries" do
+          returned = build(:schedule_entry,
+            facility: facility,
+            class_type: class_type,
+            date: tomorrow,
+            start_time: schedule_entry.start_time,
+            activ_config_id: 99)
+          allow(service).to receive(:fetch).and_return([ returned ])
+
+          perform_enqueued_jobs do
+            described_class.perform_later
+          end
+
+          expect(schedule_entry.reload.activ_config_id).to eq(99)
+        end
       end
 
       context "with multiple facilities" do
@@ -94,7 +108,7 @@ RSpec.describe HolidayScheduleRefreshJob, type: :job do
 
         before do
           allow(Partner::ActivitiesService).to receive(:new).and_return(service)
-          allow(service).to receive(:fetch)
+          allow(service).to receive(:fetch).and_return([])
         end
 
         it "calls fetch for each unique facility" do
@@ -118,7 +132,7 @@ RSpec.describe HolidayScheduleRefreshJob, type: :job do
 
         before do
           allow(Partner::ActivitiesService).to receive(:new).and_return(service)
-          allow(service).to receive(:fetch)
+          allow(service).to receive(:fetch).and_return([])
         end
 
         it "deduplicates facilities and calls fetch only once per facility" do
