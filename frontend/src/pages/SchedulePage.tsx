@@ -144,8 +144,8 @@ export default function SchedulePage() {
       </div>
 
       {/* Filters */}
-      <div className="mb-6 flex flex-wrap gap-3">
-        <div className="flex flex-col gap-1">
+      <div className="mb-6 flex flex-col gap-4">
+        <div className="flex flex-col gap-1 w-full">
           <label htmlFor="city-filter" className="text-sm font-medium text-gray-700">
             {t('schedule.filter.city')}
           </label>
@@ -153,7 +153,7 @@ export default function SchedulePage() {
             id="city-filter"
             value={cityId ?? ''}
             onChange={(event) => handleCityChange(event.target.value)}
-            className="min-h-11 rounded border border-gray-300 px-3 py-2"
+            className="w-full min-h-11 rounded border border-gray-300 px-3 py-2"
           >
             <option value="">{t('schedule.filter.all')}</option>
             {cities.map((city) => (
@@ -164,7 +164,7 @@ export default function SchedulePage() {
           </select>
         </div>
 
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1 w-full">
           <label htmlFor="facility-filter" className="text-sm font-medium text-gray-700">
             {t('schedule.filter.facility')}
           </label>
@@ -172,7 +172,7 @@ export default function SchedulePage() {
             id="facility-filter"
             value={facilityId ?? ''}
             onChange={(event) => setFacilityId(event.target.value ? Number(event.target.value) : undefined)}
-            className="min-h-11 rounded border border-gray-300 px-3 py-2"
+            className="w-full min-h-11 rounded border border-gray-300 px-3 py-2"
           >
             <option value="">{t('schedule.filter.all')}</option>
             {facilitiesForCity.map((facility) => (
@@ -183,7 +183,7 @@ export default function SchedulePage() {
           </select>
         </div>
 
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1 w-full">
           <label htmlFor="class-type-filter" className="text-sm font-medium text-gray-700">
             {t('schedule.filter.classType')}
           </label>
@@ -192,7 +192,7 @@ export default function SchedulePage() {
             value={activityId ?? ''}
             onChange={(event) => setActivityId(event.target.value ? Number(event.target.value) : undefined)}
             disabled={classTypes.length === 0}
-            className="min-h-11 rounded border border-gray-300 px-3 py-2 disabled:opacity-50"
+            className="w-full min-h-11 rounded border border-gray-300 px-3 py-2 disabled:opacity-50"
           >
             <option value="">{t('schedule.filter.all')}</option>
             {classTypes.map((ct) => (
