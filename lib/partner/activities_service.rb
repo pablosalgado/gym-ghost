@@ -125,11 +125,7 @@ module Partner
     end
 
     def same_time_on_date(datetime, new_date)
-      local = datetime.in_time_zone(HolidayService::DEFAULT_TIME_ZONE)
-      Time.zone.local(
-        new_date.year, new_date.month, new_date.day,
-        local.hour, local.min, local.sec
-      )
+      datetime.change(year: new_date.year, month: new_date.month, day: new_date.day)
     end
 
     def request_activities(facility, date)
