@@ -118,8 +118,6 @@ export default function SchedulePage() {
 
   return (
     <div className="mx-auto max-w-4xl px-3 py-6 sm:px-4">
-      <h1 className="mb-4 text-2xl font-bold">{t('schedule.title')}</h1>
-
       {/* Day strip */}
       <div className="mb-6 flex gap-1 overflow-x-auto pb-2">
         {days.map((dateKey) => {
@@ -145,10 +143,7 @@ export default function SchedulePage() {
 
       {/* Filters */}
       <div className="mb-6 flex flex-col gap-4">
-        <div className="flex flex-col gap-1 w-full">
-          <label htmlFor="city-filter" className="text-sm font-medium text-gray-700">
-            {t('schedule.filter.city')}
-          </label>
+        <div className="flex flex-col gap-1 w-full hidden">
           <select
             id="city-filter"
             value={cityId ?? ''}
@@ -165,9 +160,6 @@ export default function SchedulePage() {
         </div>
 
         <div className="flex flex-col gap-1 w-full">
-          <label htmlFor="facility-filter" className="text-sm font-medium text-gray-700">
-            {t('schedule.filter.facility')}
-          </label>
           <select
             id="facility-filter"
             value={facilityId ?? ''}
@@ -184,9 +176,6 @@ export default function SchedulePage() {
         </div>
 
         <div className="flex flex-col gap-1 w-full">
-          <label htmlFor="class-type-filter" className="text-sm font-medium text-gray-700">
-            {t('schedule.filter.classType')}
-          </label>
           <select
             id="class-type-filter"
             value={activityId ?? ''}
