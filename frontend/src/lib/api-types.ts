@@ -77,15 +77,21 @@ export interface ScheduleResponse {
   class_types: ClassType[]
 }
 
-/** POST /api/v1/booking_requests — 200 response */
-export interface CreateBookingRequestResponse {
-  booking_request: BookingRequest
-}
-
 /** GET /api/v1/gym_members — single gym member */
 export interface GymMember {
   id: number
   email: string
+}
+
+/** POST /api/v1/gym_members — request body */
+export interface CreateGymMemberRequest {
+  email: string
+  password: string
+}
+
+/** POST /api/v1/gym_members — 201 response */
+export interface CreateGymMemberResponse {
+  gym_member: GymMember
 }
 
 /** GET /api/v1/gym_members — 200 response */
@@ -101,6 +107,11 @@ export interface GymMemberResponse {
 /** PATCH /api/v1/gym_members/:id — request body (password only for inline update) */
 export interface UpdateGymMemberRequest {
   password: string
+}
+
+/** POST /api/v1/booking_requests — 200 response */
+export interface CreateBookingRequestResponse {
+  booking_request: BookingRequest
 }
 
 /** Type guard: checks if a payload is a valid ErrorResponse */
@@ -155,6 +166,17 @@ export function isScheduleResponse(payload: unknown): payload is ScheduleRespons
   )
 }
 
+/** Type guard: checks if a payload is a valid CreateGymMemberResponse */
+export function isCreateGymMemberResponse(payload: unknown): payload is CreateGymMemberResponse {
+  return (
+    typeof payload === 'object' &&
+    payload !== null &&
+    'gym_member' in payload &&
+    typeof (payload as Record<string, unknown>).gym_member === 'object' &&
+    (payload as Record<string, unknown>).gym_member !== null
+  )
+}
+
 /** Type guard: checks if a payload is a valid GymMembersResponse */
 export function isGymMembersResponse(payload: unknown): payload is GymMembersResponse {
   return (
@@ -175,7 +197,6 @@ export function isGymMemberResponse(payload: unknown): payload is GymMemberRespo
     (payload as Record<string, unknown>).gym_member !== null
   )
 }
-
 /** Type guard: checks if a payload is a valid CreateBookingRequestResponse */
 export function isBookingRequestResponse(payload: unknown): payload is CreateBookingRequestResponse {
   return (

@@ -38,7 +38,7 @@ export default function GymMembersPage() {
           to="/gym-members/new"
           className="inline-block min-h-11 rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
         >
-          {t('gymMembers.newMember')}
+          {t('gymMembers.create')}
         </Link>
       </div>
 
@@ -53,7 +53,7 @@ export default function GymMembersPage() {
             to="/gym-members/new"
             className="min-h-11 rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
           >
-            {t('gymMembers.newMember')}
+            {t('gymMembers.create')}
           </Link>
         </div>
       ) : (
@@ -103,14 +103,14 @@ export default function GymMembersPage() {
                       {t('gymMembers.updatePasswordDescription')}
                     </p>
                     <label htmlFor={`password-${member.id}`} className="sr-only">
-                      {t('gymMembers.newPassword')}
+                      {t('gymMembers.password')}
                     </label>
                     <input
                       id={`password-${member.id}`}
                       type="password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      placeholder={t('gymMembers.newPassword')}
+                      placeholder={t('gymMembers.password')}
                       autoFocus
                       required
                       minLength={1}

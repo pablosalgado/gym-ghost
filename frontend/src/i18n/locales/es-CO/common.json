@@ -47,16 +47,22 @@
   "gymMembers": {
     "title": "Miembros del gimnasio",
     "email": "Correo electrónico",
+    "password": "Contraseña",
     "updatePassword": "Actualizar contraseña",
-    "newPassword": "Nueva contraseña",
     "updatePasswordDescription": "Ingresa una nueva contraseña para este miembro.",
     "save": "Guardar",
     "saving": "Guardando...",
+    "create": "Crear Miembro",
+    "creating": "Creando...",
     "cancel": "Cancelar",
     "emptyState": "Aún no hay miembros.",
-    "newMember": "Nuevo miembro",
     "updateSuccess": "Contraseña actualizada.",
-    "updateError": "Error al actualizar la contraseña. Inténtalo de nuevo."
+    "updateError": "Error al actualizar la contraseña. Inténtalo de nuevo.",
+    "createTitle": "Registrar Miembro",
+    "backToList": "Volver a la lista",
+    "emailRequired": "El correo electrónico es obligatorio.",
+    "emailInvalid": "Ingrese un correo electrónico válido.",
+    "passwordRequired": "La contraseña es obligatoria."
   },
   "common": {
     "loading": "Cargando..."
