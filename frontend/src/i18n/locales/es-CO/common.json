@@ -49,5 +49,16 @@
   },
   "mobileMenu": {
     "toggle": "Abrir menú de navegación"
+  },
+  "gymMembers": {
+    "createTitle": "Registrar Miembro",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "creating": "Creando...",
+    "create": "Crear Miembro",
+    "backToList": "Volver a la lista",
+    "emailRequired": "El correo electrónico es obligatorio.",
+    "emailInvalid": "Ingrese un correo electrónico válido.",
+    "passwordRequired": "La contraseña es obligatoria."
   }
 }
