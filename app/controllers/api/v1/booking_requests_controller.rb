@@ -1,8 +1,6 @@
 module Api
   module V1
     class BookingRequestsController < ApplicationController
-      DEFAULT_TIME_ZONE = "America/Bogota".freeze
-
       def create
         schedule_entry = ScheduleEntry.find(booking_request_params[:schedule_entry_id])
 
@@ -59,8 +57,7 @@ module Api
       end
 
       def calculate_booking_window(schedule_entry)
-        zone = Time.find_zone!(DEFAULT_TIME_ZONE)
-        schedule_entry.start_time.in_time_zone(zone) - 24.hours
+        schedule_entry.start_time - 24.hours
       end
 
       def duplicate_booking_request?(gym_member, schedule_entry)
