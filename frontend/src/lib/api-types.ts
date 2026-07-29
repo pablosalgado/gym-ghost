@@ -82,6 +82,27 @@ export interface CreateBookingRequestResponse {
   booking_request: BookingRequest
 }
 
+/** GET /api/v1/gym_members — single gym member */
+export interface GymMember {
+  id: number
+  email: string
+}
+
+/** GET /api/v1/gym_members — 200 response */
+export interface GymMembersResponse {
+  gym_members: GymMember[]
+}
+
+/** PATCH /api/v1/gym_members/:id / POST /api/v1/gym_members — single gym member response */
+export interface GymMemberResponse {
+  gym_member: GymMember
+}
+
+/** PATCH /api/v1/gym_members/:id — request body (password only for inline update) */
+export interface UpdateGymMemberRequest {
+  password: string
+}
+
 /** Type guard: checks if a payload is a valid ErrorResponse */
 export function isErrorResponse(payload: unknown): payload is ErrorResponse {
   return (
@@ -131,6 +152,27 @@ export function isScheduleResponse(payload: unknown): payload is ScheduleRespons
     Array.isArray((payload as Record<string, unknown>).schedule) &&
     'class_types' in payload &&
     Array.isArray((payload as Record<string, unknown>).class_types)
+  )
+}
+
+/** Type guard: checks if a payload is a valid GymMembersResponse */
+export function isGymMembersResponse(payload: unknown): payload is GymMembersResponse {
+  return (
+    typeof payload === 'object' &&
+    payload !== null &&
+    'gym_members' in payload &&
+    Array.isArray((payload as Record<string, unknown>).gym_members)
+  )
+}
+
+/** Type guard: checks if a payload is a valid GymMemberResponse */
+export function isGymMemberResponse(payload: unknown): payload is GymMemberResponse {
+  return (
+    typeof payload === 'object' &&
+    payload !== null &&
+    'gym_member' in payload &&
+    typeof (payload as Record<string, unknown>).gym_member === 'object' &&
+    (payload as Record<string, unknown>).gym_member !== null
   )
 }
 

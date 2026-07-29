@@ -28,6 +28,12 @@ export default function AppShell() {
             >
               {t('nav.schedule')}
             </Link>
+            <Link
+              to="/gym-members"
+              className="min-h-11 rounded px-3 py-2 text-sm font-medium hover:bg-gray-100"
+            >
+              {t('gymMembers.title')}
+            </Link>
             <LanguageSwitcher />
             <button
               onClick={handleLogout}

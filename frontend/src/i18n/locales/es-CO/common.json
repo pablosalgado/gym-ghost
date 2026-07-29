@@ -44,6 +44,20 @@
   "nav": {
     "schedule": "Horario"
   },
+  "gymMembers": {
+    "title": "Miembros del gimnasio",
+    "email": "Correo electrónico",
+    "updatePassword": "Actualizar contraseña",
+    "newPassword": "Nueva contraseña",
+    "updatePasswordDescription": "Ingresa una nueva contraseña para este miembro.",
+    "save": "Guardar",
+    "saving": "Guardando...",
+    "cancel": "Cancelar",
+    "emptyState": "Aún no hay miembros.",
+    "newMember": "Nuevo miembro",
+    "updateSuccess": "Contraseña actualizada.",
+    "updateError": "Error al actualizar la contraseña. Inténtalo de nuevo."
+  },
   "common": {
     "loading": "Cargando..."
   },

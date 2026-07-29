@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../hooks/useAuth'
-import { useNavigate } from 'react-router'
+import { Link, useNavigate } from 'react-router'
 import LanguageSwitcher from './LanguageSwitcher'
 
 export default function MobileMenu() {
@@ -96,6 +96,14 @@ export default function MobileMenu() {
             <div className="mb-3">
               <LanguageSwitcher />
             </div>
+            <Link
+              to="/gym-members"
+              role="menuitem"
+              onClick={handleClose}
+              className="block min-h-11 w-full rounded px-3 py-2 text-left text-sm font-medium hover:bg-gray-100"
+            >
+              {t('gymMembers.title')}
+            </Link>
             <button
               onClick={handleLogout}
               role="menuitem"
