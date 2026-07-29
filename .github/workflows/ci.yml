@@ -37,7 +37,7 @@ jobs:
           ruby-version: "3.4.9"
           bundler-cache: true
       - name: Install libvips
-        run: sudo apt-get update -qq && sudo apt-get install --no-install-recommends -y libvips
+        run: sudo apt-get install -y libvips
       - name: Set up DB
         run: bin/rails db:prepare
       - name: RSpec
