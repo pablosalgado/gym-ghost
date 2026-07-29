@@ -44,21 +44,30 @@
   "nav": {
     "schedule": "Schedule"
   },
+  "gymMembers": {
+    "title": "Gym Members",
+    "email": "Email",
+    "password": "Password",
+    "updatePassword": "Update password",
+    "updatePasswordDescription": "Enter a new password for this gym member.",
+    "save": "Save",
+    "saving": "Saving...",
+    "create": "Create Member",
+    "creating": "Creating...",
+    "cancel": "Cancel",
+    "emptyState": "No gym members yet.",
+    "updateSuccess": "Password updated.",
+    "updateError": "Failed to update password. Please try again.",
+    "createTitle": "Register Member",
+    "backToList": "Back to list",
+    "emailRequired": "Email is required.",
+    "emailInvalid": "Please enter a valid email address.",
+    "passwordRequired": "Password is required."
+  },
   "common": {
     "loading": "Loading..."
   },
   "mobileMenu": {
     "toggle": "Open navigation menu"
-  },
-  "gymMembers": {
-    "createTitle": "Register Member",
-    "email": "Email",
-    "password": "Password",
-    "creating": "Creating...",
-    "create": "Create Member",
-    "backToList": "Back to list",
-    "emailRequired": "Email is required.",
-    "emailInvalid": "Please enter a valid email address.",
-    "passwordRequired": "Password is required."
   }
 }

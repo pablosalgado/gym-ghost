@@ -99,6 +99,16 @@ export interface GymMembersResponse {
   gym_members: GymMember[]
 }
 
+/** PATCH /api/v1/gym_members/:id / POST /api/v1/gym_members — single gym member response */
+export interface GymMemberResponse {
+  gym_member: GymMember
+}
+
+/** PATCH /api/v1/gym_members/:id — request body (password only for inline update) */
+export interface UpdateGymMemberRequest {
+  password: string
+}
+
 /** POST /api/v1/booking_requests — 200 response */
 export interface CreateBookingRequestResponse {
   booking_request: BookingRequest
@@ -177,6 +187,16 @@ export function isGymMembersResponse(payload: unknown): payload is GymMembersRes
   )
 }
 
+/** Type guard: checks if a payload is a valid GymMemberResponse */
+export function isGymMemberResponse(payload: unknown): payload is GymMemberResponse {
+  return (
+    typeof payload === 'object' &&
+    payload !== null &&
+    'gym_member' in payload &&
+    typeof (payload as Record<string, unknown>).gym_member === 'object' &&
+    (payload as Record<string, unknown>).gym_member !== null
+  )
+}
 /** Type guard: checks if a payload is a valid CreateBookingRequestResponse */
 export function isBookingRequestResponse(payload: unknown): payload is CreateBookingRequestResponse {
   return (
