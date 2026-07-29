@@ -181,6 +181,109 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /api/v1/gym_members:
+    get:
+      summary: List gym members
+      description: Returns all gym members ordered by email.
+      tags:
+        - Gym Members
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Gym members retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GymMembersResponse"
+        "401":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      summary: Create a gym member
+      description: Creates a new gym member with email and password credentials.
+      tags:
+        - Gym Members
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GymMemberRequest"
+      responses:
+        "201":
+          description: Gym member created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GymMemberResponse"
+        "401":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "422":
+          description: Validation failed (invalid email, duplicate email, or missing password)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/v1/gym_members/{id}:
+    patch:
+      summary: Update a gym member
+      description: |
+        Updates the email and/or password for an existing gym member.
+        Omitting or sending a blank password leaves the current password unchanged.
+      tags:
+        - Gym Members
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of the gym member to update
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GymMemberUpdateRequest"
+      responses:
+        "200":
+          description: Gym member updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GymMemberResponse"
+        "401":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Gym member not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "422":
+          description: Validation failed (duplicate email or invalid format)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /api/v1/booking_requests/{id}:
     delete:
       summary: Cancel a booking request
@@ -506,6 +609,75 @@ components:
       properties:
         booking_request:
           $ref: "#/components/schemas/BookingRequestItem"
+      additionalProperties: false
+
+    GymMember:
+      type: object
+      required:
+        - id
+        - email
+      properties:
+        id:
+          type: integer
+          description: Gym member ID
+        email:
+          type: string
+          format: email
+          description: Gym member email address
+          example: member@example.com
+      additionalProperties: false
+
+    GymMembersResponse:
+      type: object
+      required:
+        - gym_members
+      properties:
+        gym_members:
+          type: array
+          items:
+            $ref: "#/components/schemas/GymMember"
+      additionalProperties: false
+
+    GymMemberRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          description: Gym member email address
+          example: member@example.com
+        password:
+          type: string
+          format: password
+          description: Gym member plaintext password (stored encrypted)
+          example: Password123!
+      additionalProperties: false
+
+    GymMemberUpdateRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          description: New email address (optional)
+          example: updated@example.com
+        password:
+          type: string
+          format: password
+          description: New password — omitted or blank leaves current password unchanged
+          example: NewPassword456!
+      additionalProperties: false
+
+    GymMemberResponse:
+      type: object
+      required:
+        - gym_member
+      properties:
+        gym_member:
+          $ref: "#/components/schemas/GymMember"
       additionalProperties: false
 
 security:
