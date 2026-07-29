@@ -20,6 +20,15 @@ FileUtils.chdir APP_ROOT do
   #   FileUtils.cp "config/database.yml.sample", "config/database.yml"
   # end
 
+  puts "\n== Checking native dependencies =="
+  unless system("which vips > /dev/null 2>&1")
+    if RUBY_PLATFORM.include?("darwin")
+      puts "WARNING: libvips not found. Run: brew install vips"
+    else
+      puts "WARNING: libvips not found. Install it via your package manager (e.g. apt-get install libvips)"
+    end
+  end
+
   puts "\n== Preparing database =="
   system! "bin/rails db:prepare"
   system! "bin/rails db:reset" if ARGV.include?("--reset")

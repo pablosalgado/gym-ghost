@@ -23,6 +23,22 @@ Node & Vite notes
 - You do NOT need a global `vite` install. `npm run dev` uses the local devDependency installed by `npm ci`.
 - If you prefer a global vite CLI: `npm install -g vite` (not required).
 
+## Native dependencies
+
+`ruby-vips` requires the `libvips` C library. Install it with the appropriate package manager for your platform.
+
+### macOS
+
+```bash
+brew install vips
+```
+
+### Linux (Debian/Ubuntu)
+
+```bash
+sudo apt-get install libvips
+```
+
 ### Accessing Vite from other devices on the LAN
 
 The Vite dev server binds to `0.0.0.0` by default, so devices on the same network (phones, tablets, other laptops) can reach it.
