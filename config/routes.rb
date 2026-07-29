@@ -8,6 +8,7 @@ Rails.application.routes.draw do
       get "/cities", to: "cities#index"
       get "/facilities", to: "facilities#index"
       resources :booking_requests, only: [ :create, :destroy ]
+      resources :gym_members, only: [ :index, :create, :update ]
       get "/openapi.json", to: "openapi#show"
       get "/docs", to: "docs#show"
     end
