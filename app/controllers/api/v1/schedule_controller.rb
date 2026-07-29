@@ -1,8 +1,6 @@
 module Api
   module V1
     class ScheduleController < ApplicationController
-      DEFAULT_TIME_ZONE = "America/Bogota".freeze
-
       def index
         date = schedule_params[:date] || today_in_zone
         entries = ScheduleEntry.includes(:class_type, :facility).where(date: date)
@@ -36,7 +34,7 @@ module Api
       private
 
       def today_in_zone
-        Time.find_zone!(DEFAULT_TIME_ZONE).today.to_s
+        Time.zone.today.to_s
       end
 
       def schedule_params
