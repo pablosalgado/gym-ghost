@@ -19,7 +19,7 @@ ENV RAILS_ENV=production \
 WORKDIR /app
 
 RUN apt-get update -qq && \
-    apt-get install --no-install-recommends -y build-essential gosu libsqlite3-dev && \
+    apt-get install --no-install-recommends -y build-essential gosu libsqlite3-dev libvips && \
     rm -rf /var/lib/apt/lists/*
 
 RUN groupadd --system app && useradd --system --gid app --create-home app
