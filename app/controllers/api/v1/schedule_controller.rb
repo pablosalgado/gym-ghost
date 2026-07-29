@@ -2,7 +2,7 @@ module Api
   module V1
     class ScheduleController < ApplicationController
       def index
-        date = schedule_params[:date] || today_in_zone
+        date = schedule_params[:date] || Time.zone.today.to_s
         entries = ScheduleEntry.includes(:class_type, :facility).where(date: date)
         entries = entries.where(facility_id: schedule_params[:facility_id]) if schedule_params[:facility_id].present?
         entries = entries.where(start_time: Time.current..)
@@ -32,10 +32,6 @@ module Api
       end
 
       private
-
-      def today_in_zone
-        Time.zone.today.to_s
-      end
 
       def schedule_params
         params.permit(:date, :facility_id)
