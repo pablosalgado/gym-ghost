@@ -10,39 +10,46 @@ module Api
           }, status: :unprocessable_entity
         end
 
-        gym_member = GymMember.find_by!(email: current_user.email)
+        created_count = 0
+        first_booking_request = nil
 
-        if duplicate_booking_request?(gym_member, schedule_entry)
-          return render json: {
-            errors: [ { status: 409, title: "Conflict", detail: "A booking request already exists for this schedule entry." } ]
-          }, status: :conflict
+        GymMember.all.each do |gym_member|
+          next if duplicate_booking_request?(gym_member, schedule_entry)
+
+          booking_window_opens_at = calculate_booking_window(schedule_entry)
+
+          booking_request = BookingRequest.new(
+            gym_member: gym_member,
+            schedule_entry: schedule_entry,
+            status: :pending,
+            booking_window_opens_at: booking_window_opens_at
+          )
+
+          booking_request.save!
+
+          if booking_window_opens_at.past?
+            BookingRequestJob.perform_later(booking_request.id)
+          else
+            BookingRequestJob.set(wait_until: booking_window_opens_at).perform_later(booking_request.id)
+          end
+
+          first_booking_request ||= booking_request
+          created_count += 1
         end
 
-        booking_window_opens_at = calculate_booking_window(schedule_entry)
-
-        booking_request = BookingRequest.new(
-          gym_member: gym_member,
-          schedule_entry: schedule_entry,
-          status: :pending,
-          booking_window_opens_at: booking_window_opens_at
-        )
-
-        booking_request.save!
-
-        if booking_window_opens_at.past?
-          BookingRequestJob.perform_later(booking_request.id)
+        if created_count.positive?
+          render json: {
+            booking_request: {
+              id: first_booking_request.id,
+              status: first_booking_request.status,
+              booking_window_opens_at: first_booking_request.booking_window_opens_at.utc.iso8601,
+              schedule_entry_id: first_booking_request.schedule_entry_id
+            },
+            created_count: created_count
+          }, status: :created
         else
-          BookingRequestJob.set(wait_until: booking_window_opens_at).perform_later(booking_request.id)
+          head :no_content
         end
-
-        render json: {
-          booking_request: {
-            id: booking_request.id,
-            status: booking_request.status,
-            booking_window_opens_at: booking_request.booking_window_opens_at.utc.iso8601,
-            schedule_entry_id: booking_request.schedule_entry_id
-          }
-        }, status: :created
       end
 
       def destroy

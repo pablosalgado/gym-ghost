@@ -134,11 +134,14 @@ paths:
 
   /api/v1/booking_requests:
     post:
-      summary: Create a booking request
+      summary: Create booking requests in bulk
       description: |
-        Creates a pending booking request for a schedule entry. A background job is
-        scheduled to process the request when the booking window opens (24 hours before
-        the class starts in America/Bogota time).
+        Creates booking requests for all gym members for a schedule entry. Iterates
+        through all gym members, creates booking requests for those without existing
+        requests, and silently skips duplicates. A background job is scheduled to
+        process each request when the booking window opens (24 hours before the class
+        starts in America/Bogota time). Returns 201 with the first created booking
+        request and a created_count, or 204 No Content if no new requests were created.
       tags:
         - Bookings
       security:
@@ -168,12 +171,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-        "409":
-          description: Duplicate booking request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
+        "204":
+          description: No new booking requests created (all members already have pending or booked requests, or no gym members exist)
         "422":
           description: Validation failed
           content:
@@ -606,9 +605,14 @@ components:
       type: object
       required:
         - booking_request
+        - created_count
       properties:
         booking_request:
           $ref: "#/components/schemas/BookingRequestItem"
+        created_count:
+          type: integer
+          description: Number of new booking requests created in this bulk operation
+          example: 2
       additionalProperties: false
 
     GymMember:
