@@ -3,7 +3,7 @@
 Gym Ghost is a lightweight "majestic monolith" scaffold for a gym booking helper app.
 It combines a Rails 8 API backend with a React (Vite) frontend served during development from ./frontend.
 
-Stack
+## Stack
 - Ruby 3.4.9, Rails 8 (API mode)
 - SQLite (local dev)
 - React + TypeScript + Vite frontend (./frontend)
@@ -11,14 +11,14 @@ Stack
 - RSpec, FactoryBot, Shoulda-matchers for tests
 - RuboCop for linting
 
-Quickstart (local)
+## Quickstart (local)
 1. cd gym-ghost
 2. bin/setup           # rails-provided setup script (installs gems, sets up DB if necessary)
 3. In terminal A: cd frontend && npm ci && npm run dev   # starts Vite (http://localhost:5173)
 4. In terminal B: bundle exec rails server     # starts Rails API (http://localhost:3000)
 5. Verify endpoint protection: `curl -i http://localhost:3000/api/v1/schedule` (returns `401 Unauthorized` without a valid bearer token)
 
-Node & Vite notes
+## Node & Vite notes
 - Node 24.18.0 is required. With nvm, run `nvm install` and `nvm use` from the repository root.
 - You do NOT need a global `vite` install. `npm run dev` uses the local devDependency installed by `npm ci`.
 - If you prefer a global vite CLI: `npm install -g vite` (not required).
@@ -55,13 +55,13 @@ VITE_DEV_HOST=192.168.1.100   # bind to a specific IP
 ```
 Set it to `localhost` to restrict to the local machine only.
 
-Notes
+## Notes
 - The devcontainer runs ./scripts/setup_dev.sh after creation to install deps automatically.
 
-Building frontend for Rails
+## Building frontend for Rails
 - npm run build (in ./frontend) produces a dist; run `npm run build` then `cp -a frontend/dist/. public/` to let Rails serve the static files in production.
 
-Testing
+## Testing
 - Backend: `bundle exec rspec`
 - Frontend: `cd frontend && npm run test`
 - Frontend type-check and production build: `cd frontend && npm run build`
@@ -169,21 +169,64 @@ A Playwright test verifies the user-facing schedule page works end-to-end agains
 
 `bin/ci` runs the e2e test automatically against a fresh Docker container — no manual setup needed in CI.
 
-Devcontainer
+## Devcontainer
 - A .devcontainer/ is included. Open the folder in VS Code Remote Containers or Codespaces; postCreateCommand runs setup.
 
-Deployment (small VPS)
-1. Copy `.env.example` to `.env`, set `APP_HOSTS` to the public hostname (comma-separate multiple hostnames), and set `SECRET_KEY_BASE` to a long random value (generate one with `bin/rails secret`).
-2. Run `docker compose up --build -d`.
-3. Put a TLS-terminating reverse proxy in front of the host's port 3000. Compose binds that port to loopback only; the proxy must forward the original HTTPS scheme.
+## Deployment (Local Network & Mesh)
 
-The production image builds the Vite frontend and copies it to Rails' `public/` directory. SQLite data persists in the named `gym_ghost_storage` Docker volume. Back up that volume before relying on it for production data.
+1. **Environment Setup**:
+   - Copy `.env.example` to `.env`.
+   - Set `APP_HOSTS` to your local network IP(s), mesh network IP(s), or local hostname(s) (comma-separated if multiple).
+   - Set `SECRET_KEY_BASE` to a long random secret value (generate one with `bin/rails secret` or `openssl rand -hex 64`).
+   - Set `ATTR_ENCRYPTED_KEY` to a 32-byte encryption key (e.g., `bin/rails secret` or `openssl rand -hex 32`).
 
-Contributing
+2. **Build and Run Containers**:
+   - Run `docker compose up --build -d` to build the production image (which automatically compiles the React frontend into Rails' `public/` directory and runs the app as a non-root user) and start services in detached mode.
+
+3. **Reverse Proxy, Network Access, and TLS (HTTPS)**:
+   - Docker Compose binds the container port to loopback only (`127.0.0.1:3000`), protecting it from direct unvetted access.
+   - **Troubleshooting Local Network or Mesh Access (`APP_HOSTS` vs Port Binding)**:
+     - Setting `APP_HOSTS` to your mesh network IP or local network IP allows Rails to accept requests with that `Host` header (preventing DNS rebinding protection errors). However, because Docker binds port 3000 strictly to `127.0.0.1`, direct connection requests sent from other machines to `http://<your-ip>:3000` will fail or timeout.
+     - **To access via Reverse Proxy (Recommended)**: Place a reverse proxy (Nginx, Caddy, Traefik) in front of `127.0.0.1:3000` that listens on your LAN/mesh interface or `0.0.0.0`.
+     - **To access directly without a Reverse Proxy (for internal mesh/LAN testing)**: Modify `docker-compose.yml` to expose port 3000 on all interfaces by changing `127.0.0.1:${HOST_PORT:-3000}:3000` to `${HOST_PORT:-3000}:3000` (or `0.0.0.0:${HOST_PORT:-3000}:3000`), ensure `APP_HOSTS` includes your IP, and verify that host firewalls (e.g., UFW) permit inbound traffic on port 3000.
+   - **Crucial Proxy Headers**: Because production Rails enforces HTTPS (`config.assume_ssl = true` and `config.force_ssl = true`), your reverse proxy **must** forward the original scheme and host headers (e.g., `X-Forwarded-Proto: https`, `X-Forwarded-For`, and `Host`), or requests will encounter infinite redirect loops or SSL verification errors.
+   - **Health Checks**: The unauthenticated `/up` health check endpoint is automatically excluded from SSL redirection and host authorization, allowing local health probes to check `http://127.0.0.1:3000/up`.
+
+4. **Verification and Management**:
+   - Check container status: `docker compose ps`
+   - View container logs: `docker compose logs -f web`
+   - Verify health endpoint: `curl -i http://127.0.0.1:3000/up`
+
+5. **Persistence and Backups**:
+   - SQLite production data and Active Job queue state (Solid Queue, Cache, Cable) persist in the named Docker volume `gym_ghost_storage`.
+     - **To create a full backup archive** (compresses the entire persistent storage volume into `gym_ghost_storage_backup.tar.gz` in your current directory):
+       ```bash
+       docker run --rm -v gym_ghost_storage:/volume -v $(pwd):/backup alpine tar czf /backup/gym_ghost_storage_backup.tar.gz -C /volume .
+       ```
+     - **To restore from a backup archive** (stop the container first, restore files into the volume, then restart):
+       ```bash
+       docker compose down
+       docker run --rm -v gym_ghost_storage:/volume -v $(pwd):/backup alpine tar xzf /backup/gym_ghost_storage_backup.tar.gz -C /volume
+       docker compose up -d
+       ```
+     - **To perform an online hot backup of the primary database** while the app is running:
+       ```bash
+       docker compose exec web bundle exec rails runner "ActiveRecord::Base.connection.execute('VACUUM INTO \"storage/production_backup.sqlite3\"')"
+       ```
+
+6. **Automatic Startup on System Boot**:
+   - The container is configured with `restart: unless-stopped` in `docker-compose.yml`, which means it will automatically start whenever the Docker daemon runs.
+   - To ensure Docker itself starts automatically on system boot on Ubuntu:
+     ```bash
+     sudo systemctl enable docker
+     ```
+   - Once enabled, whenever your server boots up, Docker will start the daemon, and the Gym Ghost container will automatically start up.
+
+## Contributing
 - This is a personal project scaffold. Open issues/PRs as needed; include tests for new behavior.
 
-License
+## License
 - MIT
 
-Contact
+## Contact
 - Solo project; maintained by the repository owner.
