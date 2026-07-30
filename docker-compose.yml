@@ -13,6 +13,8 @@ services:
       ATTR_ENCRYPTED_KEY: "${ATTR_ENCRYPTED_KEY:?Set ATTR_ENCRYPTED_KEY in .env}"
       SMOKE_USER_EMAIL: "${SMOKE_USER_EMAIL:-}"
       SMOKE_USER_PASSWORD: "${SMOKE_USER_PASSWORD:-}"
+      INITIAL_ADMIN_EMAIL: "${INITIAL_ADMIN_EMAIL:-}"
+      INITIAL_ADMIN_PASSWORD: "${INITIAL_ADMIN_PASSWORD:-}"
     volumes:
       - gym_ghost_storage:/app/storage
     restart: unless-stopped
