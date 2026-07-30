@@ -2,5 +2,10 @@
 require_relative "../config/boot"
 require "bundler/audit/cli"
 
-ARGV.concat %w[ --config config/bundler-audit.yml ] if ARGV.empty? || ARGV.include?("check")
+# Clear GIT_* env vars (commonly set during `git` hooks like pre-push) so that
+# `git pull origin master` inside bundler-audit operates on the advisory DB
+# repo instead of the main project repo (which lacks a 'master' branch).
+ENV.delete_if { |k, _| k.start_with?("GIT_") }
+
+ARGV.concat %w[ --update --config config/bundler-audit.yml ] if ARGV.empty? || ARGV.include?("check")
 Bundler::Audit::CLI.start
