@@ -179,9 +179,16 @@ A Playwright test verifies the user-facing schedule page works end-to-end agains
    - Set `APP_HOSTS` to your local network IP(s), mesh network IP(s), or local hostname(s) (comma-separated if multiple).
    - Set `SECRET_KEY_BASE` to a long random secret value (generate one with `bin/rails secret` or `openssl rand -hex 64`).
    - Set `ATTR_ENCRYPTED_KEY` to a 32-byte encryption key (e.g., `bin/rails secret` or `openssl rand -hex 32`).
+   - Optionally set `INITIAL_ADMIN_EMAIL` / `INITIAL_ADMIN_PASSWORD` (these vars are passed through `docker-compose.yml`) to create an initial admin user on first deployment (see db/seeds.rb and issue #241).
 
 2. **Build and Run Containers**:
    - Run `docker compose up --build -d` to build the production image (which automatically compiles the React frontend into Rails' `public/` directory and runs the app as a non-root user) and start services in detached mode.
+
+   - **First deployment only** — if you set `INITIAL_ADMIN_*` vars, run the seed manually inside the container (env vars from `.env` are available):
+     ```
+     docker compose exec web bin/rails db:seed
+     ```
+     (Seeds are idempotent; skip on subsequent deploys.)
 
 3. **Reverse Proxy, Network Access, and TLS (HTTPS)**:
    - Docker Compose binds the container port to loopback only (`127.0.0.1:3000`), protecting it from direct unvetted access.
