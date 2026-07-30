@@ -59,7 +59,7 @@ RSpec.describe "BookingRequests", type: :request do
       )
     end
 
-    it "returns 404 when no gym member profile matches the authenticated user" do
+    it "returns 204 when no gym members exist" do
       user = create(:user, email: "noprofile@example.com")
       raw_token = SecureRandom.hex(32)
       create(:token, user:, digest: Token.digest(raw_token))
@@ -70,20 +70,53 @@ RSpec.describe "BookingRequests", type: :request do
         start_time: Time.zone.parse("2026-08-01 07:00:00 UTC")
       )
 
-      post "/api/v1/booking_requests",
-           params: { schedule_entry_id: schedule_entry.id },
-           headers: { "Authorization" => "Bearer #{raw_token}" },
-           as: :json
+      expect {
+        post "/api/v1/booking_requests",
+             params: { schedule_entry_id: schedule_entry.id },
+             headers: { "Authorization" => "Bearer #{raw_token}" },
+             as: :json
+      }.to change(BookingRequest, :count).by(0)
 
-      expect(response).to have_http_status(:not_found)
-      expect(response.parsed_body).to eq(
-        "errors" => [
-          {
-            "status" => 404,
-            "title" => "Not Found",
-            "detail" => "The requested resource does not exist."
-          }
-        ]
+      expect(response).to have_http_status(:no_content)
+      expect(response.body).to be_empty
+    end
+
+    it "creates booking requests for all gym members" do
+      user = create(:user, email: "member@example.com")
+      gym_member_1 = create(:gym_member, email: "member1@example.com")
+      gym_member_2 = create(:gym_member, email: "member2@example.com")
+      raw_token = SecureRandom.hex(32)
+      create(:token, user:, digest: Token.digest(raw_token))
+
+      schedule_entry = create(
+        :schedule_entry,
+        date: Date.new(2026, 8, 1),
+        start_time: Time.zone.parse("2026-08-01 07:00:00 UTC")
+      )
+
+      expected_window = Time.zone.parse("2026-07-31 07:00:00 UTC")
+
+      expect {
+        post "/api/v1/booking_requests",
+             params: { schedule_entry_id: schedule_entry.id },
+             headers: { "Authorization" => "Bearer #{raw_token}" },
+             as: :json
+      }.to have_enqueued_job(BookingRequestJob).twice
+
+      expect(response).to have_http_status(:created)
+      body = response.parsed_body
+      expect(body["booking_request"]).to include(
+        "status" => "pending",
+        "schedule_entry_id" => schedule_entry.id
+      )
+      expect(body["booking_request"]["id"]).to be_present
+      expect(body["booking_request"]["booking_window_opens_at"]).to be_present
+      expect(body["created_count"]).to eq(2)
+
+      expect(BookingRequest.count).to eq(2)
+      booking_requests = BookingRequest.where(schedule_entry: schedule_entry)
+      expect(booking_requests.pluck(:gym_member_id)).to contain_exactly(
+        gym_member_1.id, gym_member_2.id
       )
     end
 
@@ -116,6 +149,7 @@ RSpec.describe "BookingRequests", type: :request do
       )
       expect(body["booking_request"]["id"]).to be_present
       expect(body["booking_request"]["booking_window_opens_at"]).to be_present
+      expect(body["created_count"]).to eq(1)
 
       booking_request = BookingRequest.find(body["booking_request"]["id"])
       expect(booking_request.gym_member).to eq(gym_member)
@@ -150,6 +184,7 @@ RSpec.describe "BookingRequests", type: :request do
         "schedule_entry_id" => schedule_entry.id
       )
       expect(body["booking_request"]["id"]).to be_present
+      expect(body["created_count"]).to eq(1)
 
       booking_request = BookingRequest.find(body["booking_request"]["id"])
       expect(booking_request.gym_member).to eq(gym_member)
@@ -157,7 +192,7 @@ RSpec.describe "BookingRequests", type: :request do
       expect(booking_request.booking_window_opens_at).to be_past
     end
 
-    it "returns 409 when a duplicate pending booking request exists" do
+    it "returns 204 when all members already have pending booking requests" do
       user = create(:user, email: "member@example.com")
       gym_member = create(:gym_member, email: "member@example.com")
       raw_token = SecureRandom.hex(32)
@@ -176,21 +211,57 @@ RSpec.describe "BookingRequests", type: :request do
         status: :pending
       )
 
-      post "/api/v1/booking_requests",
-           params: { schedule_entry_id: schedule_entry.id },
-           headers: { "Authorization" => "Bearer #{raw_token}" },
-           as: :json
+      expect {
+        post "/api/v1/booking_requests",
+             params: { schedule_entry_id: schedule_entry.id },
+             headers: { "Authorization" => "Bearer #{raw_token}" },
+             as: :json
+      }.to have_enqueued_job(BookingRequestJob).exactly(0)
 
-      expect(response).to have_http_status(:conflict)
-      expect(response.parsed_body).to eq(
-        "errors" => [
-          {
-            "status" => 409,
-            "title" => "Conflict",
-            "detail" => "A booking request already exists for this schedule entry."
-          }
-        ]
+      expect(response).to have_http_status(:no_content)
+      expect(response.body).to be_empty
+    end
+
+    it "returns 201 with correct count when some members are duplicates" do
+      user = create(:user, email: "member@example.com")
+      gym_member_1 = create(:gym_member, email: "member1@example.com")
+      gym_member_2 = create(:gym_member, email: "member2@example.com")
+      raw_token = SecureRandom.hex(32)
+      create(:token, user:, digest: Token.digest(raw_token))
+
+      schedule_entry = create(
+        :schedule_entry,
+        date: Date.new(2026, 8, 1),
+        start_time: Time.zone.parse("2026-08-01 07:00:00 UTC")
       )
+
+      create(
+        :booking_request,
+        gym_member: gym_member_1,
+        schedule_entry: schedule_entry,
+        status: :pending
+      )
+
+      expect {
+        post "/api/v1/booking_requests",
+             params: { schedule_entry_id: schedule_entry.id },
+             headers: { "Authorization" => "Bearer #{raw_token}" },
+             as: :json
+      }.to have_enqueued_job(BookingRequestJob).once
+
+      expect(response).to have_http_status(:created)
+      body = response.parsed_body
+      expect(body["booking_request"]).to include(
+        "status" => "pending",
+        "schedule_entry_id" => schedule_entry.id
+      )
+      expect(body["created_count"]).to eq(1)
+
+      new_booking_requests = BookingRequest.where(
+        schedule_entry: schedule_entry,
+        gym_member: gym_member_2
+      )
+      expect(new_booking_requests.count).to eq(1)
     end
 
     it "returns 422 when the schedule entry is in the past" do
