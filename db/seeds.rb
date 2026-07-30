@@ -44,3 +44,17 @@ if Rails.env.test? || ENV["SMOKE_USER_EMAIL"].present?
     f.evo_token   = "smoke-evo-token-oviedo"
   end
 end
+
+# Initial admin User for first deployment / initialization (issue #241).
+# Triggered when INITIAL_ADMIN_EMAIL is set (provide via .env or compose env).
+# Keeps credentials out of source; idempotent via find_or_create_by! (uses
+# User's uniqueness validation on email and has_secure_password hashing).
+if ENV["INITIAL_ADMIN_EMAIL"].present?
+  email    = ENV.fetch("INITIAL_ADMIN_EMAIL")
+  password = ENV.fetch("INITIAL_ADMIN_PASSWORD")
+
+  User.find_or_create_by!(email: email) do |u|
+    u.password              = password
+    u.password_confirmation = password
+  end
+end
