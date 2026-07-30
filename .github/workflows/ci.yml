@@ -19,8 +19,7 @@ jobs:
       - name: Brakeman
         run: bundle exec brakeman --no-pager
       - name: Bundle Audit
-        run: |
-          bundle exec bundle-audit check --update
+        run: bin/bundler-audit
 
   test:
     name: Tests
