@@ -7,6 +7,15 @@ export APP_HOSTS="${APP_HOSTS:-smoke.gym-ghost.test}"
 export SECRET_KEY_BASE="${SECRET_KEY_BASE:-ci-smoke-test-secret}"
 export ATTR_ENCRYPTED_KEY="${ATTR_ENCRYPTED_KEY:-ci-smoke-test-encryption-key-32!}"
 
+# Partner API dummies for smoke/CI (compose requires them; sync avoided by seeds)
+export PARTNER_API_BASE_URL="${PARTNER_API_BASE_URL:-http://partner.test}"
+export PARTNER_BRANCHES_API_BASE_URL="${PARTNER_BRANCHES_API_BASE_URL:-http://partner.test}"
+export PARTNER_BRANCHES_BRAND="${PARTNER_BRANCHES_BRAND:-TestBrand}"
+export PARTNER_AUTH_TOKEN="${PARTNER_AUTH_TOKEN:-dummy-auth-token}"
+export PARTNER_AUTH_ORIGIN="${PARTNER_AUTH_ORIGIN:-https://partner.example.com}"
+export PARTNER_AUTH_REFERER="${PARTNER_AUTH_REFERER:-https://partner.example.com}"
+export PARTNER_ACTIVITIES_TOKEN="${PARTNER_ACTIVITIES_TOKEN:-dummy-activities-token}"
+
 cleanup() {
   status=$?
 

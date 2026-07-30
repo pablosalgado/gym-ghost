@@ -29,6 +29,10 @@ jobs:
       PARTNER_API_BASE_URL: "http://partner.test"
       PARTNER_BRANCHES_API_BASE_URL: "http://partner.test"
       PARTNER_BRANCHES_BRAND: "TestBrand"
+      PARTNER_AUTH_TOKEN: "dummy-auth-token"
+      PARTNER_AUTH_ORIGIN: "https://partner.example.com"
+      PARTNER_AUTH_REFERER: "https://partner.example.com"
+      PARTNER_ACTIVITIES_TOKEN: "dummy-activities-token"
     steps:
       - uses: actions/checkout@v7
       - uses: ruby/setup-ruby@v1
