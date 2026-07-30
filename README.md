@@ -218,7 +218,7 @@ A Playwright test verifies the user-facing schedule page works end-to-end agains
        ```
      - **To perform an online hot backup of the primary database** while the app is running:
        ```bash
-       docker compose exec web bundle exec rails runner "ActiveRecord::Base.connection.execute('VACUUM INTO \"storage/production_backup.sqlite3\"')"
+       docker compose exec web bundle exec rails runner "ActiveRecord::Base.connection.execute(\"VACUUM INTO 'storage/production_backup.sqlite3'\")"
        ```
 
 6. **Automatic Startup on System Boot**:
