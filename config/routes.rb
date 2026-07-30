@@ -4,6 +4,7 @@ Rails.application.routes.draw do
   namespace :api do
     namespace :v1 do
       post "/auth", to: "auth#create"
+      patch "/profile/password", to: "passwords#update"
       get "/schedule", to: "schedule#index"
       get "/cities", to: "cities#index"
       get "/facilities", to: "facilities#index"

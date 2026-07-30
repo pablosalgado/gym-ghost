@@ -43,6 +43,36 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /api/v1/profile/password:
+    patch:
+      summary: Update authenticated user's password
+      description: Allows a logged-in user to change their password after verifying the current one.
+      tags:
+        - Authentication
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PasswordUpdateRequest"
+      responses:
+        "200":
+          description: Password updated successfully
+        "401":
+          description: Current password incorrect or authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "422":
+          description: Validation failed (missing params, password mismatch, or invalid new password)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /api/v1/schedule:
     get:
       summary: Get class schedule
@@ -369,6 +399,27 @@ components:
           type: string
           format: password
           example: Password123!
+      additionalProperties: false
+
+    PasswordUpdateRequest:
+      type: object
+      required:
+        - current_password
+        - password
+        - password_confirmation
+      properties:
+        current_password:
+          type: string
+          format: password
+          example: Password123!
+        password:
+          type: string
+          format: password
+          example: NewPassword123!
+        password_confirmation:
+          type: string
+          format: password
+          example: NewPassword123!
       additionalProperties: false
 
     LoginResponse:
