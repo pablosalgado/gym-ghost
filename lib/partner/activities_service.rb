@@ -34,6 +34,8 @@ module Partner
     # Returns an array of ScheduleEntry records.
     # Raises Partner::ActivitiesError on any failure.
     def fetch(facility:, date:)
+      return [] if facility.nil?
+
       resolved_date = date.is_a?(String) ? Date.parse(date) : date
       cache_key = "schedule_load:#{facility.id}:#{resolved_date}"
 

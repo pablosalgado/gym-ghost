@@ -3,22 +3,18 @@ module Api
     class ScheduleController < ApplicationController
       def index
         date = schedule_params[:date]
-        entries = ScheduleEntry.includes(:class_type, :facility).where(date: date)
-        entries = entries.where(facility_id: schedule_params[:facility_id]) if schedule_params[:facility_id].present?
-        entries = entries.where(start_time: Time.current..)
-        entries = entries.order(:start_time).to_a
+        facility_id = schedule_params[:facility_id]
 
-        if entries.empty? && schedule_params[:facility_id].present?
-          facility = Facility.find_by(id: schedule_params[:facility_id])
-          if facility
-            begin
-              Partner::ActivitiesService.new.fetch(facility: facility, date: date)
-              entries = ScheduleEntry.includes(:class_type, :facility).where(date: date, facility_id: facility.id, start_time: Time.current..).order(:start_time).to_a
-            rescue Partner::ActivitiesError => e
-              Rails.logger.warn("ScheduleController fetch failed for facility=#{facility.id} date=#{date}: #{e.message}")
-            end
-          end
+        entries = if facility_id.present?
+                    Partner::ActivitiesService.new.fetch(
+                      facility: Facility.find_by(id: facility_id),
+                      date: date
+                    )
+        else
+                    ScheduleEntry.includes(:class_type, :facility).where(date: date)
         end
+
+        entries = entries.select { |e| e.start_time >= Time.current }.sort_by(&:start_time)
 
         booking_requests_by_entry = booking_requests_for(entries)
 

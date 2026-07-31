@@ -101,8 +101,6 @@ RSpec.describe "Schedule", type: :request do
         start_time: Time.zone.parse("2026-07-21 10:00:00 UTC")
       )
 
-      allow(Partner::ActivitiesService).to receive(:new)
-
       user = create(:user)
       raw_token = SecureRandom.hex(32)
       create(:token, user:, digest: Token.digest(raw_token))
@@ -110,8 +108,6 @@ RSpec.describe "Schedule", type: :request do
       get "/api/v1/schedule",
           params: { date: "2026-07-21", facility_id: facility_a.id },
           headers: { "Authorization" => "Bearer #{raw_token}" }
-
-      expect(Partner::ActivitiesService).not_to have_received(:new)
 
       expect(response).to have_http_status(:ok)
       body = response.parsed_body
@@ -151,6 +147,18 @@ RSpec.describe "Schedule", type: :request do
           headers: { "Authorization" => "Bearer #{raw_token}" }
 
       expect(Partner::ActivitiesService).not_to have_received(:new)
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body).to eq("schedule" => [], "class_types" => [])
+    end
+
+    it "returns empty schedule when facility_id does not exist (nil guard in service)" do
+      user = create(:user)
+      raw_token = SecureRandom.hex(32)
+      create(:token, user:, digest: Token.digest(raw_token))
+
+      get "/api/v1/schedule",
+          params: { date: "2026-07-22", facility_id: 999999 },
+          headers: { "Authorization" => "Bearer #{raw_token}" }
 
       expect(response).to have_http_status(:ok)
       expect(response.parsed_body).to eq("schedule" => [], "class_types" => [])
