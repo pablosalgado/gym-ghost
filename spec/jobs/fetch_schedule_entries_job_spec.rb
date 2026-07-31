@@ -9,11 +9,14 @@ RSpec.describe FetchScheduleEntriesJob, type: :job do
     let(:service)  { instance_double(Partner::ActivitiesService) }
 
     before do
+      Rails.cache = ActiveSupport::Cache::MemoryStore.new
+      Rails.cache.clear
+
       allow(Partner::ActivitiesService).to receive(:new).and_return(service)
       allow(service).to receive(:fetch)
     end
 
-    it "delegates to Partner::ActivitiesService#fetch with correct args" do
+    it "delegates to Partner::ActivitiesService#fetch with correct args and sets cache lock" do
       perform_enqueued_jobs do
         described_class.perform_later(facility.id, date)
       end
@@ -21,6 +24,18 @@ RSpec.describe FetchScheduleEntriesJob, type: :job do
       expect(Partner::ActivitiesService).to have_received(:new).once
       expect(service).to have_received(:fetch)
         .with(facility: facility, date: date).once
+      expect(Rails.cache.exist?("schedule_load:#{facility.id}:#{date}")).to be true
+    end
+
+    it "skips fetching when cache lock already exists (preventing concurrent fetches)" do
+      Rails.cache.write("schedule_load:#{facility.id}:#{date}", true)
+
+      perform_enqueued_jobs do
+        described_class.perform_later(facility.id, date)
+      end
+
+      expect(Partner::ActivitiesService).not_to have_received(:new)
+      expect(service).not_to have_received(:fetch)
     end
 
     it "rescues Partner::ActivitiesError and logs a warning without retrying" do
@@ -35,6 +50,8 @@ RSpec.describe FetchScheduleEntriesJob, type: :job do
           described_class.perform_later(facility.id, date)
         end
       end.not_to raise_error
+
+      expect(Rails.cache.exist?("schedule_load:#{facility.id}:#{date}")).to be true
     end
   end
 
