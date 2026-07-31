@@ -20,23 +20,23 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_28_142954) do
     t.integer "schedule_entry_id", null: false
     t.integer "status", default: 0, null: false
     t.datetime "updated_at", null: false
-    t.index ["gym_member_id", "schedule_entry_id"], name: "idx_booking_requests_on_member_schedule_unique_active", unique: true, where: "status IN (0, 1)"
-    t.index ["gym_member_id"], name: "index_booking_requests_on_gym_member_id"
-    t.index ["schedule_entry_id"], name: "index_booking_requests_on_schedule_entry_id"
+    t.index [ "gym_member_id", "schedule_entry_id" ], name: "idx_booking_requests_on_member_schedule_unique_active", unique: true, where: "status IN (0, 1)"
+    t.index [ "gym_member_id" ], name: "index_booking_requests_on_gym_member_id"
+    t.index [ "schedule_entry_id" ], name: "index_booking_requests_on_schedule_entry_id"
   end
 
   create_table "cities", force: :cascade do |t|
     t.string "city_name", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["city_name"], name: "index_cities_on_city_name", unique: true
+    t.index [ "city_name" ], name: "index_cities_on_city_name", unique: true
   end
 
   create_table "class_types", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "name", null: false
     t.datetime "updated_at", null: false
-    t.index ["name"], name: "index_class_types_on_name", unique: true
+    t.index [ "name" ], name: "index_class_types_on_name", unique: true
   end
 
   create_table "facilities", force: :cascade do |t|
@@ -47,8 +47,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_28_142954) do
     t.integer "external_id", null: false
     t.string "name"
     t.datetime "updated_at", null: false
-    t.index ["city_id"], name: "index_facilities_on_city_id"
-    t.index ["external_id"], name: "index_facilities_on_external_id", unique: true
+    t.index [ "city_id" ], name: "index_facilities_on_city_id"
+    t.index [ "external_id" ], name: "index_facilities_on_external_id", unique: true
   end
 
   create_table "gym_members", force: :cascade do |t|
@@ -57,7 +57,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_28_142954) do
     t.string "encrypted_password", null: false
     t.string "encrypted_password_iv", null: false
     t.datetime "updated_at", null: false
-    t.index ["email"], name: "index_gym_members_on_email", unique: true
+    t.index [ "email" ], name: "index_gym_members_on_email", unique: true
   end
 
   create_table "partner_tokens", force: :cascade do |t|
@@ -69,7 +69,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_28_142954) do
     t.integer "gym_member_id", null: false
     t.datetime "token_expires_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["gym_member_id"], name: "index_partner_tokens_on_gym_member_id"
+    t.index [ "gym_member_id" ], name: "index_partner_tokens_on_gym_member_id"
   end
 
   create_table "schedule_entries", force: :cascade do |t|
@@ -81,10 +81,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_28_142954) do
     t.string "partner_activity_id"
     t.datetime "start_time", null: false
     t.datetime "updated_at", null: false
-    t.index ["class_type_id"], name: "index_schedule_entries_on_class_type_id"
-    t.index ["facility_id", "class_type_id", "start_time"], name: "idx_on_facility_id_class_type_id_start_time_ccce54ca85", unique: true
-    t.index ["facility_id", "class_type_id"], name: "index_schedule_entries_on_facility_id_and_class_type_id"
-    t.index ["facility_id"], name: "index_schedule_entries_on_facility_id"
+    t.index [ "class_type_id" ], name: "index_schedule_entries_on_class_type_id"
+    t.index [ "facility_id", "class_type_id", "start_time" ], name: "idx_on_facility_id_class_type_id_start_time_ccce54ca85", unique: true
+    t.index [ "facility_id", "class_type_id" ], name: "index_schedule_entries_on_facility_id_and_class_type_id"
+    t.index [ "facility_id" ], name: "index_schedule_entries_on_facility_id"
   end
 
   create_table "tokens", force: :cascade do |t|
@@ -92,8 +92,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_28_142954) do
     t.string "digest", null: false
     t.datetime "updated_at", null: false
     t.integer "user_id", null: false
-    t.index ["digest"], name: "index_tokens_on_digest", unique: true
-    t.index ["user_id"], name: "index_tokens_on_user_id"
+    t.index [ "digest" ], name: "index_tokens_on_digest", unique: true
+    t.index [ "user_id" ], name: "index_tokens_on_user_id"
   end
 
   create_table "users", force: :cascade do |t|
@@ -101,7 +101,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_28_142954) do
     t.string "email", null: false
     t.string "password_digest", null: false
     t.datetime "updated_at", null: false
-    t.index ["email"], name: "index_users_on_email", unique: true
+    t.index [ "email" ], name: "index_users_on_email", unique: true
   end
 
   add_foreign_key "booking_requests", "gym_members"
