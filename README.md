@@ -179,6 +179,7 @@ A Playwright test verifies the user-facing schedule page works end-to-end agains
    - Set `APP_HOSTS` to your local network IP(s), mesh network IP(s), or local hostname(s) (comma-separated if multiple).
    - Set `SECRET_KEY_BASE` to a long random secret value (generate one with `bin/rails secret` or `openssl rand -hex 64`).
    - Set `ATTR_ENCRYPTED_KEY` to a 32-byte encryption key (e.g., `bin/rails secret` or `openssl rand -hex 32`).
+   - Optionally set `SENTRY_DSN`, `SENTRY_ENVIRONMENT` (defaults to Rails.env), and `SENTRY_TRACES_SAMPLE_RATE` (defaults to `1.0`) for Sentry error tracking and performance monitoring.
    - Optionally set `INITIAL_ADMIN_EMAIL` / `INITIAL_ADMIN_PASSWORD` (these vars are passed through `docker-compose.yml`) to create an initial admin user on first deployment (see db/seeds.rb and issue #241).
 
 2. **Build and Run Containers**:

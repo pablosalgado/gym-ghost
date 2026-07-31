@@ -42,6 +42,10 @@ gem "ruby-vips", "~> 2.0"
 # HTTP client for downstream partner API communication
 gem "httparty"
 
+# Error tracking and performance monitoring
+gem "sentry-ruby"
+gem "sentry-rails"
+
 # Use Rack CORS for handling Cross-Origin Resource Sharing (CORS), making cross-origin Ajax possible
 # gem "rack-cors"
 
