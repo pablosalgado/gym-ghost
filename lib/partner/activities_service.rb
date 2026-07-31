@@ -34,14 +34,17 @@ module Partner
     # Returns an array of ScheduleEntry records.
     # Raises Partner::ActivitiesError on any failure.
     def fetch(facility:, date:)
-      cache_key = "schedule_load:#{facility.id}:#{date}"
+      resolved_date = date.is_a?(String) ? Date.parse(date) : date
+      cache_key = "schedule_load:#{facility.id}:#{resolved_date}"
 
       unless Rails.cache.write(cache_key, true, unless_exist: true, expires_in: 5.minutes)
-        resolved_date = date.is_a?(String) ? Date.parse(date) : date
         return ScheduleEntry.includes(:class_type, :facility).where(facility: facility, date: resolved_date).to_a
       end
 
       begin
+        local_entries = ScheduleEntry.includes(:class_type, :facility).where(facility: facility, date: resolved_date).to_a
+        return local_entries if local_entries.any?
+
         response = request_activities(facility, date)
         payload = parse_payload(response)
 
