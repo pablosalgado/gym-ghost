@@ -101,15 +101,17 @@ RSpec.describe "Schedule", type: :request do
         start_time: Time.zone.parse("2026-07-21 10:00:00 UTC")
       )
 
+      allow(Partner::ActivitiesService).to receive(:new)
+
       user = create(:user)
       raw_token = SecureRandom.hex(32)
       create(:token, user:, digest: Token.digest(raw_token))
 
-      expect {
-        get "/api/v1/schedule",
-            params: { date: "2026-07-21", facility_id: facility_a.id },
-            headers: { "Authorization" => "Bearer #{raw_token}" }
-      }.not_to have_enqueued_job(FetchScheduleEntriesJob)
+      get "/api/v1/schedule",
+          params: { date: "2026-07-21", facility_id: facility_a.id },
+          headers: { "Authorization" => "Bearer #{raw_token}" }
+
+      expect(Partner::ActivitiesService).not_to have_received(:new)
 
       expect(response).to have_http_status(:ok)
       body = response.parsed_body
@@ -117,35 +119,38 @@ RSpec.describe "Schedule", type: :request do
       expect(body["schedule"].first["facility_id"]).to eq(facility_a.id)
     end
 
-    it "enqueues FetchScheduleEntriesJob on cache miss with facility_id and returns empty results" do
+    it "calls Partner::ActivitiesService#fetch on cache miss with facility_id and returns results" do
       facility = create(:facility)
+      service = instance_double(Partner::ActivitiesService, fetch: [])
+      allow(Partner::ActivitiesService).to receive(:new).and_return(service)
 
       user = create(:user)
       raw_token = SecureRandom.hex(32)
       create(:token, user:, digest: Token.digest(raw_token))
 
-      expect {
-        get "/api/v1/schedule",
-            params: { date: "2026-07-22", facility_id: facility.id },
-            headers: { "Authorization" => "Bearer #{raw_token}" }
-      }.to have_enqueued_job(FetchScheduleEntriesJob)
-        .with(facility.id.to_s, "2026-07-22")
+      get "/api/v1/schedule",
+          params: { date: "2026-07-22", facility_id: facility.id },
+          headers: { "Authorization" => "Bearer #{raw_token}" }
+
+      expect(Partner::ActivitiesService).to have_received(:new).once
+      expect(service).to have_received(:fetch).with(facility: facility, date: "2026-07-22").once
 
       expect(response).to have_http_status(:ok)
       expect(response.parsed_body).to eq("schedule" => [], "class_types" => [])
     end
 
+    it "does not call Partner::ActivitiesService when facility_id is missing on cache miss" do
+      allow(Partner::ActivitiesService).to receive(:new)
 
-    it "does not enqueue job when facility_id is missing on cache miss" do
       user = create(:user)
       raw_token = SecureRandom.hex(32)
       create(:token, user:, digest: Token.digest(raw_token))
 
-      expect {
-        get "/api/v1/schedule",
-            params: { date: "2026-07-22" },
-            headers: { "Authorization" => "Bearer #{raw_token}" }
-      }.not_to have_enqueued_job(FetchScheduleEntriesJob)
+      get "/api/v1/schedule",
+          params: { date: "2026-07-22" },
+          headers: { "Authorization" => "Bearer #{raw_token}" }
+
+      expect(Partner::ActivitiesService).not_to have_received(:new)
 
       expect(response).to have_http_status(:ok)
       expect(response.parsed_body).to eq("schedule" => [], "class_types" => [])

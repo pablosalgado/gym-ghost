@@ -9,7 +9,15 @@ module Api
         entries = entries.order(:start_time).to_a
 
         if entries.empty? && schedule_params[:facility_id].present?
-          FetchScheduleEntriesJob.perform_later(schedule_params[:facility_id], date)
+          facility = Facility.find_by(id: schedule_params[:facility_id])
+          if facility
+            begin
+              Partner::ActivitiesService.new.fetch(facility: facility, date: date)
+              entries = ScheduleEntry.includes(:class_type, :facility).where(date: date, facility_id: facility.id, start_time: Time.current..).order(:start_time).to_a
+            rescue Partner::ActivitiesError => e
+              Rails.logger.warn("ScheduleController fetch failed for facility=#{facility.id} date=#{date}: #{e.message}")
+            end
+          end
         end
 
         booking_requests_by_entry = booking_requests_for(entries)
