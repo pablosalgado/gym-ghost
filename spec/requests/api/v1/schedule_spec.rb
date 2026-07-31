@@ -135,6 +135,24 @@ RSpec.describe "Schedule", type: :request do
       expect(response.parsed_body).to eq("schedule" => [], "class_types" => [])
     end
 
+    it "does not enqueue FetchScheduleEntriesJob when cache lock already exists for facility and date" do
+      facility = create(:facility)
+      date_str = "2026-07-22"
+      Rails.cache.write("schedule_load:#{facility.id}:#{date_str}", true)
+
+      user = create(:user)
+      raw_token = SecureRandom.hex(32)
+      create(:token, user:, digest: Token.digest(raw_token))
+
+      expect {
+        get "/api/v1/schedule",
+            params: { date: date_str, facility_id: facility.id },
+            headers: { "Authorization" => "Bearer #{raw_token}" }
+      }.not_to have_enqueued_job(FetchScheduleEntriesJob)
+
+      expect(response).to have_http_status(:ok)
+    end
+
     it "does not enqueue job when facility_id is missing on cache miss" do
       user = create(:user)
       raw_token = SecureRandom.hex(32)

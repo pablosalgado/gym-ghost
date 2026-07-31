@@ -34,49 +34,60 @@ module Partner
     # Returns an array of ScheduleEntry records.
     # Raises Partner::ActivitiesError on any failure.
     def fetch(facility:, date:)
-      response = request_activities(facility, date)
-      payload = parse_payload(response)
+      cache_key = "schedule_load:#{facility.id}:#{date}"
 
-      raise ActivitiesError, error_detail(response, payload) unless response.success?
-      raise ActivitiesError, error_detail(response, payload) if payload["status"] == "ERROR"
-
-      data = payload["data"]
-      raise ActivitiesError, "Missing data array in partner response" unless data.is_a?(Array)
-
-      holiday_dates = Set.new
-
-      entries = data.each_with_object([]) do |item, result|
-        next if item["activity_name"].blank?
-
-        class_type = ClassType.find_or_create_by!(name: item["activity_name"])
-
-        facility_record = Facility.find_by(external_id: item["branch_id"])
-        next if facility_record.nil?
-
-        start_time = item["start_time"]
-        entry_date = resolve_entry_date(item, date)
-
-        if HolidayService.holiday?(entry_date)
-          holiday_dates << [ facility_record.id, entry_date ]
-          next
-        end
-
-        entry = ScheduleEntry.find_or_initialize_by(
-          facility: facility_record,
-          class_type: class_type,
-          start_time: start_time
-        )
-        entry.date = entry_date
-        entry.partner_activity_id = item["activity_id"]
-        entry.activ_config_id = item["activ_config_id"]
-        entry.save!
-
-        result << entry
+      unless Rails.cache.write(cache_key, true, unless_exist: true, expires_in: 5.minutes)
+        resolved_date = date.is_a?(String) ? Date.parse(date) : date
+        return ScheduleEntry.includes(:class_type, :facility).where(facility: facility, date: resolved_date).to_a
       end
 
-      backfill_holidays(holiday_dates)
+      begin
+        response = request_activities(facility, date)
+        payload = parse_payload(response)
 
-      entries
+        raise ActivitiesError, error_detail(response, payload) unless response.success?
+        raise ActivitiesError, error_detail(response, payload) if payload["status"] == "ERROR"
+
+        data = payload["data"]
+        raise ActivitiesError, "Missing data array in partner response" unless data.is_a?(Array)
+
+        holiday_dates = Set.new
+
+        entries = data.each_with_object([]) do |item, result|
+          next if item["activity_name"].blank?
+
+          class_type = ClassType.find_or_create_by!(name: item["activity_name"])
+
+          facility_record = Facility.find_by(external_id: item["branch_id"])
+          next if facility_record.nil?
+
+          start_time = item["start_time"]
+          entry_date = resolve_entry_date(item, date)
+
+          if HolidayService.holiday?(entry_date)
+            holiday_dates << [ facility_record.id, entry_date ]
+            next
+          end
+
+          entry = ScheduleEntry.find_or_initialize_by(
+            facility: facility_record,
+            class_type: class_type,
+            start_time: start_time
+          )
+          entry.date = entry_date
+          entry.partner_activity_id = item["activity_id"]
+          entry.activ_config_id = item["activ_config_id"]
+          entry.save!
+
+          result << entry
+        end
+
+        backfill_holidays(holiday_dates)
+
+        entries
+      ensure
+        Rails.cache.delete(cache_key)
+      end
     end
 
     private

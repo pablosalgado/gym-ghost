@@ -436,5 +436,29 @@ RSpec.describe Partner::ActivitiesService do
         expect(entries).to be_empty
       end
     end
+
+    context "concurrency locking" do
+      before do
+        Rails.cache = ActiveSupport::Cache::MemoryStore.new
+        Rails.cache.clear
+      end
+
+      it "skips fetching and returns existing local entries when cache lock already exists" do
+        Rails.cache.write("schedule_load:#{facility.id}:#{date}", true)
+        existing_entry = create(:schedule_entry, facility: facility, date: date)
+
+        expect(described_class).not_to receive(:get)
+        entries = service.fetch(facility:, date:)
+
+        expect(entries).to eq([ existing_entry ])
+      end
+
+      it "clears cache lock in ensure block even when fetching raises an error" do
+        allow(described_class).to receive(:get).and_raise(StandardError.new("Network error"))
+
+        expect { service.fetch(facility:, date:) }.to raise_error(StandardError, /Network error/)
+        expect(Rails.cache.exist?("schedule_load:#{facility.id}:#{date}")).to be false
+      end
+    end
   end
 end

@@ -9,7 +9,8 @@ module Api
         entries = entries.order(:start_time).to_a
 
         if entries.empty? && schedule_params[:facility_id].present?
-          FetchScheduleEntriesJob.perform_later(schedule_params[:facility_id], date)
+          cache_key = "schedule_load:#{schedule_params[:facility_id]}:#{date}"
+          FetchScheduleEntriesJob.perform_later(schedule_params[:facility_id], date) unless Rails.cache.exist?(cache_key)
         end
 
         booking_requests_by_entry = booking_requests_for(entries)

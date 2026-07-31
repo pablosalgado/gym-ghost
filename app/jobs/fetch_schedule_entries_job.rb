@@ -13,20 +13,12 @@
 class FetchScheduleEntriesJob < ApplicationJob
   queue_as :default
 
-  CACHE_TTL = 30.minutes
-
   # Wrapped by Active Job's retry/discards behavior is intentionally NOT
   # configured here: the service is idempotent (find_or_create_by! per row)
   # and a transient failure should be logged rather than silently retried.
   # The next user request for the same facility+date will re-trigger the
   # cache-miss enqueue naturally.
   def perform(facility_id, date)
-    cache_key = "schedule_load:#{facility_id}:#{date}"
-
-    unless Rails.cache.write(cache_key, true, unless_exist: true, expires_in: CACHE_TTL)
-      return
-    end
-
     facility = Facility.find(facility_id)
     Partner::ActivitiesService.new.fetch(facility: facility, date: date)
   rescue Partner::ActivitiesError => e
