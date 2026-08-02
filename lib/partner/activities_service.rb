@@ -24,78 +24,114 @@ module Partner
 
     NON_HOLIDAY_SUNDAY_WALK_BACK_LIMIT = 7
 
+    # TTL for the schedule-load lock. It bounds how long a crashed request can
+    # block refetches for the same facility/date.
+    SCHEDULE_LOCK_TTL = 5.minutes
+
     def initialize; end
 
     # Fetches activities for the given facility and date.
     #
-    # facility - a Facility record whose evo_token is sent as token_branch
+    # facility - a Facility record
     # date     - a Date object or a String in YYYY-MM-DD format
     #
     # Returns an array of ScheduleEntry records.
     # Raises Partner::ActivitiesError on any failure.
     def fetch(facility:, date:)
-      return [] if facility.nil?
+      return [] if facility.nil? || date.nil?
 
-      resolved_date = date.is_a?(String) ? Date.parse(date) : date
-      cache_key = "schedule_load:#{facility.id}:#{resolved_date}"
+      requested_date = resolved_date(date)
+      stored_entries = local_entries(facility, requested_date)
+      return stored_entries if stored_entries.any?
 
-      unless Rails.cache.write(cache_key, true, unless_exist: true, expires_in: 5.minutes)
-        return ScheduleEntry.includes(:class_type, :facility).where(facility: facility, date: resolved_date).to_a
+      with_schedule_lock(facility, requested_date) do
+        fetch_from_partner(facility, requested_date)
       end
+    end
+
+    private
+
+    def local_entries(facility, date)
+      ScheduleEntry.includes(:class_type, :facility).where(facility:, date:)
+    end
+
+    # Guards the downstream fetch with a per-facility/per-date lock so concurrent
+    # requests don't trigger duplicate partner calls for the same schedule. When
+    # another request already holds the lock, serves whatever is stored locally.
+    def with_schedule_lock(facility, date)
+      cache_key = cache_key_for(facility, date)
+
+      return local_entries(facility, date).to_a unless Rails.cache.write(
+        cache_key, true, unless_exist: true, expires_in: SCHEDULE_LOCK_TTL
+      )
 
       begin
-        local_entries = ScheduleEntry.includes(:class_type, :facility).where(facility: facility, date: resolved_date).to_a
-        return local_entries if local_entries.any?
-
-        response = request_activities(facility, date)
-        payload = parse_payload(response)
-
-        raise ActivitiesError, error_detail(response, payload) unless response.success?
-        raise ActivitiesError, error_detail(response, payload) if payload["status"] == "ERROR"
-
-        data = payload["data"]
-        raise ActivitiesError, "Missing data array in partner response" unless data.is_a?(Array)
-
-        holiday_dates = Set.new
-
-        entries = data.each_with_object([]) do |item, result|
-          next if item["activity_name"].blank?
-
-          class_type = ClassType.find_or_create_by!(name: item["activity_name"])
-
-          facility_record = Facility.find_by(external_id: item["branch_id"])
-          next if facility_record.nil?
-
-          start_time = item["start_time"]
-          entry_date = resolve_entry_date(item, date)
-
-          if HolidayService.holiday?(entry_date)
-            holiday_dates << [ facility_record.id, entry_date ]
-            next
-          end
-
-          entry = ScheduleEntry.find_or_initialize_by(
-            facility: facility_record,
-            class_type: class_type,
-            start_time: start_time
-          )
-          entry.date = entry_date
-          entry.partner_activity_id = item["activity_id"]
-          entry.activ_config_id = item["activ_config_id"]
-          entry.save!
-
-          result << entry
-        end
-
-        backfill_holidays(holiday_dates)
-
-        entries
+        yield
       ensure
         Rails.cache.delete(cache_key)
       end
     end
 
-    private
+    def cache_key_for(facility, date)
+      "schedule_load:#{facility.id}:#{date}"
+    end
+
+    def resolved_date(date)
+      date.is_a?(String) ? Date.parse(date) : date
+    end
+
+    def fetch_from_partner(facility, date)
+      response = request_activities(facility, date)
+      payload = parse_payload(response)
+
+      raise ActivitiesError, error_detail(response, payload) unless response.success?
+      raise ActivitiesError, error_detail(response, payload) if payload["status"] == "ERROR"
+
+      data = payload["data"]
+      raise ActivitiesError, "Missing data array in partner response" unless data.is_a?(Array)
+
+      upsert_entries(data, date)
+    end
+
+    def upsert_entries(items, fallback_date)
+      holiday_dates = Set.new
+
+      entries = items.filter_map do |item|
+        upsert_entry(item, fallback_date, holiday_dates)
+      end
+
+      backfill_holidays(holiday_dates)
+
+      entries
+    end
+
+    def upsert_entry(item, fallback_date, holiday_dates)
+      return nil if item["activity_name"].blank?
+
+      class_type = ClassType.find_or_create_by!(name: item["activity_name"])
+
+      facility_record = Facility.find_by(external_id: item["branch_id"])
+      return nil if facility_record.nil?
+
+      entry_date = resolve_entry_date(item, fallback_date)
+
+      if HolidayService.holiday?(entry_date)
+        holiday_dates << [ facility_record.id, entry_date ]
+        return nil
+      end
+
+      entry = ScheduleEntry.find_or_initialize_by(
+        facility: facility_record,
+        class_type: class_type,
+        start_time: item["start_time"]
+      )
+      entry.date = entry_date
+      entry.partner_activity_id = item["activity_id"]
+      entry.activ_config_id = item["activ_config_id"]
+      entry.save!
+
+      entry
+    end
 
     def resolve_entry_date(item, fallback_date)
       raw = item["date"] || fallback_date
