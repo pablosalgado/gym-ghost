@@ -3,7 +3,20 @@ require "rails_helper"
 RSpec.describe "BookingRequests", type: :request do
   include_context "with OpenAPI contract"
 
+  # Controller resolves gym members via the current user's email, so the
+  # user and gym_member must share it. Pass with_member: false when the
+  # example creates its own gym_members.
+  def create_authenticated_user(email: "member@example.com", with_member: true)
+    user = create(:user, email:)
+    create(:gym_member, email:) if with_member
+    raw_token = SecureRandom.hex(32)
+    create(:token, user:, digest: Token.digest(raw_token))
+    [ user, raw_token ]
+  end
+
   describe "POST /api/v1/booking_requests" do
+    before { travel_to Time.parse("2026-07-31 00:00:00 UTC") }
+
     it "returns unauthorized when header is missing" do
       post "/api/v1/booking_requests", params: { schedule_entry_id: 1 }, as: :json
 
@@ -38,9 +51,7 @@ RSpec.describe "BookingRequests", type: :request do
     end
 
     it "returns 404 when schedule entry does not exist" do
-      user = create(:user)
-      raw_token = SecureRandom.hex(32)
-      create(:token, user:, digest: Token.digest(raw_token))
+      _user, raw_token = create_authenticated_user(email: "noprofile@example.com", with_member: false)
 
       post "/api/v1/booking_requests",
            params: { schedule_entry_id: 999 },
@@ -60,9 +71,7 @@ RSpec.describe "BookingRequests", type: :request do
     end
 
     it "returns 204 when no gym members exist" do
-      user = create(:user, email: "noprofile@example.com")
-      raw_token = SecureRandom.hex(32)
-      create(:token, user:, digest: Token.digest(raw_token))
+      _user, raw_token = create_authenticated_user(email: "noprofile@example.com", with_member: false)
 
       schedule_entry = create(
         :schedule_entry,
@@ -82,19 +91,15 @@ RSpec.describe "BookingRequests", type: :request do
     end
 
     it "creates booking requests for all gym members" do
-      user = create(:user, email: "member@example.com")
+      _user, raw_token = create_authenticated_user(email: "member@example.com", with_member: false)
       gym_member_1 = create(:gym_member, email: "member1@example.com")
       gym_member_2 = create(:gym_member, email: "member2@example.com")
-      raw_token = SecureRandom.hex(32)
-      create(:token, user:, digest: Token.digest(raw_token))
 
       schedule_entry = create(
         :schedule_entry,
         date: Date.new(2026, 8, 1),
         start_time: Time.parse("2026-08-01 07:00:00 UTC")
       )
-
-      expected_window = Time.parse("2026-07-31 07:00:00 UTC")
 
       expect {
         post "/api/v1/booking_requests",
@@ -121,49 +126,43 @@ RSpec.describe "BookingRequests", type: :request do
     end
 
     it "schedules job for booking window when it opens in the future" do
-      travel_to(Time.parse("2026-07-21T06:00:00Z")) do
-        user = create(:user, email: "member@example.com")
-        gym_member = create(:gym_member, email: "member@example.com")
-        raw_token = SecureRandom.hex(32)
-        create(:token, user:, digest: Token.digest(raw_token))
+      _user, raw_token = create_authenticated_user
+      gym_member = GymMember.find_by(email: "member@example.com")
 
-        schedule_entry = create(
-          :schedule_entry,
-          date: Date.new(2026, 8, 1),
-          start_time: Time.parse("2026-08-01 07:00:00 UTC")
-        )
+      schedule_entry = create(
+        :schedule_entry,
+        date: Date.new(2026, 8, 1),
+        start_time: Time.parse("2026-08-01 07:00:00 UTC")
+      )
 
-        expected_window = Time.parse("2026-07-31 07:00:00 UTC")
+      expected_window = Time.parse("2026-07-31 07:00:00 UTC")
 
-        expect {
-          post "/api/v1/booking_requests",
-               params: { schedule_entry_id: schedule_entry.id },
-               headers: { "Authorization" => "Bearer #{raw_token}" },
-               as: :json
-        }.to have_enqueued_job(BookingRequestJob).at(expected_window)
+      expect {
+        post "/api/v1/booking_requests",
+             params: { schedule_entry_id: schedule_entry.id },
+             headers: { "Authorization" => "Bearer #{raw_token}" },
+             as: :json
+      }.to have_enqueued_job(BookingRequestJob).at(expected_window)
 
-        expect(response).to have_http_status(:created)
-        body = response.parsed_body
-        expect(body["booking_request"]).to include(
-                                             "status" => "pending",
-                                             "schedule_entry_id" => schedule_entry.id
-                                           )
-        expect(body["booking_request"]["id"]).to be_present
-        expect(body["booking_request"]["booking_window_opens_at"]).to be_present
-        expect(body["created_count"]).to eq(1)
+      expect(response).to have_http_status(:created)
+      body = response.parsed_body
+      expect(body["booking_request"]).to include(
+        "status" => "pending",
+        "schedule_entry_id" => schedule_entry.id
+      )
+      expect(body["booking_request"]["id"]).to be_present
+      expect(body["booking_request"]["booking_window_opens_at"]).to be_present
+      expect(body["created_count"]).to eq(1)
 
-        booking_request = BookingRequest.find(body["booking_request"]["id"])
-        expect(booking_request.gym_member).to eq(gym_member)
-        expect(booking_request.status).to eq("pending")
-        expect(booking_request.booking_window_opens_at.utc.iso8601).to eq("2026-07-31T07:00:00Z")
-      end
+      booking_request = BookingRequest.find(body["booking_request"]["id"])
+      expect(booking_request.gym_member).to eq(gym_member)
+      expect(booking_request.status).to eq("pending")
+      expect(booking_request.booking_window_opens_at.utc.iso8601).to eq("2026-07-31T07:00:00Z")
     end
 
     it "enqueues job immediately when booking window is already open" do
-      user = create(:user, email: "member@example.com")
-      gym_member = create(:gym_member, email: "member@example.com")
-      raw_token = SecureRandom.hex(32)
-      create(:token, user:, digest: Token.digest(raw_token))
+      _user, raw_token = create_authenticated_user
+      gym_member = GymMember.find_by(email: "member@example.com")
 
       # Create a schedule entry starting 1 hour from now — booking window opened 23 hours ago
       schedule_entry = create(
@@ -195,10 +194,8 @@ RSpec.describe "BookingRequests", type: :request do
     end
 
     it "returns 204 when all members already have pending booking requests" do
-      user = create(:user, email: "member@example.com")
-      gym_member = create(:gym_member, email: "member@example.com")
-      raw_token = SecureRandom.hex(32)
-      create(:token, user:, digest: Token.digest(raw_token))
+      _user, raw_token = create_authenticated_user
+      gym_member = GymMember.find_by(email: "member@example.com")
 
       schedule_entry = create(
         :schedule_entry,
@@ -225,11 +222,9 @@ RSpec.describe "BookingRequests", type: :request do
     end
 
     it "returns 201 with correct count when some members are duplicates" do
-      user = create(:user, email: "member@example.com")
+      _user, raw_token = create_authenticated_user(email: "member@example.com", with_member: false)
       gym_member_1 = create(:gym_member, email: "member1@example.com")
       gym_member_2 = create(:gym_member, email: "member2@example.com")
-      raw_token = SecureRandom.hex(32)
-      create(:token, user:, digest: Token.digest(raw_token))
 
       schedule_entry = create(
         :schedule_entry,
@@ -267,10 +262,7 @@ RSpec.describe "BookingRequests", type: :request do
     end
 
     it "returns 422 when the schedule entry is in the past" do
-      user = create(:user, email: "member@example.com")
-      create(:gym_member, email: "member@example.com")
-      raw_token = SecureRandom.hex(32)
-      create(:token, user:, digest: Token.digest(raw_token))
+      _user, raw_token = create_authenticated_user
 
       schedule_entry = create(
         :schedule_entry,
@@ -331,10 +323,8 @@ RSpec.describe "BookingRequests", type: :request do
     end
 
     it "returns 204 and destroys the booking request" do
-      user = create(:user, email: "member@example.com")
-      gym_member = create(:gym_member, email: "member@example.com")
-      raw_token = SecureRandom.hex(32)
-      create(:token, user:, digest: Token.digest(raw_token))
+      _user, raw_token = create_authenticated_user
+      gym_member = GymMember.find_by(email: "member@example.com")
 
       booking_request = create(:booking_request, gym_member:)
 
@@ -348,10 +338,7 @@ RSpec.describe "BookingRequests", type: :request do
     end
 
     it "returns 404 when booking request does not exist" do
-      user = create(:user, email: "member@example.com")
-      create(:gym_member, email: "member@example.com")
-      raw_token = SecureRandom.hex(32)
-      create(:token, user:, digest: Token.digest(raw_token))
+      _user, raw_token = create_authenticated_user
 
       delete "/api/v1/booking_requests/99999",
              headers: { "Authorization" => "Bearer #{raw_token}" }
@@ -374,10 +361,7 @@ RSpec.describe "BookingRequests", type: :request do
 
       booking_request = create(:booking_request, gym_member: owner_member)
 
-      other_user = create(:user, email: "other@example.com")
-      create(:gym_member, email: "other@example.com")
-      other_raw_token = SecureRandom.hex(32)
-      create(:token, user: other_user, digest: Token.digest(other_raw_token))
+      _other_user, other_raw_token = create_authenticated_user(email: "other@example.com")
 
       expect {
         delete "/api/v1/booking_requests/#{booking_request.id}",
@@ -388,9 +372,7 @@ RSpec.describe "BookingRequests", type: :request do
     end
 
     it "allows any authenticated user to cancel a booking request regardless of gym member profile" do
-      user = create(:user, email: "noprofile@example.com")
-      raw_token = SecureRandom.hex(32)
-      create(:token, user:, digest: Token.digest(raw_token))
+      _user, raw_token = create_authenticated_user(email: "noprofile@example.com", with_member: false)
 
       booking_request = create(:booking_request)
 
@@ -403,10 +385,8 @@ RSpec.describe "BookingRequests", type: :request do
     end
 
     it "allows cancelling a booking request in failed status" do
-      user = create(:user, email: "member@example.com")
-      gym_member = create(:gym_member, email: "member@example.com")
-      raw_token = SecureRandom.hex(32)
-      create(:token, user:, digest: Token.digest(raw_token))
+      _user, raw_token = create_authenticated_user
+      gym_member = GymMember.find_by(email: "member@example.com")
 
       booking_request = create(:booking_request, :failed, gym_member:)
 
