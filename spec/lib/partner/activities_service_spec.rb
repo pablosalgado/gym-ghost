@@ -436,5 +436,56 @@ RSpec.describe Partner::ActivitiesService do
         expect(entries).to be_empty
       end
     end
+
+    context "concurrency locking" do
+      let(:cache_key) { "schedule_load:#{facility.id}:#{date}" }
+
+      before do
+        Rails.cache = ActiveSupport::Cache::MemoryStore.new
+        Rails.cache.clear
+      end
+
+      it "sets the lock with a TTL before fetching and releases it afterwards" do
+        response = instance_double(HTTParty::Response,
+                                   success?: true,
+                                   code: 200,
+                                   parsed_response: { "status" => "OK", "data" => [] })
+        allow(described_class).to receive(:get).and_return(response)
+        allow(Rails.cache).to receive(:write).and_call_original
+
+        service.fetch(facility:, date:)
+
+        expect(Rails.cache).to have_received(:write).with(
+          cache_key, true, unless_exist: true, expires_in: 5.minutes
+        )
+        expect(Rails.cache.exist?(cache_key)).to be false
+      end
+
+      it "keeps the lock intact and skips the downstream call when another request holds it" do
+        Rails.cache.write(cache_key, true)
+
+        expect(described_class).not_to receive(:get)
+        entries = service.fetch(facility:, date:)
+
+        expect(entries).to eq([])
+        expect(Rails.cache.exist?(cache_key)).to be true
+      end
+
+      it "returns stored entries without calling downstream when entries already exist locally" do
+        existing_entry = create(:schedule_entry, facility: facility, date: date)
+
+        expect(described_class).not_to receive(:get)
+        entries = service.fetch(facility:, date:)
+
+        expect(entries).to eq([ existing_entry ])
+      end
+
+      it "releases the lock even when the downstream call fails" do
+        allow(described_class).to receive(:get).and_raise(StandardError.new("Network error"))
+
+        expect { service.fetch(facility:, date:) }.to raise_error(StandardError, /Network error/)
+        expect(Rails.cache.exist?(cache_key)).to be false
+      end
+    end
   end
 end
