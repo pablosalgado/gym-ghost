@@ -263,7 +263,6 @@ RSpec.describe "BookingRequests", type: :request do
 
     it "returns 422 when the schedule entry is in the past" do
       _user, raw_token = create_authenticated_user
-      gym_member = GymMember.find_by(email: "member@example.com")
 
       schedule_entry = create(
         :schedule_entry,
@@ -340,7 +339,6 @@ RSpec.describe "BookingRequests", type: :request do
 
     it "returns 404 when booking request does not exist" do
       _user, raw_token = create_authenticated_user
-      gym_member = GymMember.find_by(email: "member@example.com")
 
       delete "/api/v1/booking_requests/99999",
              headers: { "Authorization" => "Bearer #{raw_token}" }
