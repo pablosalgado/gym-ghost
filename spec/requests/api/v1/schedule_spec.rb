@@ -3,6 +3,14 @@ require "rails_helper"
 RSpec.describe "Schedule", type: :request do
   include_context "with OpenAPI contract"
 
+  def get_without_contract_validation(path, **options)
+    previous_app = @_committee_app
+    @_committee_app = Rails.application
+    get(path, **options)
+  ensure
+    @_committee_app = previous_app
+  end
+
   describe "GET /api/v1/schedule" do
     let(:frozen_time) { Time.zone.parse("2026-07-21T06:00:00Z") }
 
@@ -12,7 +20,7 @@ RSpec.describe "Schedule", type: :request do
 
     context "when authentication is missing or invalid" do
       it "returns unauthorized when header is missing" do
-        get "/api/v1/schedule"
+        get "/api/v1/schedule", params: { city_id: 1, facility_id: 1, date: "2026-07-21" }
 
         expect(response).to have_http_status(:unauthorized)
         expect(response.parsed_body).to eq(
@@ -27,7 +35,9 @@ RSpec.describe "Schedule", type: :request do
       end
 
       it "returns unauthorized when token is invalid" do
-        get "/api/v1/schedule", headers: headers { "Authorization" => "Bearer invalid-token" }
+        get "/api/v1/schedule",
+            params: { city_id: 1, facility_id: 1, date: "2026-07-21" },
+            headers: { "Authorization" => "Bearer invalid-token" }
 
         expect(response).to have_http_status(:unauthorized)
         expect(response.parsed_body).to eq(
@@ -47,26 +57,96 @@ RSpec.describe "Schedule", type: :request do
       let(:raw_token) { SecureRandom.hex(32) }
       let(:headers) { { "Authorization" => "Bearer #{raw_token}" } }
       let(:facility) { create(:facility) }
+      let(:city) { facility.city }
+      let(:scope_params) { { city_id: city.id, facility_id: facility.id } }
 
       before do
         create(:token, user:, raw_token:)
       end
 
-      context "when no facility or date is provided" do
-        it "returns an empty schedule and class_types" do
-          get "/api/v1/schedule", headers: headers
+      context "when a required parameter is missing" do
+        it "requires city_id, facility_id, and date" do
+          get_without_contract_validation "/api/v1/schedule", headers: headers
 
-          expect(response).to have_http_status(:ok)
-          expect(response.parsed_body).to eq("schedule" => [], "class_types" => [])
+          expect(response).to have_http_status(:unprocessable_entity)
+          expect(response.parsed_body).to eq(
+            "errors" => [
+              {
+                "status" => 422,
+                "title" => "Validation Failed",
+                "detail" => "city_id and facility_id and date are required."
+              }
+            ]
+          )
+        end
+
+        it "requires city_id" do
+          get_without_contract_validation(
+            "/api/v1/schedule",
+            params: { facility_id: facility.id, date: "2026-07-21" },
+            headers: headers
+          )
+
+          expect(response).to have_http_status(:unprocessable_entity)
+          expect(response.parsed_body.dig("errors", 0, "detail")).to eq("city_id is required.")
+        end
+
+        it "requires facility_id" do
+          get_without_contract_validation(
+            "/api/v1/schedule",
+            params: { city_id: city.id, date: "2026-07-21" },
+            headers: headers
+          )
+
+          expect(response).to have_http_status(:unprocessable_entity)
+          expect(response.parsed_body.dig("errors", 0, "detail")).to eq("facility_id is required.")
+        end
+
+        it "requires date" do
+          expect(Partner::ActivitiesService).not_to receive(:new)
+
+          get_without_contract_validation "/api/v1/schedule", params: scope_params, headers: headers
+
+          expect(response).to have_http_status(:unprocessable_entity)
+          expect(response.parsed_body.dig("errors", 0, "detail")).to eq("date is required.")
         end
       end
 
-      context "when the facility does not exist" do
-        it "returns an empty schedule and class_types" do
-          get "/api/v1/schedule", params: { date: "2026-07-22", facility_id: 999_999 }, headers: headers
+      context "when the requested scope is invalid" do
+        it "rejects a city that does not exist" do
+          expect(Partner::ActivitiesService).not_to receive(:new)
 
-          expect(response).to have_http_status(:ok)
-          expect(response.parsed_body).to eq("schedule" => [], "class_types" => [])
+          get "/api/v1/schedule",
+              params: scope_params.merge(city_id: 999_999, date: "2026-07-22"),
+              headers: headers
+
+          expect(response).to have_http_status(:unprocessable_entity)
+          expect(response.parsed_body.dig("errors", 0, "detail")).to eq("City not found.")
+        end
+
+        it "rejects a facility that does not exist" do
+          expect(Partner::ActivitiesService).not_to receive(:new)
+
+          get "/api/v1/schedule",
+              params: scope_params.merge(facility_id: 999_999, date: "2026-07-22"),
+              headers: headers
+
+          expect(response).to have_http_status(:unprocessable_entity)
+          expect(response.parsed_body.dig("errors", 0, "detail")).to eq("Facility not found.")
+        end
+
+        it "rejects a facility from a different city" do
+          other_facility = create(:facility)
+          expect(Partner::ActivitiesService).not_to receive(:new)
+
+          get "/api/v1/schedule",
+              params: scope_params.merge(facility_id: other_facility.id, date: "2026-07-22"),
+              headers: headers
+
+          expect(response).to have_http_status(:unprocessable_entity)
+          expect(response.parsed_body.dig("errors", 0, "detail")).to eq(
+            "Facility does not belong to the requested city."
+          )
         end
       end
 
@@ -75,7 +155,9 @@ RSpec.describe "Schedule", type: :request do
           service = instance_double(Partner::ActivitiesService, fetch: [])
           allow(Partner::ActivitiesService).to receive(:new).and_return(service)
 
-          get "/api/v1/schedule", params: { date: "2026-07-22", facility_id: facility.id }, headers: headers
+          get "/api/v1/schedule",
+              params: scope_params.merge(date: "2026-07-22"),
+              headers: headers
 
           expect(Partner::ActivitiesService).to have_received(:new).once
           expect(service).to have_received(:fetch).with(facility: facility, date: "2026-07-22").once
@@ -100,7 +182,7 @@ RSpec.describe "Schedule", type: :request do
         it "returns the full payload for the requested facility and date" do
           schedule_entry
 
-          get "/api/v1/schedule", params: { date: "2026-07-21", facility_id: facility.id }, headers: headers
+          get "/api/v1/schedule", params: scope_params.merge(date: "2026-07-21"), headers: headers
 
           expect(response).to have_http_status(:ok)
           body = response.parsed_body
@@ -126,12 +208,32 @@ RSpec.describe "Schedule", type: :request do
           )
           schedule_entry
 
-          get "/api/v1/schedule", params: { date: "2026-07-21", facility_id: facility.id }, headers: headers
+          get "/api/v1/schedule", params: scope_params.merge(date: "2026-07-21"), headers: headers
 
           expect(response).to have_http_status(:ok)
           body = response.parsed_body
           expect(body["schedule"].length).to eq(1)
           expect(body["schedule"].first["facility_id"]).to eq(facility.id)
+        end
+
+        it "filters cache-miss results to the requested facility" do
+          other_facility = create(:facility, display_name: "Gym B")
+          other_entry = create(
+            :schedule_entry,
+            facility: other_facility,
+            class_type: class_type,
+            date: Date.new(2026, 7, 21),
+            start_time: Time.zone.parse("2026-07-21 09:00:00 UTC")
+          )
+          schedule_entry
+          service = instance_double(Partner::ActivitiesService, fetch: [ other_entry, schedule_entry ])
+          allow(Partner::ActivitiesService).to receive(:new).and_return(service)
+
+          get "/api/v1/schedule", params: scope_params.merge(date: "2026-07-21"), headers: headers
+
+          expect(response).to have_http_status(:ok)
+          body = response.parsed_body
+          expect(body["schedule"].map { |entry| entry["facility_id"] }).to eq([ facility.id ])
         end
 
         it "returns unique class types across the schedule entries" do
@@ -145,7 +247,7 @@ RSpec.describe "Schedule", type: :request do
           )
           schedule_entry
 
-          get "/api/v1/schedule", params: { date: "2026-07-21", facility_id: facility.id }, headers: headers
+          get "/api/v1/schedule", params: scope_params.merge(date: "2026-07-21"), headers: headers
 
           expect(response).to have_http_status(:ok)
           expect(response.parsed_body["class_types"]).to contain_exactly(
@@ -164,7 +266,7 @@ RSpec.describe "Schedule", type: :request do
           )
           schedule_entry
 
-          get "/api/v1/schedule", params: { date: "2026-07-21", facility_id: facility.id }, headers: headers
+          get "/api/v1/schedule", params: scope_params.merge(date: "2026-07-21"), headers: headers
 
           expect(response).to have_http_status(:ok)
           body = response.parsed_body
@@ -183,7 +285,7 @@ RSpec.describe "Schedule", type: :request do
           )
           schedule_entry
 
-          get "/api/v1/schedule", params: { date: "2026-07-21", facility_id: facility.id }, headers: headers
+          get "/api/v1/schedule", params: scope_params.merge(date: "2026-07-21"), headers: headers
 
           expect(response).to have_http_status(:ok)
           expect(response.parsed_body["schedule"].length).to eq(2)
@@ -205,7 +307,7 @@ RSpec.describe "Schedule", type: :request do
             start_time: Time.zone.parse("2026-07-21 05:00:00 UTC")
           )
 
-          get "/api/v1/schedule", params: { date: "2026-07-21", facility_id: facility.id }, headers: headers
+          get "/api/v1/schedule", params: scope_params.merge(date: "2026-07-21"), headers: headers
 
           expect(response).to have_http_status(:ok)
           expect(response.parsed_body).to eq("schedule" => [], "class_types" => [])
@@ -214,7 +316,7 @@ RSpec.describe "Schedule", type: :request do
         it "includes null booking_request when no gym member profile exists" do
           schedule_entry
 
-          get "/api/v1/schedule", params: { date: "2026-07-21", facility_id: facility.id }, headers: headers
+          get "/api/v1/schedule", params: scope_params.merge(date: "2026-07-21"), headers: headers
 
           expect(response).to have_http_status(:ok)
           expect(response.parsed_body["schedule"].first["booking_request"]).to be_nil
@@ -237,7 +339,7 @@ RSpec.describe "Schedule", type: :request do
             gym_member
             booking_schedule_entry
 
-            get "/api/v1/schedule", params: { date: "2026-08-01", facility_id: facility.id }, headers: headers
+            get "/api/v1/schedule", params: scope_params.merge(date: "2026-08-01"), headers: headers
 
             expect(response).to have_http_status(:ok)
             expect(response.parsed_body["schedule"].first["booking_request"]).to be_nil
@@ -252,7 +354,7 @@ RSpec.describe "Schedule", type: :request do
               booking_window_opens_at: Time.zone.parse("2026-07-31 07:00:00 UTC")
             )
 
-            get "/api/v1/schedule", params: { date: "2026-08-01", facility_id: facility.id }, headers: headers
+            get "/api/v1/schedule", params: scope_params.merge(date: "2026-08-01"), headers: headers
 
             expect(response).to have_http_status(:ok)
             expect(response.parsed_body["schedule"].first["booking_request"]).to eq(
@@ -271,7 +373,7 @@ RSpec.describe "Schedule", type: :request do
               booking_window_opens_at: Time.zone.parse("2026-08-01 09:00:00 UTC")
             )
 
-            get "/api/v1/schedule", params: { date: "2026-08-01", facility_id: facility.id }, headers: headers
+            get "/api/v1/schedule", params: scope_params.merge(date: "2026-08-01"), headers: headers
 
             expect(response).to have_http_status(:ok)
             expect(response.parsed_body["schedule"].first["booking_request"]).to eq(

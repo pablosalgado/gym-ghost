@@ -4,6 +4,12 @@ import { useSchedule } from './useSchedule'
 import { AUTH_TOKEN_STORAGE_KEY } from './useAuth'
 
 const AUTH_TOKEN = 'test-token-123'
+const DEFAULT_CITY_ID = 1
+const DEFAULT_FACILITY_ID = 9
+
+function useTestSchedule(dateKey: string, facilityId = DEFAULT_FACILITY_ID) {
+  return useSchedule(dateKey, DEFAULT_CITY_ID, facilityId)
+}
 
 const MOCK_SCHEDULE_RESPONSE = {
   schedule: [
@@ -55,7 +61,7 @@ describe('useSchedule', () => {
     return fetchMock
   }
 
-  it('fetches schedule for a given date and facility', async () => {
+  it('fetches schedule for a given date, city, and facility', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn().mockResolvedValue({
@@ -64,7 +70,7 @@ describe('useSchedule', () => {
       })
     )
 
-    const { result } = renderHook(() => useSchedule('2026-07-20', 5))
+    const { result } = renderHook(() => useTestSchedule('2026-07-20', 5))
 
     await waitFor(() => expect(result.current.isLoading).toBe(false))
 
@@ -72,12 +78,12 @@ describe('useSchedule', () => {
     expect(result.current.classTypes).toEqual(MOCK_SCHEDULE_RESPONSE.class_types)
     expect(result.current.error).toBeNull()
     expect(fetch).toHaveBeenCalledWith(
-      '/api/v1/schedule?date=2026-07-20&facility_id=5',
+      '/api/v1/schedule?date=2026-07-20&city_id=1&facility_id=5',
       { headers: { Authorization: `Bearer ${AUTH_TOKEN}`, 'Cache-Control': 'no-store' } },
     )
   })
 
-  it('fetches without facility filter when facilityId is omitted', async () => {
+  it('does not fetch until both cityId and facilityId are provided', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn().mockResolvedValue({
@@ -90,11 +96,9 @@ describe('useSchedule', () => {
 
     await waitFor(() => expect(result.current.isLoading).toBe(false))
 
-    expect(result.current.sessions).toEqual(MAPPED_SESSIONS)
-    expect(fetch).toHaveBeenCalledWith(
-      '/api/v1/schedule?date=2026-07-20',
-      { headers: { Authorization: `Bearer ${AUTH_TOKEN}`, 'Cache-Control': 'no-store' } },
-    )
+    expect(result.current.sessions).toEqual([])
+    expect(result.current.error).toBeNull()
+    expect(fetch).not.toHaveBeenCalled()
   })
 
   it('refetches when facilityId changes', async () => {
@@ -116,7 +120,7 @@ describe('useSchedule', () => {
 
     const { result, rerender } = renderHook(
       ({ facilityId }: { facilityId?: number }) =>
-        useSchedule('2026-07-20', facilityId),
+        useTestSchedule('2026-07-20', facilityId),
       { initialProps: { facilityId: 5 } },
     )
 
@@ -127,7 +131,7 @@ describe('useSchedule', () => {
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2))
     expect(fetchMock).toHaveBeenLastCalledWith(
-      '/api/v1/schedule?date=2026-07-20&facility_id=9',
+      '/api/v1/schedule?date=2026-07-20&city_id=1&facility_id=9',
       { headers: { Authorization: `Bearer ${AUTH_TOKEN}`, 'Cache-Control': 'no-store' } },
     )
   })
@@ -147,7 +151,7 @@ describe('useSchedule', () => {
     vi.stubGlobal('fetch', fetchMock)
 
     const { result, rerender } = renderHook(
-      (dateKey: string) => useSchedule(dateKey),
+      (dateKey: string) =>       useTestSchedule(dateKey),
       { initialProps: '2026-07-20' },
     )
 
@@ -158,7 +162,7 @@ describe('useSchedule', () => {
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2))
     expect(fetchMock).toHaveBeenLastCalledWith(
-      '/api/v1/schedule?date=2026-07-21',
+      '/api/v1/schedule?date=2026-07-21&city_id=1&facility_id=9',
       { headers: { Authorization: `Bearer ${AUTH_TOKEN}`, 'Cache-Control': 'no-store' } },
     )
   })
@@ -173,7 +177,7 @@ describe('useSchedule', () => {
       })
     )
 
-    const { result } = renderHook(() => useSchedule('2026-07-20', 5))
+    const { result } = renderHook(() => useTestSchedule('2026-07-20', 5))
 
     await waitFor(() => expect(result.current.isLoading).toBe(false))
 
@@ -185,7 +189,7 @@ describe('useSchedule', () => {
   it('returns empty arrays on network error', async () => {
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('Network down')))
 
-    const { result } = renderHook(() => useSchedule('2026-07-20', 5))
+    const { result } = renderHook(() => useTestSchedule('2026-07-20', 5))
 
     await waitFor(() => expect(result.current.isLoading).toBe(false))
 
@@ -203,7 +207,7 @@ describe('useSchedule', () => {
       })
     )
 
-    const { result } = renderHook(() => useSchedule('2026-07-20', 5))
+    const { result } = renderHook(() => useTestSchedule('2026-07-20', 5))
 
     expect(result.current.isLoading).toBe(true)
     expect(result.current.sessions).toEqual([])
@@ -215,7 +219,7 @@ describe('useSchedule', () => {
   it('returns empty arrays when no auth token is present', async () => {
     localStorage.clear()
 
-    const { result } = renderHook(() => useSchedule('2026-07-20', 5))
+    const { result } = renderHook(() => useTestSchedule('2026-07-20', 5))
 
     await waitFor(() => expect(result.current.isLoading).toBe(false))
 
@@ -233,7 +237,7 @@ describe('useSchedule', () => {
       })
     )
 
-    const { result } = renderHook(() => useSchedule('2026-07-20', 5))
+    const { result } = renderHook(() => useTestSchedule('2026-07-20', 5))
 
     await waitFor(() => expect(result.current.isLoading).toBe(false))
 
@@ -256,7 +260,7 @@ describe('useSchedule', () => {
         { ok: true, json: () => Promise.resolve(MOCK_EMPTY_RESPONSE) },
       ])
 
-      const { result } = renderHook(() => useSchedule('2026-07-23'))
+      const { result } = renderHook(() => useTestSchedule('2026-07-23'))
 
       await waitFor(() => expect(result.current.isLoading).toBe(false))
 
@@ -272,7 +276,7 @@ describe('useSchedule', () => {
         { ok: true, json: () => Promise.resolve(MOCK_FULL_RESPONSE) },
       ])
 
-      const { result } = renderHook(() => useSchedule('2026-07-23'))
+      const { result } = renderHook(() => useTestSchedule('2026-07-23'))
 
       await waitFor(() => expect(result.current.isLoading).toBe(false))
       expect(fetchMock).toHaveBeenCalledTimes(1)
@@ -292,7 +296,7 @@ describe('useSchedule', () => {
         { ok: true, json: () => Promise.resolve(MOCK_FULL_RESPONSE) },
       ])
 
-      const { result } = renderHook(() => useSchedule('2026-07-23'))
+      const { result } = renderHook(() => useTestSchedule('2026-07-23'))
 
       await waitFor(() => expect(result.current.isLoading).toBe(false))
       expect(fetchMock).toHaveBeenCalledTimes(1)
@@ -321,7 +325,7 @@ describe('useSchedule', () => {
         { ok: true, json: () => Promise.resolve(MOCK_EMPTY_RESPONSE) },
       ])
 
-      const { result } = renderHook(() => useSchedule('2026-07-23'))
+      const { result } = renderHook(() => useTestSchedule('2026-07-23'))
 
       await waitFor(() => expect(result.current.isLoading).toBe(false))
       expect(result.current.retryCount).toBe(0)
@@ -349,7 +353,7 @@ describe('useSchedule', () => {
         { ok: false, status: 500, json: () => Promise.resolve({}) },
       ])
 
-      const { result } = renderHook(() => useSchedule('2026-07-23'))
+      const { result } = renderHook(() => useTestSchedule('2026-07-23'))
 
       await waitFor(() => expect(result.current.isLoading).toBe(false))
       expect(result.current.isBackgroundLoading).toBe(true)
@@ -369,7 +373,7 @@ describe('useSchedule', () => {
       fetchMock.mockRejectedValueOnce(new Error('Network down'))
       vi.stubGlobal('fetch', fetchMock)
 
-      const { result } = renderHook(() => useSchedule('2026-07-23'))
+      const { result } = renderHook(() => useTestSchedule('2026-07-23'))
 
       await waitFor(() => expect(result.current.isLoading).toBe(false))
       expect(result.current.isBackgroundLoading).toBe(true)
@@ -389,7 +393,7 @@ describe('useSchedule', () => {
 
       const { result, rerender } = renderHook(
         (props: { date: string; facilityId?: number }) =>
-          useSchedule(props.date, props.facilityId),
+          useTestSchedule(props.date, props.facilityId),
         { initialProps: { date: '2026-07-23', facilityId: 9 } },
       )
 
@@ -401,7 +405,7 @@ describe('useSchedule', () => {
       await waitFor(() => expect(result.current.isLoading).toBe(false))
       expect(fetchMock).toHaveBeenCalledTimes(2)
       expect(fetchMock).toHaveBeenLastCalledWith(
-        '/api/v1/schedule?date=2026-07-24&facility_id=9',
+        '/api/v1/schedule?date=2026-07-24&city_id=1&facility_id=9',
         { headers: { Authorization: `Bearer ${AUTH_TOKEN}`, 'Cache-Control': 'no-store' } },
       )
     })
@@ -416,7 +420,7 @@ describe('useSchedule', () => {
 
       const { result, rerender } = renderHook(
         (props: { date: string; facilityId?: number }) =>
-          useSchedule(props.date, props.facilityId),
+          useTestSchedule(props.date, props.facilityId),
         { initialProps: { date: '2026-07-23', facilityId: 9 } },
       )
 
@@ -431,7 +435,7 @@ describe('useSchedule', () => {
 
       expect(fetchMock).toHaveBeenCalledTimes(2)
       expect(fetchMock).toHaveBeenLastCalledWith(
-        '/api/v1/schedule?date=2026-07-24&facility_id=9',
+        '/api/v1/schedule?date=2026-07-24&city_id=1&facility_id=9',
         { headers: { Authorization: `Bearer ${AUTH_TOKEN}`, 'Cache-Control': 'no-store' } },
       )
 
@@ -448,7 +452,7 @@ describe('useSchedule', () => {
 
       const { result, rerender } = renderHook(
         (props: { date: string; facilityId?: number }) =>
-          useSchedule(props.date, props.facilityId),
+          useTestSchedule(props.date, props.facilityId),
         { initialProps: { date: '2026-07-23', facilityId: 9 } },
       )
 
@@ -478,7 +482,7 @@ describe('useSchedule', () => {
         { ok: true, json: () => Promise.resolve(MOCK_FULL_RESPONSE) },
       ])
 
-      const { result } = renderHook(() => useSchedule('2026-07-23'))
+      const { result } = renderHook(() => useTestSchedule('2026-07-23'))
 
       await waitFor(() => expect(result.current.isLoading).toBe(false))
       vi.advanceTimersByTime(3000)
@@ -509,7 +513,7 @@ describe('useSchedule', () => {
         { ok: true, json: () => Promise.resolve(MOCK_EMPTY_RESPONSE) },
       ])
 
-      const { result, unmount } = renderHook(() => useSchedule('2026-07-23'))
+      const { result, unmount } = renderHook(() => useTestSchedule('2026-07-23'))
 
       await waitFor(() => expect(result.current.isLoading).toBe(false))
       expect(result.current.isBackgroundLoading).toBe(true)

@@ -1,6 +1,8 @@
 module Api
   module V1
     class ScheduleController < ApplicationController
+      before_action :validate_schedule_request
+
       def index
         entries = upcoming_entries
 
@@ -13,17 +15,42 @@ module Api
       private
 
       def schedule_params
-        params.permit(:date, :facility_id)
+        params.permit(:date, :city_id, :facility_id)
+      end
+
+      def validate_schedule_request
+        requested_params = schedule_params
+        missing_params = %i[city_id facility_id date].select { |key| requested_params[key].blank? }
+        return render_scope_error("#{missing_params.join(" and ")} #{missing_params.one? ? "is" : "are"} required.") if missing_params.any?
+
+        city = City.find_by(id: requested_params[:city_id])
+        return render_scope_error("City not found.") unless city
+
+        facility = Facility.find_by(id: requested_params[:facility_id])
+        return render_scope_error("Facility not found.") unless facility
+        return render_scope_error("Facility does not belong to the requested city.") unless facility.city_id == city.id
+
+        @facility = facility
+        @date = requested_params[:date]
+      end
+
+      def render_scope_error(detail)
+        render json: {
+          errors: [ { status: 422, title: "Validation Failed", detail: detail } ]
+        }, status: :unprocessable_entity
       end
 
       def upcoming_entries
-        facility = Facility.find_by(id: schedule_params[:facility_id])
         entries = Partner::ActivitiesService.new.fetch(
-          facility: facility,
-          date: schedule_params[:date]
+          facility: @facility,
+          date: @date
         )
 
-        entries.select { |entry| entry.start_time >= Time.current }.sort_by(&:start_time)
+        entries.select do |entry|
+          entry.facility_id == @facility.id &&
+            entry.date.to_s == @date &&
+            entry.start_time >= Time.current
+        end.sort_by(&:start_time)
       end
 
       def serialize_entries(entries)

@@ -76,7 +76,7 @@ paths:
   /api/v1/schedule:
     get:
       summary: Get class schedule
-      description: Returns gym class schedule entries and available class types. When `date` is omitted it defaults to today in America/Bogota time.
+      description: Returns gym class schedule entries and available class types for a required city, facility, and date.
       tags:
         - Schedule
       security:
@@ -84,19 +84,26 @@ paths:
       parameters:
         - name: date
           in: query
-          description: Fetch schedule for this date (YYYY-MM-DD). Defaults to today in America/Bogota.
-          required: false
+          description: Fetch schedule for this date (YYYY-MM-DD).
+          required: true
           schema:
             type: string
             format: date
             example: "2026-07-23"
         - name: facility_id
           in: query
-          description: Filter schedule entries by facility ID.
-          required: false
+          description: Facility ID to scope the schedule request.
+          required: true
           schema:
             type: integer
             example: 9
+        - name: city_id
+          in: query
+          description: City ID that owns the requested facility.
+          required: true
+          schema:
+            type: integer
+            example: 1
       responses:
         "200":
           description: Schedule retrieved successfully
@@ -106,6 +113,12 @@ paths:
                 $ref: "#/components/schemas/ScheduleResponse"
         "401":
           description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "422":
+          description: The city, facility, or date parameter is missing, invalid, or mismatched
           content:
             application/json:
               schema:

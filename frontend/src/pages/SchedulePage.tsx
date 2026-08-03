@@ -40,7 +40,7 @@ export default function SchedulePage() {
     retryCount,
     maxRetries,
     manualRetry,
-  } = useSchedule(selectedDate, facilityId)
+  } = useSchedule(selectedDate, cityId, facilityId)
 
   const booking = useBookingRequest()
   const [createTargetId, setCreateTargetId] = useState<number | null>(null)

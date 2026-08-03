@@ -35,6 +35,7 @@ function toSession(item: ScheduleItem): Session {
 
 export function useSchedule(
   dateKey: string,
+  cityId?: number,
   facilityId?: number,
 ): UseScheduleResult {
   const [schedule, setSchedule] = useState<readonly ScheduleItem[]>([])
@@ -45,13 +46,15 @@ export function useSchedule(
   const [retryCount, setRetryCount] = useState(0)
 
   const dateKeyRef = useRef(dateKey)
-  const facilityIdRef = useRef(facilityId)
   const retryCountRef = useRef(0)
+  const cityIdRef = useRef(cityId)
+  const facilityIdRef = useRef(facilityId)
   const cancelledRef = useRef(false)
   const pollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Keep refs in sync so setTimeout callbacks read fresh values.
   dateKeyRef.current = dateKey
+  cityIdRef.current = cityId
   facilityIdRef.current = facilityId
 
   const clearPollTimer = useCallback(() => {
@@ -63,6 +66,15 @@ export function useSchedule(
 
   const doFetch = useCallback(
     async (isRetry: boolean) => {
+      if (cityIdRef.current === undefined || facilityIdRef.current === undefined) {
+        setSchedule([])
+        setClassTypes([])
+        setError(null)
+        setIsLoading(false)
+        setIsBackgroundLoading(false)
+        return
+      }
+
       const token = localStorage.getItem(AUTH_TOKEN_STORAGE_KEY)
       if (!token) {
         setError('Not authenticated')
@@ -77,10 +89,11 @@ export function useSchedule(
       }
 
       try {
-        const params = new URLSearchParams({ date: dateKeyRef.current })
-        if (facilityIdRef.current !== undefined) {
-          params.set('facility_id', String(facilityIdRef.current))
-        }
+        const params = new URLSearchParams({
+          date: dateKeyRef.current,
+          city_id: String(cityIdRef.current),
+          facility_id: String(facilityIdRef.current),
+        })
 
         const response = await fetch(
           `/api/v1/schedule?${params.toString()}`,
@@ -189,7 +202,7 @@ export function useSchedule(
       clearPollTimer()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dateKey, facilityId])
+  }, [dateKey, cityId, facilityId])
 
   const sessions = schedule.map(toSession)
 
