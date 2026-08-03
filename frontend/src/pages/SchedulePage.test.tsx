@@ -51,6 +51,7 @@ const DEFAULT_SCHEDULE_RESULT = {
 }
 
 let scheduleReturn = { ...DEFAULT_SCHEDULE_RESULT }
+const scheduleCalls: Array<[string, number | undefined, number | undefined]> = []
 
 let citiesReturn: { cities: readonly City[]; isLoading: boolean; error: string | null } = {
   cities: [],
@@ -81,7 +82,10 @@ let bookingReturn = {
 }
 
 vi.mock('../hooks/useSchedule', () => ({
-  useSchedule: () => scheduleReturn,
+  useSchedule: (...args: [string, number | undefined, number | undefined]) => {
+    scheduleCalls.push(args)
+    return scheduleReturn
+  },
 }))
 
 vi.mock('../hooks/useBookingRequest', () => ({
@@ -102,6 +106,7 @@ describe('SchedulePage', () => {
   beforeEach(() => {
     vi.setSystemTime(new Date(FROZEN_UTC))
     scheduleReturn = { ...DEFAULT_SCHEDULE_RESULT }
+    scheduleCalls.length = 0
     citiesReturn = { cities: [], isLoading: false, error: null }
     facilitiesReturn = { facilities: [], isLoading: false, error: null }
     bookingReturn = {
@@ -211,6 +216,26 @@ describe('SchedulePage', () => {
 
       const facilitySelect = container.querySelector('#facility-filter') as HTMLSelectElement
       expect(facilitySelect.value).toBe('9')
+    })
+
+    it('passes the selected date, city, and facility IDs to the schedule hook', async () => {
+      citiesReturn = {
+        cities: [{ id: 1, city_name: 'BOGOTÁ, D.C.' }],
+        isLoading: false,
+        error: null,
+      }
+      facilitiesReturn = {
+        facilities: [{ id: 9, display_name: 'C.C Parque La Colina', city_id: 1 }],
+        isLoading: false,
+        error: null,
+      }
+
+      renderPage()
+
+      await waitFor(() => {
+        const lastCall = scheduleCalls[scheduleCalls.length - 1]
+        expect(lastCall).toEqual(['2026-07-17', 1, 9])
+      })
     })
   })
 
