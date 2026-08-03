@@ -101,6 +101,27 @@ describe('useSchedule', () => {
     expect(fetch).not.toHaveBeenCalled()
   })
 
+  it.each([
+    ['cityId', undefined, DEFAULT_FACILITY_ID],
+    ['facilityId', DEFAULT_CITY_ID, undefined],
+  ] as const)('does not fetch when %s is unset', async (_missingId, cityId, facilityId) => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve(MOCK_SCHEDULE_RESPONSE),
+      }),
+    )
+
+    const { result } = renderHook(() => useSchedule('2026-07-20', cityId, facilityId))
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false))
+
+    expect(result.current.sessions).toEqual([])
+    expect(result.current.error).toBeNull()
+    expect(fetch).not.toHaveBeenCalled()
+  })
+
   it('refetches when facilityId changes', async () => {
     const fetchMock = vi.fn()
 
