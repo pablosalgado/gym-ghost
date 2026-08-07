@@ -131,7 +131,7 @@ GEM
       raabro (~> 1.4)
     globalid (1.4.0)
       activesupport (>= 6.1)
-    holidays (11.1.0)
+    holidays (11.3.0)
     httparty (0.24.2)
       csv
       mini_mime (>= 1.0.0)
@@ -404,7 +404,7 @@ DEPENDENCIES
   debug
   dotenv-rails
   factory_bot_rails (~> 6.5)
-  holidays (~> 11.1)
+  holidays (~> 11.3)
   httparty
   image_processing (~> 2.0)
   kamal
