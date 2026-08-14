@@ -10,7 +10,7 @@ export function filterSessions(
   filters: ScheduleFilters,
 ): Session[] {
   if (filters.activityId === undefined) {
-    return [...sessions]
+    return sessions as Session[]
   }
 
   return sessions.filter((session) => session.activityId === filters.activityId)

@@ -35,10 +35,9 @@ describe('filterSessions', () => {
     expect(result).toHaveLength(0)
   })
 
-  it('returns a new array when All is selected', () => {
+  it('returns the original array when All is selected', () => {
     const result = filterSessions(TEST_SESSIONS, { activityId: undefined })
 
-    expect(result).toEqual(TEST_SESSIONS)
-    expect(result).not.toBe(TEST_SESSIONS)
+    expect(result).toBe(TEST_SESSIONS)
   })
 })
