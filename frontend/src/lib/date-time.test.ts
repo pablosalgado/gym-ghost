@@ -4,9 +4,11 @@ import {
   addDays,
   formatDayLabel,
   formatTimeOfDay,
+  nextMidnightInZone,
   todayInZone,
   toDateKey,
   wallTimeInZoneToUtc,
+  windowFromDate,
   windowFromToday,
 } from './date-time'
 
@@ -100,6 +102,24 @@ describe('windowFromToday', () => {
       const [year, month, day] = keys[i - 1].split('-').map(Number)
       expect(keys[i]).toBe(toDateKey(addDays({ year, month, day }, 1)))
     }
+  })
+})
+
+describe('windowFromDate', () => {
+  it('starts at the supplied calendar date', () => {
+    expect(windowFromDate({ year: 2026, month: 7, day: 18 }, 3)).toEqual([
+      '2026-07-18',
+      '2026-07-19',
+      '2026-07-20',
+    ])
+  })
+})
+
+describe('nextMidnightInZone', () => {
+  it('returns the next Bogotá midnight from an explicit instant', () => {
+    expect(nextMidnightInZone(BOGOTA, new Date('2026-07-18T02:30:00Z')).toISOString()).toBe(
+      '2026-07-18T05:00:00.000Z'
+    )
   })
 })
 

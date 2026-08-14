@@ -5,7 +5,11 @@ import {
   DEFAULT_TIME_ZONE,
   formatDayLabel,
   formatTimeOfDay,
-  windowFromToday,
+  nextMidnightInZone,
+  todayInZone,
+  toDateKey,
+  windowFromDate,
+  type DateParts,
 } from '../lib/date-time'
 import { filterSessions } from '../features/schedule/filterSessions'
 import { classColors } from '../lib/class-colors'
@@ -18,11 +22,18 @@ import BookingStatusBadge from '../components/BookingStatusBadge'
 
 const DEFAULT_CITY_NAME = 'BOGOTÁ, D.C.'
 const DEFAULT_FACILITY_NAME = 'C.C Parque La Colina'
+const SCHEDULE_DAY_COUNT = 14
 
 export default function SchedulePage() {
   const { t } = useTranslation()
   const locale = i18n.resolvedLanguage ?? 'es-CO'
-  const days = useMemo(() => windowFromToday(14, DEFAULT_TIME_ZONE), [])
+  const [windowStart, setWindowStart] = useState<DateParts>(() =>
+    todayInZone(DEFAULT_TIME_ZONE)
+  )
+  const days = useMemo(
+    () => windowFromDate(windowStart, SCHEDULE_DAY_COUNT),
+    [windowStart],
+  )
 
   const [selectedDate, setSelectedDate] = useState(() => days[0])
   const [cityId, setCityId] = useState<number | undefined>()
@@ -64,6 +75,46 @@ export default function SchedulePage() {
 
   const cityPreselected = useRef(false)
   const facilityPreselected = useRef(false)
+  const previousDaysRef = useRef(days)
+
+  useEffect(() => {
+    const previousDays = previousDaysRef.current
+    previousDaysRef.current = days
+
+    if (previousDays[0] === days[0]) return
+
+    setSelectedDate((currentDate) =>
+      currentDate === previousDays[0] || !days.includes(currentDate)
+        ? days[0]
+        : currentDate
+    )
+  }, [days])
+
+  useEffect(() => {
+    let timeoutId: ReturnType<typeof setTimeout> | null = null
+
+    const scheduleRefresh = () => {
+      const now = new Date()
+      const nextMidnight = nextMidnightInZone(DEFAULT_TIME_ZONE, now)
+      const delay = Math.max(nextMidnight.getTime() - now.getTime(), 0)
+
+      timeoutId = setTimeout(() => {
+        const refreshedToday = todayInZone(DEFAULT_TIME_ZONE)
+        setWindowStart((currentStart) =>
+          toDateKey(currentStart) === toDateKey(refreshedToday)
+            ? currentStart
+            : refreshedToday
+        )
+        scheduleRefresh()
+      }, delay)
+    }
+
+    scheduleRefresh()
+
+    return () => {
+      if (timeoutId !== null) clearTimeout(timeoutId)
+    }
+  }, [])
 
   useEffect(() => {
     if (

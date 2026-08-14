@@ -88,16 +88,20 @@ export function toDateKey(parts: DateParts): string {
   return `${parts.year}-${month}-${day}`
 }
 
+/** `dayCount` consecutive date keys starting at a calendar date. */
+export function windowFromDate(start: DateParts, dayCount: number): string[] {
+  return Array.from({ length: dayCount }, (_, index) =>
+    toDateKey(addDays(start, index))
+  )
+}
+
 /** `dayCount` consecutive date keys starting at today in `timeZone`. */
 export function windowFromToday(
   dayCount: number,
   timeZone: string = DEFAULT_TIME_ZONE,
   now: Date = new Date()
 ): string[] {
-  const start = todayInZone(timeZone, now)
-  return Array.from({ length: dayCount }, (_, index) =>
-    toDateKey(addDays(start, index))
-  )
+  return windowFromDate(todayInZone(timeZone, now), dayCount)
 }
 
 /** Localized wall-clock time of a UTC instant inside `timeZone`. */
@@ -159,4 +163,13 @@ export function wallTimeInZoneToUtc(
   )
   const offsetMs = zonedAsUtc - wallAsUtc
   return new Date(wallAsUtc - offsetMs)
+}
+
+/** The next local midnight in `timeZone` after `now`. */
+export function nextMidnightInZone(
+  timeZone: string = DEFAULT_TIME_ZONE,
+  now: Date = new Date()
+): Date {
+  const tomorrow = addDays(todayInZone(timeZone, now), 1)
+  return wallTimeInZoneToUtc(toDateKey(tomorrow), 0, 0, timeZone)
 }
