@@ -102,22 +102,20 @@ export default function SchedulePage() {
     }
   }, [cityId, facilitiesError, facilitiesForCity, facilitiesLoading, facilityId])
 
-  // Reset activity filter when facility or date changes —
-  // the previously selected class type may not exist in the new response.
+  // Reset the presentation filter when the server-side schedule scope changes.
   useEffect(() => {
     setActivityId(undefined)
-  }, [facilityId, selectedDate])
+  }, [cityId, facilityId, selectedDate])
 
   const sessions = useMemo(() => {
-    return filterSessions(scheduleSessions, { cityId, facilityId, activityId })
-  }, [scheduleSessions, cityId, facilityId, activityId])
+    return filterSessions(scheduleSessions, { activityId })
+  }, [scheduleSessions, activityId])
 
   function handleCityChange(newCityId: string) {
     const value = newCityId ? Number(newCityId) : undefined
     facilityPreselected.current = false
     setCityId(value)
     setFacilityId(undefined)
-    setActivityId(undefined)
   }
 
   const isExhausted = retryCount >= maxRetries && scheduleSessions.length === 0

@@ -25,29 +25,20 @@ describe('filterSessions', () => {
     expect(filterSessions(TEST_SESSIONS, {})).toHaveLength(4)
   })
 
-  it('filters by facility directly', () => {
-    const result = filterSessions(TEST_SESSIONS, { facilityId: 3 })
-    expect(result.map((s) => s.id)).toEqual(['s3'])
-  })
-
   it('filters by class type', () => {
     const result = filterSessions(TEST_SESSIONS, { activityId: 1 })
     expect(result.map((s) => s.id)).toEqual(['s1', 's3'])
   })
 
-  it('composes facility and class type with AND logic', () => {
-    const result = filterSessions(
-      TEST_SESSIONS,
-      { facilityId: 1, activityId: 1 },
-    )
-    expect(result.map((s) => s.id)).toEqual(['s1'])
+  it('returns empty array when no sessions match', () => {
+    const result = filterSessions(TEST_SESSIONS, { activityId: 99 })
+    expect(result).toHaveLength(0)
   })
 
-  it('returns empty array when no sessions match', () => {
-    const result = filterSessions(
-      TEST_SESSIONS,
-      { facilityId: 99, activityId: 2 },
-    )
-    expect(result).toHaveLength(0)
+  it('returns a new array when All is selected', () => {
+    const result = filterSessions(TEST_SESSIONS, { activityId: undefined })
+
+    expect(result).toEqual(TEST_SESSIONS)
+    expect(result).not.toBe(TEST_SESSIONS)
   })
 })
