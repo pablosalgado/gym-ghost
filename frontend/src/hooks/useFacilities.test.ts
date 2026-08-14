@@ -21,7 +21,7 @@ describe('useFacilities', () => {
     vi.unstubAllGlobals()
   })
 
-  it('fetches all facilities when no cityId is provided', async () => {
+  it('does not fetch facilities when no cityId is provided', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn().mockResolvedValue({
@@ -34,11 +34,9 @@ describe('useFacilities', () => {
 
     await waitFor(() => expect(result.current.isLoading).toBe(false))
 
-    expect(result.current.facilities).toEqual(MOCK_FACILITIES)
+    expect(result.current.facilities).toEqual([])
     expect(result.current.error).toBeNull()
-    expect(fetch).toHaveBeenCalledWith('/api/v1/facilities', {
-      headers: { Authorization: `Bearer ${AUTH_TOKEN}` },
-    })
+    expect(fetch).not.toHaveBeenCalled()
   })
 
   it('filters facilities by cityId when provided', async () => {
@@ -76,18 +74,41 @@ describe('useFacilities', () => {
 
     const { result, rerender } = renderHook(
       (cityId: number | undefined) => useFacilities(cityId),
-      { initialProps: undefined }
+      { initialProps: 1 }
     )
 
     await waitFor(() => expect(result.current.isLoading).toBe(false))
     expect(fetchMock).toHaveBeenCalledTimes(1)
 
-    rerender(1)
+    rerender(2)
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2))
-    expect(fetchMock).toHaveBeenLastCalledWith('/api/v1/facilities?city_id=1', {
+    expect(fetchMock).toHaveBeenLastCalledWith('/api/v1/facilities?city_id=2', {
       headers: { Authorization: `Bearer ${AUTH_TOKEN}` },
     })
+  })
+
+  it('reports loading immediately when cityId changes from undefined to a value', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ facilities: [MOCK_FACILITIES[0]] }),
+      })
+    )
+
+    const { result, rerender } = renderHook(
+      (currentCityId: number | undefined) => useFacilities(currentCityId),
+      { initialProps: undefined }
+    )
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false))
+
+    rerender(1)
+
+    expect(result.current.isLoading).toBe(true)
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false))
   })
 
   it('returns empty array on non-ok response', async () => {
@@ -100,7 +121,7 @@ describe('useFacilities', () => {
       })
     )
 
-    const { result } = renderHook(() => useFacilities())
+    const { result } = renderHook(() => useFacilities(1))
 
     await waitFor(() => expect(result.current.isLoading).toBe(false))
 
@@ -111,7 +132,7 @@ describe('useFacilities', () => {
   it('returns empty array on network error', async () => {
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('Network down')))
 
-    const { result } = renderHook(() => useFacilities())
+    const { result } = renderHook(() => useFacilities(1))
 
     await waitFor(() => expect(result.current.isLoading).toBe(false))
 
@@ -128,7 +149,7 @@ describe('useFacilities', () => {
       })
     )
 
-    const { result } = renderHook(() => useFacilities())
+    const { result } = renderHook(() => useFacilities(1))
 
     expect(result.current.isLoading).toBe(true)
     expect(result.current.facilities).toEqual([])
@@ -139,7 +160,7 @@ describe('useFacilities', () => {
   it('returns empty array when no auth token is present', async () => {
     localStorage.clear()
 
-    const { result } = renderHook(() => useFacilities())
+    const { result } = renderHook(() => useFacilities(1))
 
     await waitFor(() => expect(result.current.isLoading).toBe(false))
 
@@ -156,7 +177,7 @@ describe('useFacilities', () => {
       })
     )
 
-    const { result } = renderHook(() => useFacilities())
+    const { result } = renderHook(() => useFacilities(1))
 
     await waitFor(() => expect(result.current.isLoading).toBe(false))
 

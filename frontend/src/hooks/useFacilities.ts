@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { AUTH_TOKEN_STORAGE_KEY } from './useAuth'
 import {
   isFacilitiesResponse,
@@ -14,10 +14,22 @@ interface UseFacilitiesResult {
 
 export function useFacilities(cityId?: number): UseFacilitiesResult {
   const [facilities, setFacilities] = useState<readonly Facility[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(cityId !== undefined)
   const [error, setError] = useState<string | null>(null)
+  const currentCityId = useRef(cityId)
 
-  const fetchFacilities = useCallback(async () => {
+  const fetchFacilities = useCallback(async (isCancelled: () => boolean) => {
+    if (cityId === undefined) {
+      setFacilities([])
+      setError(null)
+      setIsLoading(false)
+      return
+    }
+
+    setFacilities([])
+    setIsLoading(true)
+    setError(null)
+
     const token = localStorage.getItem(AUTH_TOKEN_STORAGE_KEY)
     if (!token) {
       setError('Not authenticated')
@@ -25,16 +37,15 @@ export function useFacilities(cityId?: number): UseFacilitiesResult {
       return
     }
 
-    setIsLoading(true)
-    setError(null)
-
     try {
-      const params = cityId !== undefined ? `?city_id=${cityId}` : ''
+      const params = `?city_id=${cityId}`
       const response = await fetch(`/api/v1/facilities${params}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       })
+
+      if (isCancelled()) return
 
       if (!response.ok) {
         setFacilities([])
@@ -43,6 +54,8 @@ export function useFacilities(cityId?: number): UseFacilitiesResult {
       }
 
       const payload: unknown = await response.json()
+
+      if (isCancelled()) return
 
       if (!isFacilitiesResponse(payload)) {
         setFacilities([])
@@ -53,16 +66,29 @@ export function useFacilities(cityId?: number): UseFacilitiesResult {
       const data: FacilitiesResponse = payload
       setFacilities(data.facilities)
     } catch {
+      if (isCancelled()) return
       setFacilities([])
       setError('Network error')
     } finally {
-      setIsLoading(false)
+      if (!isCancelled()) {
+        setIsLoading(false)
+      }
     }
   }, [cityId])
 
   useEffect(() => {
-    fetchFacilities()
+    let cancelled = false
+    currentCityId.current = cityId
+    void fetchFacilities(() => cancelled)
+
+    return () => {
+      cancelled = true
+    }
   }, [fetchFacilities])
 
-  return { facilities, isLoading, error }
+  return {
+    facilities,
+    isLoading: isLoading || (cityId !== undefined && cityId !== currentCityId.current),
+    error,
+  }
 }

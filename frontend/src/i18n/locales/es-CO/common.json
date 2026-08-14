@@ -30,7 +30,15 @@
       "all": "Todas",
       "city": "Ciudad",
       "facility": "Sede",
-      "classType": "Clase"
+      "classType": "Clase",
+      "selectCity": "Selecciona una ciudad",
+      "selectFacility": "Selecciona una sede"
+    },
+    "location": {
+      "selectCity": "Selecciona una ciudad para ver el horario.",
+      "selectFacility": "Selecciona una sede para ver el horario.",
+      "noCities": "No hay ciudades disponibles.",
+      "noFacilities": "No hay sedes disponibles para esta ciudad."
     },
     "emptyState": "No hay clases para esta selección.",
     "retry": "Reintentar",

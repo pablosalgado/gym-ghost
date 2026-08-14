@@ -29,8 +29,23 @@ export default function SchedulePage() {
   const [facilityId, setFacilityId] = useState<number | undefined>()
   const [activityId, setActivityId] = useState<number | undefined>()
 
-  const { cities, isLoading: citiesLoading } = useCities()
-  const { facilities: facilitiesForCity, isLoading: facilitiesLoading } = useFacilities(cityId)
+  const {
+    cities,
+    isLoading: citiesLoading,
+    error: citiesError,
+  } = useCities()
+  const {
+    facilities,
+    isLoading: facilitiesLoading,
+    error: facilitiesError,
+  } = useFacilities(cityId)
+  const facilitiesForCity = useMemo(
+    () =>
+      cityId === undefined
+        ? []
+        : facilities.filter((facility) => facility.city_id === cityId),
+    [cityId, facilities],
+  )
   const {
     sessions: scheduleSessions,
     classTypes,
@@ -51,22 +66,41 @@ export default function SchedulePage() {
   const facilityPreselected = useRef(false)
 
   useEffect(() => {
-    if (cityId !== undefined || cityPreselected.current || citiesLoading || cities.length === 0) return
+    if (
+      cityId !== undefined ||
+      cityPreselected.current ||
+      citiesLoading ||
+      citiesError !== null ||
+      cities.length === 0
+    ) {
+      return
+    }
+
     const match = cities.find((c) => c.city_name === DEFAULT_CITY_NAME)
     if (match) {
       cityPreselected.current = true
       setCityId(match.id)
     }
-  }, [cities, citiesLoading, cityId])
+  }, [cities, citiesError, citiesLoading, cityId])
 
   useEffect(() => {
-    if (facilityId !== undefined || facilityPreselected.current || facilitiesLoading || facilitiesForCity.length === 0) return
+    if (
+      cityId === undefined ||
+      facilityId !== undefined ||
+      facilityPreselected.current ||
+      facilitiesLoading ||
+      facilitiesError !== null ||
+      facilitiesForCity.length === 0
+    ) {
+      return
+    }
+
     const match = facilitiesForCity.find((f) => f.display_name === DEFAULT_FACILITY_NAME)
     if (match) {
       facilityPreselected.current = true
       setFacilityId(match.id)
     }
-  }, [facilitiesForCity, facilitiesLoading, facilityId])
+  }, [cityId, facilitiesError, facilitiesForCity, facilitiesLoading, facilityId])
 
   // Reset activity filter when facility or date changes —
   // the previously selected class type may not exist in the new response.
@@ -80,8 +114,10 @@ export default function SchedulePage() {
 
   function handleCityChange(newCityId: string) {
     const value = newCityId ? Number(newCityId) : undefined
+    facilityPreselected.current = false
     setCityId(value)
     setFacilityId(undefined)
+    setActivityId(undefined)
   }
 
   const isExhausted = retryCount >= maxRetries && scheduleSessions.length === 0
@@ -144,45 +180,94 @@ export default function SchedulePage() {
 
       {/* Filters */}
       <div className="mb-6 flex flex-col gap-4">
-        <div className="flex flex-col gap-1 w-full hidden">
+        <div className="flex w-full flex-col gap-1">
+          <label htmlFor="city-filter" className="text-sm font-medium text-gray-700">
+            {t('schedule.filter.city')}
+          </label>
           <select
             id="city-filter"
             value={cityId ?? ''}
             onChange={(event) => handleCityChange(event.target.value)}
-            className="w-full min-h-11 rounded border border-gray-300 px-3 py-2"
+            disabled={citiesLoading || citiesError !== null || cities.length === 0}
+            className="min-h-11 w-full rounded border border-gray-300 px-3 py-2 disabled:opacity-50"
           >
-            <option value="">{t('schedule.filter.all')}</option>
+            <option value="" disabled>
+              {t('schedule.filter.selectCity')}
+            </option>
             {cities.map((city) => (
               <option key={city.id} value={city.id}>
                 {city.city_name}
               </option>
             ))}
           </select>
+          {citiesLoading && (
+            <p className="text-sm text-gray-500" role="status">
+              {t('common.loading')}
+            </p>
+          )}
+          {citiesError !== null && (
+            <p className="text-sm text-red-600" role="alert">
+              {citiesError}
+            </p>
+          )}
+          {!citiesLoading && citiesError === null && cities.length === 0 && (
+            <p className="text-sm text-gray-500">{t('schedule.location.noCities')}</p>
+          )}
         </div>
 
-        <div className="flex flex-col gap-1 w-full">
+        <div className="flex w-full flex-col gap-1">
+          <label htmlFor="facility-filter" className="text-sm font-medium text-gray-700">
+            {t('schedule.filter.facility')}
+          </label>
           <select
             id="facility-filter"
             value={facilityId ?? ''}
             onChange={(event) => setFacilityId(event.target.value ? Number(event.target.value) : undefined)}
-            className="w-full min-h-11 rounded border border-gray-300 px-3 py-2"
+            disabled={
+              cityId === undefined ||
+              facilitiesLoading ||
+              facilitiesError !== null ||
+              facilitiesForCity.length === 0
+            }
+            className="min-h-11 w-full rounded border border-gray-300 px-3 py-2 disabled:opacity-50"
           >
-            <option value="">{t('schedule.filter.all')}</option>
+            <option value="" disabled>
+              {t('schedule.filter.selectFacility')}
+            </option>
             {facilitiesForCity.map((facility) => (
               <option key={facility.id} value={facility.id}>
                 {facility.display_name}
               </option>
             ))}
           </select>
+          {cityId !== undefined && facilitiesLoading && (
+            <p className="text-sm text-gray-500" role="status">
+              {t('common.loading')}
+            </p>
+          )}
+          {cityId !== undefined && facilitiesError !== null && (
+            <p className="text-sm text-red-600" role="alert">
+              {facilitiesError}
+            </p>
+          )}
+          {cityId !== undefined &&
+            !facilitiesLoading &&
+            facilitiesError === null &&
+            facilitiesForCity.length === 0 && (
+              <p className="text-sm text-gray-500">{t('schedule.location.noFacilities')}</p>
+            )}
         </div>
 
-        <div className="flex flex-col gap-1 w-full">
+        <div className="flex w-full flex-col gap-1">
+          <label htmlFor="class-type-filter" className="text-sm font-medium text-gray-700">
+            {t('schedule.filter.classType')}
+          </label>
           <select
             id="class-type-filter"
             value={activityId ?? ''}
             onChange={(event) => setActivityId(event.target.value ? Number(event.target.value) : undefined)}
             disabled={classTypes.length === 0}
-            className="w-full min-h-11 rounded border border-gray-300 px-3 py-2 disabled:opacity-50"
+            className="min-h-11 w-full rounded border border-gray-300 px-3 py-2 disabled:opacity-50"
           >
             <option value="">{t('schedule.filter.all')}</option>
             {classTypes.map((ct) => (
@@ -196,10 +281,36 @@ export default function SchedulePage() {
       </div>
 
       {/* Session list / states */}
-      {scheduleError !== null ? (
+      {citiesLoading ? (
+        <p className="py-12 text-center text-gray-500" role="status">
+          {t('common.loading')}
+        </p>
+      ) : citiesError !== null ? (
+        <p className="py-12 text-center text-red-600" role="alert">
+          {citiesError}
+        </p>
+      ) : cities.length === 0 ? (
+        <p className="py-12 text-center text-gray-500">{t('schedule.location.noCities')}</p>
+      ) : cityId === undefined ? (
+        <p className="py-12 text-center text-gray-500">{t('schedule.location.selectCity')}</p>
+      ) : facilitiesLoading ? (
+        <p className="py-12 text-center text-gray-500" role="status">
+          {t('common.loading')}
+        </p>
+      ) : facilitiesError !== null ? (
+        <p className="py-12 text-center text-red-600" role="alert">
+          {facilitiesError}
+        </p>
+      ) : facilitiesForCity.length === 0 ? (
+        <p className="py-12 text-center text-gray-500">{t('schedule.location.noFacilities')}</p>
+      ) : facilityId === undefined ? (
+        <p className="py-12 text-center text-gray-500">{t('schedule.location.selectFacility')}</p>
+      ) : scheduleError !== null ? (
         <p className="py-12 text-center text-red-600">{scheduleError}</p>
       ) : scheduleLoading ? (
-        <p className="py-12 text-center text-gray-500">{t('common.loading')}</p>
+        <p className="py-12 text-center text-gray-500" role="status">
+          {t('common.loading')}
+        </p>
       ) : sessions.length === 0 ? (
         <div className="py-12 text-center">
           {isBackgroundLoading ? (
