@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { AUTH_TOKEN_STORAGE_KEY } from './useAuth'
 import {
   isFacilitiesResponse,
@@ -16,6 +16,7 @@ export function useFacilities(cityId?: number): UseFacilitiesResult {
   const [facilities, setFacilities] = useState<readonly Facility[]>([])
   const [isLoading, setIsLoading] = useState(cityId !== undefined)
   const [error, setError] = useState<string | null>(null)
+  const currentCityId = useRef(cityId)
 
   const fetchFacilities = useCallback(async (isCancelled: () => boolean) => {
     if (cityId === undefined) {
@@ -77,6 +78,7 @@ export function useFacilities(cityId?: number): UseFacilitiesResult {
 
   useEffect(() => {
     let cancelled = false
+    currentCityId.current = cityId
     void fetchFacilities(() => cancelled)
 
     return () => {
@@ -84,5 +86,9 @@ export function useFacilities(cityId?: number): UseFacilitiesResult {
     }
   }, [fetchFacilities])
 
-  return { facilities, isLoading, error }
+  return {
+    facilities,
+    isLoading: isLoading || (cityId !== undefined && cityId !== currentCityId.current),
+    error,
+  }
 }

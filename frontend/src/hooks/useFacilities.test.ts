@@ -88,6 +88,29 @@ describe('useFacilities', () => {
     })
   })
 
+  it('reports loading immediately when cityId changes from undefined to a value', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ facilities: [MOCK_FACILITIES[0]] }),
+      })
+    )
+
+    const { result, rerender } = renderHook(
+      (currentCityId: number | undefined) => useFacilities(currentCityId),
+      { initialProps: undefined }
+    )
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false))
+
+    rerender(1)
+
+    expect(result.current.isLoading).toBe(true)
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false))
+  })
+
   it('returns empty array on non-ok response', async () => {
     vi.stubGlobal(
       'fetch',
