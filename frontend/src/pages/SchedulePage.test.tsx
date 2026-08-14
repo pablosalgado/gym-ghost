@@ -391,6 +391,7 @@ describe('SchedulePage', () => {
       const classTypeSelect = container.querySelector('#class-type-filter') as HTMLSelectElement
       const options = classTypeSelect.querySelectorAll('option')
       expect(options).toHaveLength(3)
+      expect(options[0]).toHaveTextContent(/Todas|All/)
       expect(options[1].textContent).toBe('Yoga')
       expect(options[2].textContent).toBe('Spinning')
     })
@@ -429,6 +430,61 @@ describe('SchedulePage', () => {
         expect(within(sessionList).getByText('Yoga')).toBeInTheDocument()
       })
       expect(within(sessionList).queryByText('Spinning')).not.toBeInTheDocument()
+
+      await user.selectOptions(classTypeSelect, '')
+
+      expect(within(sessionList).getByText('Yoga')).toBeInTheDocument()
+      expect(within(sessionList).getByText('Spinning')).toBeInTheDocument()
+    })
+
+    it('resets the selected class when the date changes', async () => {
+      scheduleReturn = {
+        ...DEFAULT_SCHEDULE_RESULT,
+        sessions: MOCK_SESSIONS,
+        classTypes: MOCK_CLASS_TYPES,
+      }
+
+      const user = userEvent.setup()
+      const { container } = renderPage()
+      const classTypeSelect = container.querySelector('#class-type-filter') as HTMLSelectElement
+      const locale = i18n.resolvedLanguage ?? 'es-CO'
+      const { weekday, day } = formatDayLabel('2026-07-18', locale)
+
+      await user.selectOptions(classTypeSelect, '10')
+      await user.click(
+        screen.getByRole('button', {
+          name: new RegExp(`${weekday}.*${day}`, 'i'),
+        }),
+      )
+
+      await waitFor(() => expect(classTypeSelect.value).toBe(''))
+    })
+
+    it('resets the selected class when the facility changes', async () => {
+      facilitiesReturn = {
+        facilities: [
+          DEFAULT_FACILITY,
+          { id: 5, display_name: 'C.C Unicentro', city_id: DEFAULT_CITY.id },
+        ],
+        isLoading: false,
+        error: null,
+      }
+      scheduleReturn = {
+        ...DEFAULT_SCHEDULE_RESULT,
+        sessions: MOCK_SESSIONS,
+        classTypes: MOCK_CLASS_TYPES,
+      }
+
+      const user = userEvent.setup()
+      const { container } = renderPage()
+      const classTypeSelect = container.querySelector('#class-type-filter') as HTMLSelectElement
+      const facilitySelect = container.querySelector('#facility-filter') as HTMLSelectElement
+
+      await waitFor(() => expect(facilitySelect.value).toBe(String(DEFAULT_FACILITY.id)))
+      await user.selectOptions(classTypeSelect, '10')
+      await user.selectOptions(facilitySelect, '5')
+
+      await waitFor(() => expect(classTypeSelect.value).toBe(''))
     })
   })
 
