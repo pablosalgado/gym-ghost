@@ -1,7 +1,7 @@
-import { render, screen, waitFor, within } from '@testing-library/react'
+import { act, render, screen, waitFor, within } from '@testing-library/react'
 import { userEvent } from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router'
-import { describe, expect, it, vi, beforeEach } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import SchedulePage from './SchedulePage'
 import { formatDayLabel } from '../lib/date-time'
 import type { Session } from '../features/schedule/types'
@@ -39,6 +39,13 @@ const MOCK_BOOKING_FAILED: BookingRequest = {
   booking_window_opens_at: '2026-07-18T10:00:00.000Z',
 }
 
+const DEFAULT_CITY: City = { id: 1, city_name: 'BOGOTÁ, D.C.' }
+const DEFAULT_FACILITY: Facility = {
+  id: 9,
+  display_name: 'C.C Parque La Colina',
+  city_id: DEFAULT_CITY.id,
+}
+
 const DEFAULT_SCHEDULE_RESULT = {
   sessions: [] as readonly Session[],
   classTypes: [] as readonly ClassType[],
@@ -64,13 +71,20 @@ let facilitiesReturn: { facilities: readonly Facility[]; isLoading: boolean; err
   isLoading: false,
   error: null,
 }
+let facilitiesByCity: Record<
+  number,
+  { facilities: readonly Facility[]; isLoading: boolean; error: string | null }
+> = {}
 
 vi.mock('../hooks/useCities', () => ({
   useCities: () => citiesReturn,
 }))
 
 vi.mock('../hooks/useFacilities', () => ({
-  useFacilities: () => facilitiesReturn,
+  useFacilities: (cityId?: number) =>
+    cityId !== undefined && facilitiesByCity[cityId] !== undefined
+      ? facilitiesByCity[cityId]
+      : facilitiesReturn,
 }))
 
 let bookingReturn = {
@@ -107,8 +121,9 @@ describe('SchedulePage', () => {
     vi.setSystemTime(new Date(FROZEN_UTC))
     scheduleReturn = { ...DEFAULT_SCHEDULE_RESULT }
     scheduleCalls.length = 0
-    citiesReturn = { cities: [], isLoading: false, error: null }
-    facilitiesReturn = { facilities: [], isLoading: false, error: null }
+    citiesReturn = { cities: [DEFAULT_CITY], isLoading: false, error: null }
+    facilitiesReturn = { facilities: [DEFAULT_FACILITY], isLoading: false, error: null }
+    facilitiesByCity = {}
     bookingReturn = {
       create: vi.fn().mockResolvedValue(undefined),
       cancel: vi.fn().mockResolvedValue(true),
@@ -116,6 +131,10 @@ describe('SchedulePage', () => {
       error: null,
       bookingRequest: null,
     }
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
   })
 
   it('renders 14 day buttons', () => {
@@ -136,6 +155,68 @@ describe('SchedulePage', () => {
     ).toBeInTheDocument()
   })
 
+  describe('date window refresh', () => {
+    it('moves the default selection to the new Bogotá date after midnight', async () => {
+      vi.useFakeTimers({ shouldAdvanceTime: true })
+      vi.setSystemTime(new Date(FROZEN_UTC))
+
+      renderPage()
+
+      const locale = i18n.resolvedLanguage ?? 'es-CO'
+      const previousDay = formatDayLabel('2026-07-17', locale)
+      const nextDay = formatDayLabel('2026-07-18', locale)
+
+      expect(
+        screen.getByRole('button', {
+          name: new RegExp(`${previousDay.weekday}.*${previousDay.day}`, 'i'),
+        })
+      ).toHaveClass('bg-blue-600')
+
+      await act(async () => {
+        vi.advanceTimersToNextTimer()
+      })
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole('button', {
+            name: new RegExp(`${nextDay.weekday}.*${nextDay.day}`, 'i'),
+          })
+        ).toHaveClass('bg-blue-600')
+      })
+      expect(scheduleCalls[scheduleCalls.length - 1]?.[0]).toBe('2026-07-18')
+    })
+
+    it('preserves a selected date that remains in the refreshed window', async () => {
+      vi.useFakeTimers({ shouldAdvanceTime: true })
+      vi.setSystemTime(new Date(FROZEN_UTC))
+
+      renderPage()
+
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+      const locale = i18n.resolvedLanguage ?? 'es-CO'
+      const selectedDay = formatDayLabel('2026-07-19', locale)
+      const selectedButton = screen.getByRole('button', {
+        name: new RegExp(`${selectedDay.weekday}.*${selectedDay.day}`, 'i'),
+      })
+
+      await user.click(selectedButton)
+      expect(selectedButton).toHaveClass('bg-blue-600')
+      const callsBeforeMidnight = scheduleCalls.length
+
+      await act(async () => {
+        vi.advanceTimersToNextTimer()
+      })
+
+      await waitFor(() => {
+        expect(selectedButton).toHaveClass('bg-blue-600')
+      })
+      expect(scheduleCalls.filter(([dateKey]) => dateKey === '2026-07-18')).toHaveLength(0)
+      expect(
+        scheduleCalls.slice(callsBeforeMidnight).every(([dateKey]) => dateKey === '2026-07-19')
+      ).toBe(true)
+    })
+  })
+
   it('renders empty state when no sessions are available', () => {
     renderPage()
 
@@ -144,22 +225,26 @@ describe('SchedulePage', () => {
     ).toBeInTheDocument()
   })
 
-  it('shows only All option in city select', () => {
+  it('renders cities without an All option', () => {
     const { container } = renderPage()
 
     const citySelect = container.querySelector('#city-filter') as HTMLSelectElement
     const options = citySelect.querySelectorAll('option')
-    expect(options).toHaveLength(1)
-    expect(options[0].textContent).toMatch(/Todas|All/)
+    expect(options).toHaveLength(2)
+    expect(options[0]).toHaveTextContent(/Selecciona una ciudad|Select a city/)
+    expect(options[0]).not.toHaveTextContent(/Todas|All/)
+    expect(options[1]).toHaveTextContent('BOGOTÁ, D.C.')
   })
 
-  it('shows only All option in facility select', () => {
+  it('renders facilities without an All option', () => {
     const { container } = renderPage()
 
     const facilitySelect = container.querySelector('#facility-filter') as HTMLSelectElement
     const options = facilitySelect.querySelectorAll('option')
-    expect(options).toHaveLength(1)
-    expect(options[0].textContent).toMatch(/Todas|All/)
+    expect(options).toHaveLength(2)
+    expect(options[0]).toHaveTextContent(/Selecciona una sede|Select a facility/)
+    expect(options[0]).not.toHaveTextContent(/Todas|All/)
+    expect(options[1]).toHaveTextContent('C.C Parque La Colina')
   })
 
   describe('default city and facility selection', () => {
@@ -237,6 +322,110 @@ describe('SchedulePage', () => {
         expect(lastCall).toEqual(['2026-07-17', 1, 9])
       })
     })
+
+    it('keeps the schedule gated when the default city is unavailable', () => {
+      citiesReturn = {
+        cities: [{ id: 3, city_name: 'MEDELLÍN' }],
+        isLoading: false,
+        error: null,
+      }
+      scheduleReturn = {
+        ...DEFAULT_SCHEDULE_RESULT,
+        sessions: MOCK_SESSIONS,
+        classTypes: MOCK_CLASS_TYPES,
+      }
+
+      renderPage()
+
+      expect(screen.getByText(/Selecciona una ciudad para ver el horario|Select a city to view the schedule/))
+        .toBeInTheDocument()
+      expect(screen.queryByRole('list')).not.toBeInTheDocument()
+      expect(scheduleCalls[scheduleCalls.length - 1]).toEqual(['2026-07-17', undefined, undefined])
+    })
+
+    it('keeps the schedule gated when the default facility is unavailable', () => {
+      facilitiesReturn = {
+        facilities: [{ id: 5, display_name: 'C.C Unicentro', city_id: DEFAULT_CITY.id }],
+        isLoading: false,
+        error: null,
+      }
+      scheduleReturn = {
+        ...DEFAULT_SCHEDULE_RESULT,
+        sessions: MOCK_SESSIONS,
+        classTypes: MOCK_CLASS_TYPES,
+      }
+
+      renderPage()
+
+      const facilitySelect = document.querySelector('#facility-filter') as HTMLSelectElement
+      expect(facilitySelect.value).toBe('')
+      expect(screen.getByText(/Selecciona una sede para ver el horario|Select a facility to view the schedule/))
+        .toBeInTheDocument()
+      expect(screen.queryByRole('list')).not.toBeInTheDocument()
+      expect(scheduleCalls[scheduleCalls.length - 1]).toEqual(['2026-07-17', 1, undefined])
+    })
+
+    it('shows city loading and error states', () => {
+      citiesReturn = { cities: [], isLoading: true, error: null }
+      const { container, rerender } = renderPage()
+
+      expect(container.querySelector('#city-filter')).toBeDisabled()
+      expect(screen.getAllByText(/Cargando\.\.\.|Loading\.\.\./)).not.toHaveLength(0)
+
+      citiesReturn = { cities: [], isLoading: false, error: 'Request failed: 500' }
+      rerender(
+        <MemoryRouter>
+          <SchedulePage />
+        </MemoryRouter>,
+      )
+
+      expect(screen.getAllByText('Request failed: 500')).toHaveLength(2)
+      expect(screen.queryByRole('list')).not.toBeInTheDocument()
+    })
+
+    it('shows an empty facility state after a city is selected', () => {
+      facilitiesReturn = { facilities: [], isLoading: false, error: null }
+
+      renderPage()
+
+      expect(screen.getAllByText(/No hay sedes disponibles para esta ciudad\.|No facilities are available for this city\./))
+        .toHaveLength(2)
+      expect(screen.queryByRole('list')).not.toBeInTheDocument()
+    })
+
+    it('clears facility and class selections when the city changes', async () => {
+      citiesReturn = {
+        cities: [DEFAULT_CITY, { id: 2, city_name: 'MEDELLÍN' }],
+        isLoading: false,
+        error: null,
+      }
+      scheduleReturn = {
+        ...DEFAULT_SCHEDULE_RESULT,
+        sessions: MOCK_SESSIONS,
+        classTypes: MOCK_CLASS_TYPES,
+      }
+      facilitiesByCity = {
+        2: { facilities: [], isLoading: true, error: null },
+      }
+
+      const user = userEvent.setup()
+      const { container } = renderPage()
+      const citySelect = container.querySelector('#city-filter') as HTMLSelectElement
+      const facilitySelect = container.querySelector('#facility-filter') as HTMLSelectElement
+      const classTypeSelect = container.querySelector('#class-type-filter') as HTMLSelectElement
+
+      await waitFor(() => {
+        expect(citySelect.value).toBe(String(DEFAULT_CITY.id))
+        expect(facilitySelect.value).toBe(String(DEFAULT_FACILITY.id))
+      })
+      await user.selectOptions(classTypeSelect, '10')
+      await user.selectOptions(citySelect, '2')
+
+      expect(citySelect.value).toBe('2')
+      expect(facilitySelect.value).toBe('')
+      expect(classTypeSelect.value).toBe('')
+      expect(screen.getAllByText(/Cargando\.\.\.|Loading\.\.\./)).not.toHaveLength(0)
+    })
   })
 
   describe('class-type filter', () => {
@@ -268,6 +457,7 @@ describe('SchedulePage', () => {
       const classTypeSelect = container.querySelector('#class-type-filter') as HTMLSelectElement
       const options = classTypeSelect.querySelectorAll('option')
       expect(options).toHaveLength(3)
+      expect(options[0]).toHaveTextContent(/Todas|All/)
       expect(options[1].textContent).toBe('Yoga')
       expect(options[2].textContent).toBe('Spinning')
     })
@@ -306,6 +496,61 @@ describe('SchedulePage', () => {
         expect(within(sessionList).getByText('Yoga')).toBeInTheDocument()
       })
       expect(within(sessionList).queryByText('Spinning')).not.toBeInTheDocument()
+
+      await user.selectOptions(classTypeSelect, '')
+
+      expect(within(sessionList).getByText('Yoga')).toBeInTheDocument()
+      expect(within(sessionList).getByText('Spinning')).toBeInTheDocument()
+    })
+
+    it('resets the selected class when the date changes', async () => {
+      scheduleReturn = {
+        ...DEFAULT_SCHEDULE_RESULT,
+        sessions: MOCK_SESSIONS,
+        classTypes: MOCK_CLASS_TYPES,
+      }
+
+      const user = userEvent.setup()
+      const { container } = renderPage()
+      const classTypeSelect = container.querySelector('#class-type-filter') as HTMLSelectElement
+      const locale = i18n.resolvedLanguage ?? 'es-CO'
+      const { weekday, day } = formatDayLabel('2026-07-18', locale)
+
+      await user.selectOptions(classTypeSelect, '10')
+      await user.click(
+        screen.getByRole('button', {
+          name: new RegExp(`${weekday}.*${day}`, 'i'),
+        }),
+      )
+
+      await waitFor(() => expect(classTypeSelect.value).toBe(''))
+    })
+
+    it('resets the selected class when the facility changes', async () => {
+      facilitiesReturn = {
+        facilities: [
+          DEFAULT_FACILITY,
+          { id: 5, display_name: 'C.C Unicentro', city_id: DEFAULT_CITY.id },
+        ],
+        isLoading: false,
+        error: null,
+      }
+      scheduleReturn = {
+        ...DEFAULT_SCHEDULE_RESULT,
+        sessions: MOCK_SESSIONS,
+        classTypes: MOCK_CLASS_TYPES,
+      }
+
+      const user = userEvent.setup()
+      const { container } = renderPage()
+      const classTypeSelect = container.querySelector('#class-type-filter') as HTMLSelectElement
+      const facilitySelect = container.querySelector('#facility-filter') as HTMLSelectElement
+
+      await waitFor(() => expect(facilitySelect.value).toBe(String(DEFAULT_FACILITY.id)))
+      await user.selectOptions(classTypeSelect, '10')
+      await user.selectOptions(facilitySelect, '5')
+
+      await waitFor(() => expect(classTypeSelect.value).toBe(''))
     })
   })
 

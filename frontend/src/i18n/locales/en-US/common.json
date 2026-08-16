@@ -30,7 +30,15 @@
       "all": "All",
       "city": "City",
       "facility": "Facility",
-      "classType": "Class"
+      "classType": "Class",
+      "selectCity": "Select a city",
+      "selectFacility": "Select a facility"
+    },
+    "location": {
+      "selectCity": "Select a city to view the schedule.",
+      "selectFacility": "Select a facility to view the schedule.",
+      "noCities": "No cities are available.",
+      "noFacilities": "No facilities are available for this city."
     },
     "emptyState": "No classes for this selection.",
     "retry": "Retry",

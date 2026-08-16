@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { AUTH_TOKEN_STORAGE_KEY } from './useAuth'
 import {
   isFacilitiesResponse,
@@ -12,57 +12,99 @@ interface UseFacilitiesResult {
   error: string | null
 }
 
+interface FacilitiesState {
+  cityId: number | undefined
+  facilities: readonly Facility[]
+  isLoading: boolean
+  error: string | null
+}
+
 export function useFacilities(cityId?: number): UseFacilitiesResult {
-  const [facilities, setFacilities] = useState<readonly Facility[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
-  const fetchFacilities = useCallback(async () => {
-    const token = localStorage.getItem(AUTH_TOKEN_STORAGE_KEY)
-    if (!token) {
-      setError('Not authenticated')
-      setIsLoading(false)
-      return
-    }
-
-    setIsLoading(true)
-    setError(null)
-
-    try {
-      const params = cityId !== undefined ? `?city_id=${cityId}` : ''
-      const response = await fetch(`/api/v1/facilities${params}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-
-      if (!response.ok) {
-        setFacilities([])
-        setError(`Request failed: ${response.status}`)
-        return
-      }
-
-      const payload: unknown = await response.json()
-
-      if (!isFacilitiesResponse(payload)) {
-        setFacilities([])
-        setError('Invalid response format')
-        return
-      }
-
-      const data: FacilitiesResponse = payload
-      setFacilities(data.facilities)
-    } catch {
-      setFacilities([])
-      setError('Network error')
-    } finally {
-      setIsLoading(false)
-    }
-  }, [cityId])
+  const [state, setState] = useState<FacilitiesState>(() => ({
+    cityId,
+    facilities: [],
+    isLoading: cityId !== undefined,
+    error: null,
+  }))
+  const requestIdRef = useRef(0)
 
   useEffect(() => {
-    fetchFacilities()
-  }, [fetchFacilities])
+    const requestId = requestIdRef.current + 1
+    requestIdRef.current = requestId
+    let isActive = true
+    const controller = new AbortController()
 
-  return { facilities, isLoading, error }
+    const isCurrentRequest = () => isActive && requestIdRef.current === requestId
+    const updateState = (
+      facilities: readonly Facility[],
+      isLoading: boolean,
+      error: string | null,
+    ) => {
+      if (!isCurrentRequest()) return
+      setState({ cityId, facilities, isLoading, error })
+    }
+
+    updateState([], cityId !== undefined, null)
+
+    const cleanup = () => {
+      isActive = false
+      controller.abort()
+    }
+
+    if (cityId === undefined) {
+      return cleanup
+    }
+
+    const token = localStorage.getItem(AUTH_TOKEN_STORAGE_KEY)
+    if (!token) {
+      updateState([], false, 'Not authenticated')
+      return cleanup
+    }
+
+    async function loadFacilities() {
+      try {
+        const params = `?city_id=${cityId}`
+        const response = await fetch(`/api/v1/facilities${params}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          signal: controller.signal,
+        })
+
+        if (!isCurrentRequest()) return
+
+        if (!response.ok) {
+          updateState([], false, `Request failed: ${response.status}`)
+          return
+        }
+
+        const payload: unknown = await response.json()
+
+        if (!isCurrentRequest()) return
+
+        if (!isFacilitiesResponse(payload)) {
+          updateState([], false, 'Invalid response format')
+          return
+        }
+
+        const data: FacilitiesResponse = payload
+        updateState(data.facilities, false, null)
+      } catch {
+        if (!isCurrentRequest()) return
+        updateState([], false, 'Network error')
+      }
+    }
+
+    void loadFacilities()
+
+    return cleanup
+  }, [cityId])
+
+  const isCurrentCity = state.cityId === cityId
+
+  return {
+    facilities: isCurrentCity ? state.facilities : [],
+    isLoading: cityId !== undefined && (!isCurrentCity || state.isLoading),
+    error: isCurrentCity ? state.error : null,
+  }
 }

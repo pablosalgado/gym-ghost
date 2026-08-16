@@ -41,6 +41,23 @@ const MOCK_CLASS_TYPES = [
 
 const MOCK_FULL_RESPONSE = { schedule: MOCK_SCHEDULE_ITEMS, class_types: MOCK_CLASS_TYPES }
 
+interface MockResponse {
+  ok: boolean
+  status?: number
+  json: () => Promise<unknown>
+}
+
+function deferred<T>() {
+  let resolvePromise: (value: T | PromiseLike<T>) => void = () => {
+    throw new Error('Promise resolver not initialized')
+  }
+  const promise = new Promise<T>((resolve) => {
+    resolvePromise = resolve
+  })
+
+  return { promise, resolve: resolvePromise }
+}
+
 describe('useSchedule', () => {
   beforeEach(() => {
     localStorage.setItem(AUTH_TOKEN_STORAGE_KEY, AUTH_TOKEN)
@@ -79,7 +96,10 @@ describe('useSchedule', () => {
     expect(result.current.error).toBeNull()
     expect(fetch).toHaveBeenCalledWith(
       '/api/v1/schedule?date=2026-07-20&city_id=1&facility_id=5',
-      { headers: { Authorization: `Bearer ${AUTH_TOKEN}`, 'Cache-Control': 'no-store' } },
+      {
+        headers: { Authorization: `Bearer ${AUTH_TOKEN}`, 'Cache-Control': 'no-store' },
+        signal: expect.any(AbortSignal),
+      },
     )
   })
 
@@ -153,7 +173,10 @@ describe('useSchedule', () => {
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2))
     expect(fetchMock).toHaveBeenLastCalledWith(
       '/api/v1/schedule?date=2026-07-20&city_id=1&facility_id=9',
-      { headers: { Authorization: `Bearer ${AUTH_TOKEN}`, 'Cache-Control': 'no-store' } },
+      {
+        headers: { Authorization: `Bearer ${AUTH_TOKEN}`, 'Cache-Control': 'no-store' },
+        signal: expect.any(AbortSignal),
+      },
     )
   })
 
@@ -184,7 +207,10 @@ describe('useSchedule', () => {
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2))
     expect(fetchMock).toHaveBeenLastCalledWith(
       '/api/v1/schedule?date=2026-07-21&city_id=1&facility_id=9',
-      { headers: { Authorization: `Bearer ${AUTH_TOKEN}`, 'Cache-Control': 'no-store' } },
+      {
+        headers: { Authorization: `Bearer ${AUTH_TOKEN}`, 'Cache-Control': 'no-store' },
+        signal: expect.any(AbortSignal),
+      },
     )
   })
 
@@ -427,7 +453,10 @@ describe('useSchedule', () => {
       expect(fetchMock).toHaveBeenCalledTimes(2)
       expect(fetchMock).toHaveBeenLastCalledWith(
         '/api/v1/schedule?date=2026-07-24&city_id=1&facility_id=9',
-        { headers: { Authorization: `Bearer ${AUTH_TOKEN}`, 'Cache-Control': 'no-store' } },
+        {
+          headers: { Authorization: `Bearer ${AUTH_TOKEN}`, 'Cache-Control': 'no-store' },
+          signal: expect.any(AbortSignal),
+        },
       )
     })
 
@@ -457,8 +486,14 @@ describe('useSchedule', () => {
       expect(fetchMock).toHaveBeenCalledTimes(2)
       expect(fetchMock).toHaveBeenLastCalledWith(
         '/api/v1/schedule?date=2026-07-24&city_id=1&facility_id=9',
-        { headers: { Authorization: `Bearer ${AUTH_TOKEN}`, 'Cache-Control': 'no-store' } },
+        {
+          headers: { Authorization: `Bearer ${AUTH_TOKEN}`, 'Cache-Control': 'no-store' },
+          signal: expect.any(AbortSignal),
+        },
       )
+
+      vi.advanceTimersByTime(30000)
+      expect(fetchMock).toHaveBeenCalledTimes(2)
 
       vi.useRealTimers()
     })
@@ -489,9 +524,101 @@ describe('useSchedule', () => {
 
       vi.useRealTimers()
     })
+
+    it('ignores an out-of-order response from a previous date and location', async () => {
+      const firstResponse = deferred<MockResponse>()
+      const secondResponse = deferred<MockResponse>()
+      const fetchMock = vi.fn()
+        .mockImplementationOnce(() => firstResponse.promise)
+        .mockImplementationOnce(() => secondResponse.promise)
+      vi.stubGlobal('fetch', fetchMock)
+
+      const { result, rerender } = renderHook(
+        (props: { dateKey: string; cityId: number; facilityId: number }) =>
+          useSchedule(props.dateKey, props.cityId, props.facilityId),
+        { initialProps: { dateKey: '2026-07-23', cityId: 1, facilityId: 9 } },
+      )
+
+      await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1))
+      const firstSignal = fetchMock.mock.calls[0]?.[1]?.signal
+
+      rerender({ dateKey: '2026-07-24', cityId: 2, facilityId: 10 })
+
+      await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2))
+      expect(firstSignal).toBeInstanceOf(AbortSignal)
+      expect(firstSignal.aborted).toBe(true)
+
+      secondResponse.resolve({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            schedule: [
+              {
+                id: 99,
+                activity_name: 'Boxing',
+                activity_id: 30,
+                facility_id: 10,
+                starts_at: '2026-07-24T16:00:00.000Z',
+              },
+            ],
+            class_types: [{ id: 30, name: 'Boxing' }],
+          }),
+      })
+
+      await waitFor(() => expect(result.current.sessions.map((session) => session.id)).toEqual(['99']))
+
+      firstResponse.resolve({
+        ok: true,
+        json: () => Promise.resolve(MOCK_EMPTY_RESPONSE),
+      })
+
+      await Promise.resolve()
+      expect(result.current.sessions.map((session) => session.id)).toEqual(['99'])
+      expect(result.current.classTypes).toEqual([{ id: 30, name: 'Boxing' }])
+      expect(result.current.error).toBeNull()
+      expect(result.current.isBackgroundLoading).toBe(false)
+    })
   })
 
   describe('manualRetry', () => {
+    it('starts one current-query retry chain and cancels the previous chain', async () => {
+      vi.useFakeTimers({ shouldAdvanceTime: true })
+
+      const secondResponse = deferred<MockResponse>()
+      const fetchMock = vi.fn()
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve(MOCK_EMPTY_RESPONSE),
+        })
+        .mockImplementationOnce(() => secondResponse.promise)
+      vi.stubGlobal('fetch', fetchMock)
+
+      const { result } = renderHook(() => useTestSchedule('2026-07-23'))
+
+      await waitFor(() => expect(result.current.isBackgroundLoading).toBe(true))
+      const firstSignal = fetchMock.mock.calls[0]?.[1]?.signal
+
+      result.current.manualRetry()
+
+      await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2))
+      expect(firstSignal).toBeInstanceOf(AbortSignal)
+      expect(firstSignal.aborted).toBe(true)
+
+      vi.advanceTimersByTime(3000)
+      expect(fetchMock).toHaveBeenCalledTimes(2)
+
+      secondResponse.resolve({
+        ok: true,
+        json: () => Promise.resolve(MOCK_FULL_RESPONSE),
+      })
+
+      await waitFor(() => expect(result.current.sessions.length).toBeGreaterThan(0))
+      expect(result.current.retryCount).toBe(0)
+      expect(result.current.isBackgroundLoading).toBe(false)
+
+      vi.useRealTimers()
+    })
+
     it('resets state and re-fetches after exhaustion', async () => {
       vi.useFakeTimers({ shouldAdvanceTime: true })
 
@@ -539,8 +666,12 @@ describe('useSchedule', () => {
       await waitFor(() => expect(result.current.isLoading).toBe(false))
       expect(result.current.isBackgroundLoading).toBe(true)
       expect(fetchMock).toHaveBeenCalledTimes(1)
+      const signal = fetchMock.mock.calls[0]?.[1]?.signal
 
       unmount()
+
+      expect(signal).toBeInstanceOf(AbortSignal)
+      expect(signal.aborted).toBe(true)
 
       vi.advanceTimersByTime(30000)
       expect(fetchMock).toHaveBeenCalledTimes(1)
