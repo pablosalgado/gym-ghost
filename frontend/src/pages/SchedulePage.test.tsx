@@ -1,7 +1,7 @@
-import { render, screen, waitFor, within } from '@testing-library/react'
+import { act, render, screen, waitFor, within } from '@testing-library/react'
 import { userEvent } from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router'
-import { describe, expect, it, vi, beforeEach } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import SchedulePage from './SchedulePage'
 import { formatDayLabel } from '../lib/date-time'
 import type { Session } from '../features/schedule/types'
@@ -133,6 +133,10 @@ describe('SchedulePage', () => {
     }
   })
 
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
   it('renders 14 day buttons', () => {
     renderPage()
 
@@ -149,6 +153,68 @@ describe('SchedulePage', () => {
     expect(
       screen.getByRole('button', { name: new RegExp(`${weekday}.*${day}`, 'i') })
     ).toBeInTheDocument()
+  })
+
+  describe('date window refresh', () => {
+    it('moves the default selection to the new Bogotá date after midnight', async () => {
+      vi.useFakeTimers({ shouldAdvanceTime: true })
+      vi.setSystemTime(new Date(FROZEN_UTC))
+
+      renderPage()
+
+      const locale = i18n.resolvedLanguage ?? 'es-CO'
+      const previousDay = formatDayLabel('2026-07-17', locale)
+      const nextDay = formatDayLabel('2026-07-18', locale)
+
+      expect(
+        screen.getByRole('button', {
+          name: new RegExp(`${previousDay.weekday}.*${previousDay.day}`, 'i'),
+        })
+      ).toHaveClass('bg-blue-600')
+
+      await act(async () => {
+        vi.advanceTimersToNextTimer()
+      })
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole('button', {
+            name: new RegExp(`${nextDay.weekday}.*${nextDay.day}`, 'i'),
+          })
+        ).toHaveClass('bg-blue-600')
+      })
+      expect(scheduleCalls[scheduleCalls.length - 1]?.[0]).toBe('2026-07-18')
+    })
+
+    it('preserves a selected date that remains in the refreshed window', async () => {
+      vi.useFakeTimers({ shouldAdvanceTime: true })
+      vi.setSystemTime(new Date(FROZEN_UTC))
+
+      renderPage()
+
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+      const locale = i18n.resolvedLanguage ?? 'es-CO'
+      const selectedDay = formatDayLabel('2026-07-19', locale)
+      const selectedButton = screen.getByRole('button', {
+        name: new RegExp(`${selectedDay.weekday}.*${selectedDay.day}`, 'i'),
+      })
+
+      await user.click(selectedButton)
+      expect(selectedButton).toHaveClass('bg-blue-600')
+      const callsBeforeMidnight = scheduleCalls.length
+
+      await act(async () => {
+        vi.advanceTimersToNextTimer()
+      })
+
+      await waitFor(() => {
+        expect(selectedButton).toHaveClass('bg-blue-600')
+      })
+      expect(scheduleCalls.filter(([dateKey]) => dateKey === '2026-07-18')).toHaveLength(0)
+      expect(
+        scheduleCalls.slice(callsBeforeMidnight).every(([dateKey]) => dateKey === '2026-07-19')
+      ).toBe(true)
+    })
   })
 
   it('renders empty state when no sessions are available', () => {
